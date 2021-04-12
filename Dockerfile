@@ -150,6 +150,9 @@ RUN source activate legate \
  && cd /opt/legate/legate.pandas \
  && bash -x /opt/legate/quickstart/build.sh ${INSTALL_ARGS}
 
+# Needed for Pandas IO tests
+RUN chmod og+w /opt/legate/legate.pandas/tests/io
+
 # Build legate.numpy
 COPY legate.numpy /opt/legate/legate.numpy
 RUN source activate legate \
