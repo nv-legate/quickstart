@@ -27,17 +27,17 @@ use Legate: building from source and using a pre-built Docker image.
 # Using a pre-built Docker image
 
 At this time, we provide two versions of Legate images: a Volta architecture
-image and an Ampere architecture image.  The images are available at TODO and
+image and an Ampere architecture image.  The images are available at GitHub and
 can be accessed as follows with
 
 ```
-docker pull TODO
+docker pull ghcr.io/nv-legate/legate-other-volta:latest
 ```
 
 for the Volta image and 
 
 ```
-docker pull TODO
+$ docker pull ghcr.io/nv-legate/legate-other-ampere:latest
 ```
 
 Here is an example of running one of some of the examples included on the
