@@ -108,7 +108,7 @@ jobscripts yourself.
 ### Working on container-based clusters
 
 * Images including all legate libraries are generated periodically for all
-  supported container-based clusters (e.g. NGC, Circe, Selene), and `run.sh`
+  supported container-based clusters, and `run.sh`
   will automatically use the latest version. On such clusters you don't need to
   build anything; just call `run.sh` from the login node.
 * If you wish to use a custom image, you can set the `IMAGE` argument of
