@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-set -euo pipefail
+set -euox pipefail
 
 # Print usage if requested
 if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
@@ -34,9 +34,13 @@ fi
 export CUDA_VER="${CUDA_VER:-11.0}"
 export DEBUG="${DEBUG:-0}"
 export LINUX_VER="${LINUX_VER:-ubuntu18.04}"
+export LINUX_VER_URL="${LINUX_VER/./}"
 export OMPI_VER="${OMPI_VER:-4.0.5}"
+export OMPI_VER_URL="${OMPI_VER:0:3}"
+export OMPI_VER_URL="${OMPI_VER:0:3}"
 export PLATFORM="$PLATFORM"
 export PYTHON_VER="${PYTHON_VER:-3.8}"
+export GPU_ARCH="${GPU_ARCH:-""}"
 
 # Pull latest versions of legate libraries and Legion
 function git_pull {
@@ -48,25 +52,23 @@ function git_pull {
     git pull --ff-only
     cd ..
 }
-git_pull ssh://git@gitlab-master.nvidia.com:12051/legate legate.core master
-git_pull ssh://git@gitlab-master.nvidia.com:12051/legate legate.dask master
-git_pull ssh://git@gitlab-master.nvidia.com:12051/legate legate.hello master
-git_pull ssh://git@gitlab-master.nvidia.com:12051/legate legate.numpy master
-git_pull ssh://git@gitlab-master.nvidia.com:12051/legate legate.pandas master
-cd legate.core
-git_pull https://gitlab.com/StanfordLegion legion control_replication
-cd ..
+git_pull git@github.com:nv-legate legate.core master
+git_pull git@github.com:nv-legate legate.hello main
+git_pull git@github.com:nv-legate legate.numpy master
+git_pull git@github.com:nv-legate legate.pandas master
 
 # Build and push image
-IMAGE=nvcr.io/nvidian/legion/legate-"$PLATFORM"
+IMAGE=ghcr.io/nv-legate/legate-"$PLATFORM"-"$GPU_ARCH"
 TAG="$(date +%Y-%m-%d-%H%M%S)"
 DOCKER_BUILDKIT=1 docker build -t "$IMAGE:$TAG" -t "$IMAGE:latest" \
     --build-arg CUDA_VER="$CUDA_VER" \
     --build-arg DEBUG="$DEBUG" \
     --build-arg LINUX_VER="$LINUX_VER" \
+    --build-arg LINUX_VER_URL="$LINUX_VER_URL" \
     --build-arg OMPI_VER="$OMPI_VER" \
     --build-arg PLATFORM="$PLATFORM" \
     --build-arg PYTHON_VER="$PYTHON_VER" \
+    --build-arg GPU_ARCH="$GPU_ARCH" \
     "$@" .
 docker push "$IMAGE:$TAG"
 docker push "$IMAGE:latest"
