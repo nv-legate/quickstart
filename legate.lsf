@@ -1,0 +1,10 @@
+#!/bin/bash
+
+echo "Job ID: $LSB_JOBID"
+echo "Submitted from: $(pwd)"
+echo "Started on: $(date)"
+echo "Command: $@"
+echo -n "Running on: "
+echo "$LSB_HOSTS" | tr ' ' '\n' | sort | uniq | xargs
+"$@"
+echo "Job finished"
