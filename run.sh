@@ -30,7 +30,6 @@ if [[ $# -lt 2 || ! "$1" =~ ^(1/)?[0-9]+$ ]]; then
     echo "Arguments read from the environment:"
     echo "  ACCOUNT : account/group/project to submit the job under (if applicable)"
     echo "  ENTRYPOINT : entrypoint script to use (for container-based clusters)"
-    echo "               (default : /opt/legate/entrypoint.sh)"
     echo "  IMAGE : which image to use (for container-based clusters)"
     echo "          (default : nvcr.io/nvidian/legion/legate-\$PLATFORM:latest)"
     echo "  INTERACTIVE : submit an interactive rather than a batch job (defaut: 0)"
@@ -57,18 +56,11 @@ else
 fi
 shift
 detect_platform
-if [[ "$PLATFORM" == ngc || "$PLATFORM" == circe || "$PLATFORM" == selene ]]; then
-    export ENTRYPOINT="${ENTRYPOINT:-/opt/legate/entrypoint.sh}"
-else
-    export ENTRYPOINT=""
-fi
+
 export IMAGE="${IMAGE:-nvcr.io/nvidian/legion/legate-$PLATFORM:latest}"
 export INTERACTIVE="${INTERACTIVE:-0}"
-if [[ "$PLATFORM" == ngc || "$PLATFORM" == circe || "$PLATFORM" == selene ]]; then
-    export LEGATE_DIR="/opt/legate/install"
-else
-    true "$LEGATE_DIR"
-fi
+true "$LEGATE_DIR"
+
 export MOUNTS="${MOUNTS:-}"
 export NODRIVER="${NODRIVER:-0}"
 export NOWAIT="${NOWAIT:-0}"
@@ -84,11 +76,7 @@ if [[ "$PLATFORM" != ngc ]]; then
     mkdir "$HOST_OUT_DIR"
     echo "Redirecting output to $HOST_OUT_DIR"
 fi
-if [[ "$PLATFORM" == ngc || "$PLATFORM" == circe || "$PLATFORM" == selene ]]; then
-    export CMD_OUT_DIR="/result"
-else
-    export CMD_OUT_DIR="$HOST_OUT_DIR"
-fi
+export CMD_OUT_DIR="$HOST_OUT_DIR"
 
 # Calculate per-rank resources
 if [[ "$PLATFORM" == summit ]]; then

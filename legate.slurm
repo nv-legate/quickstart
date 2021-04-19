@@ -15,16 +15,6 @@ set -u
 
 if [[ "$PLATFORM" == cori ]]; then
     true
-elif [[ "$PLATFORM" == circe ]]; then
-    if [[ "$MOUNTS" != "" ]]; then
-        MOUNTS="$HOST_OUT_DIR:$CMD_OUT_DIR,$MOUNTS"
-    else
-        MOUNTS="$HOST_OUT_DIR:$CMD_OUT_DIR"
-    fi
-    if [[ "$INTERACTIVE" == "1" ]]; then
-        set -- --pty "$@"
-    fi
-    set -- srun --mpi=pmix -n "$SLURM_JOB_NUM_NODES" --ntasks-per-node 1 --container-image "$IMAGE" --container-mounts "$MOUNTS" "$ENTRYPOINT" "$@"
 else
     echo "Error: Unexpected platform $PLATFORM in SLURM script" 1>&2
     exit 1
