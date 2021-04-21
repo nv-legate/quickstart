@@ -18,64 +18,49 @@ limitations under the License.
 Legate Quickstart
 =================
 
-# Introduction
-
-Legate quickstart provides a collection of scripts to simplify building,
-installing, and running of Legate libraries.  Currently, there are two ways to
+Legate Quickstart provides a collection of scripts to simplify building,
+installing, and running Legate libraries. Currently there are two ways to
 use Legate: building from source and using a pre-built Docker image.
 
-# Using a pre-built Docker image
+Using a pre-built Docker image
+==============================
 
-At this time, we provide two versions of Legate images: a Volta architecture
-image and an Ampere architecture image.  The images are available at GitHub and
-can be accessed as follows with
+At this time we provide two versions of an image containing all Legate
+libraries, for the Volta and Ampere CUDA architectures. The images are available
+on GitHub and can be used as follows:
 
 ```
 docker pull ghcr.io/nv-legate/legate-other-volta:latest
+docker run -it --rm ghcr.io/nv-legate/legate-other-volta:latest /bin/bash
 ```
 
-for the Volta image and 
+and correspondingly for the `legate-other-ampere` image.
+
+After entering the container, you can try running some examples:
 
 ```
-$ docker pull ghcr.io/nv-legate/legate-other-ampere:latest
+# Legate NumPy 2d stencil example
+/opt/legate/quickstart/run.sh 1 /opt/legate/legate.numpy/examples/stencil.py -n 1000 -t -b 10
+# Legate Pandas join microbenchmark
+/opt/legate/quickstart/run.sh 1 /opt/legate/legate.pandas/benchmarks/micro/merge.py --size_per_proc 10000 --num_runs 10
 ```
 
-Here is an example of running one of some of the examples included on the
-images:
+The `run.sh` script will automatically detect the resources available in the
+container. If you wish to control that further, you can use the `legate` launcher
+script directly:
 
 ```
-docker run -it --rm TODO /bin/bash
+# Legate NumPy 2d stencil example
+legate --gpus 1 --fbmem 15000 /opt/legate/legate.numpy/examples/stencil.py -n 1000 -t -b 10 
+# Legate Pandas join microbenchmark
+legate --gpus 1 --fbmem 15000 /opt/legate/legate.pandas/benchmarks/micro/merge.py --size_per_proc 10000 --num_runs 10
 ```
 
-One can begin by running some tests:
-
-```
-$ cd /opt/legate/legate.numpy/
-$ ./test.py --use cuda --use cpus --use openmp
-$ cd /opt/legate/legate.pandas/
-$ ./test.py
-$ ./test.py --use cuda
-```
-
-There are also some example programs to try:
-
-``` 
-$ cd /opt/legate/legate.numpy/examples
-$ legate --gpus 1 stencil.py -n 1000 -t -b 10 --fbmem 15000
-```
-
-The `-n` option controls the size of the problem, the `-t` option turns on
-timing, and the `-b` option controls how many times to repeat the benchmark.
-A join micro benchmark in Legate Pandas can be run as follows:
-
-```
-$ cd /opt/legate/legate.pandas/
-$ legate --gpus 1 --fbmem 15000 ./benchmarks/micro/merge.py --size_per_proc 10000 --num_runs 10
-```
+Invoke any script with `-h` to see more available options.
 
 # Building from source
 
-Find your platform below and follow the instructions to set up legate. If you
+Find your platform below and follow the instructions to set up Legate. If you
 are running on a supported cluster then all the scripts will automatically
 invoke the appropriate job scheduler commands, so you don't need to create
 jobscripts yourself.
@@ -92,40 +77,43 @@ jobscripts yourself.
 ### Customizing installation
 
 * `setup_conda.sh`: This script will create a new conda environment suitable for
-  running legate applications on GPUs. Use `CUDA_VER=none` to skip GPU support.
+  running Legate applications on GPUs. Use `CUDA_VER=none` to skip GPU support.
   You can skip the script entirely if you prefer to install the required
-  packages manually; see the `requirements.txt` file on the individual legate
+  packages manually; see the `conda/???.yml` files on the individual Legate
   libraries.
 * `install_ib_ucx.sh`: This script will remove the UCX conda package and build
   UCX from source, adding Infiniband Verbs support. You can skip this if you
   will not be running multi-node Rapids algorithms over Infiniband.
 * `~/.bashrc`: The commands we add to this file activate the environment we set
-  up for legate runs, and must be executed on every node in a multi-node run
-  before invoking the legate executable. Note that the order of commands
+  up for Legate runs, and must be executed on every node in a multi-node run
+  before invoking the Legate executable. Note that the order of commands
   matters; we want the paths set by `conda` to supersede those set by `module`.
 * Invoke any script with `-h` to see more available options.
 
 ### Working on container-based clusters
 
-* Images including all legate libraries are generated periodically for all
-  supported container-based clusters, and `run.sh`
-  will automatically use the latest version. On such clusters you don't need to
-  build anything; just call `run.sh` from the login node.
-* If you wish to use a custom image, you can set the `IMAGE` argument of
-  `run.sh`. You can use `Dockerfile` as a starting point for generating custom
-  legate images; you may need to remove parts of this recipe if your cluster
-  doesn't use GPUs or Mellanox hardware.
-* All paths on the legate command line refer to files within the image. The
+* On container-based clusters typically each user will prepare an image
+  ahead of time and provide it at job submission time, to be instantiated on
+  each allocated node. The `run.sh` script can handle such worflows when run
+  directly on the login node, but will need to be specialized for each
+  particular cluster.
+* You can use `Dockerfile` as a starting point for generating custom
+  Legate images; you may need to remove parts of this recipe if your cluster
+  does not use Nvidia GPUs or networking hardware. Pre-built images for any
+  supported container-based clusters will be available on GitHub as
+  `ghcr.io/nv-legate/legate-<platform>`, and `run.sh` will automatically use
+  the latest version.
+* All paths on the Legate command line refer to files within the image. The
   host's filesystem is not normally accessible while running; you need to
   explicitly mount directories inside the container (see the `MOUNTS` argument
   of `run.sh`).
-* If you wish to port legate to a new container-based cluster note the
-  following: In order to use GPUs from inside a container, the host needs to
+* When porting Legate to a new container-based cluster note the following: In
+  order to use Nvidia GPUs from inside a container the host needs to
   provide a CUDA installation at least as recent as the version used in the
   image, and a GPU-aware container execution engine like
-  [nvidia-docker](https://github.com/NVIDIA/nvidia-docker). To use Mellanox
-  hardware from inside a container, the host and the image must use the same
-  version of MOFED.
+  [nvidia-docker](https://github.com/NVIDIA/nvidia-docker). To use Nvidia
+  networking hardware from inside a container the host and the image must use
+  the same version of MOFED.
 
 Local machine
 =============
@@ -147,14 +135,14 @@ cd /path/to/legate.core
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
 ```
 
-Build additional legate libraries:
+Build additional Legate libraries:
 
 ```
 cd /path/to/legate/lib
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
 ```
 
-Run legate programs:
+Run Legate programs:
 
 ```
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/run.sh prog.py
@@ -181,14 +169,14 @@ cd /path/to/legate.core
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
 ```
 
-Build additional legate libraries:
+Build additional Legate libraries:
 
 ```
 cd /path/to/legate/lib
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
 ```
 
-Run legate programs:
+Run Legate programs:
 
 ```
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/run.sh prog.py
@@ -223,14 +211,14 @@ cd /path/to/legate.core
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
 ```
 
-Build additional legate libraries:
+Build additional Legate libraries:
 
 ```
 cd /path/to/legate/lib
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
 ```
 
-Run legate programs:
+Run Legate programs:
 
 ```
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/run.sh prog.py
