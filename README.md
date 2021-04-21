@@ -235,3 +235,8 @@ Run legate programs:
 ```
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/run.sh prog.py
 ```
+
+Questions
+=========
+
+If you have questions, please contact us at legate(at)nvidia.com.
