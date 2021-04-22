@@ -30,8 +30,9 @@ if [[ $# -lt 2 || ! "$1" =~ ^(1/)?[0-9]+$ ]]; then
     echo "Arguments read from the environment:"
     echo "  ACCOUNT : account/group/project to submit the job under (if applicable)"
     echo "  ENTRYPOINT : entrypoint script to use (for container-based clusters)"
+    echo "               (default : /opt/legate/quickstart/entrypoint.sh)"
     echo "  IMAGE : which image to use (for container-based clusters)"
-    echo "          (default : nvcr.io/nvidian/legion/legate-\$PLATFORM:latest)"
+    echo "          (default : ghcr.io/nv-legate/legate-\$PLATFORM:latest)"
     echo "  INTERACTIVE : submit an interactive rather than a batch job (defaut: 0)"
     echo "  JOBSCRIPT : what jobscript to submit (defaut: appropriate script in $SCRIPT_DIR)"
     echo "  LEGATE_DIR : path to Legate installation directory"
@@ -56,11 +57,10 @@ else
 fi
 shift
 detect_platform
-
-export IMAGE="${IMAGE:-nvcr.io/nvidian/legion/legate-$PLATFORM:latest}"
+export ENTRYPOINT="${ENTRYPOINT:-/opt/legate/quickstart/entrypoint.sh}"
+export IMAGE="${IMAGE:-ghcr.io/nv-legate/legate-$PLATFORM:latest}"
 export INTERACTIVE="${INTERACTIVE:-0}"
 true "$LEGATE_DIR"
-
 export MOUNTS="${MOUNTS:-}"
 export NODRIVER="${NODRIVER:-0}"
 export NOWAIT="${NOWAIT:-0}"
@@ -68,14 +68,12 @@ export SCRATCH="${SCRATCH:-.}"
 export TIMELIMIT="${TIMELIMIT:-60}"
 
 # Prepare output directory
-if [[ "$PLATFORM" != ngc ]]; then
-    DATE="$(date +%Y/%m/%d)"
-    TIME="$(date +%H%M%S)"
-    mkdir -p "$SCRATCH/$DATE"
-    export HOST_OUT_DIR="$SCRATCH/$DATE/$TIME"
-    mkdir "$HOST_OUT_DIR"
-    echo "Redirecting output to $HOST_OUT_DIR"
-fi
+DATE="$(date +%Y/%m/%d)"
+TIME="$(date +%H%M%S)"
+mkdir -p "$SCRATCH/$DATE"
+export HOST_OUT_DIR="$SCRATCH/$DATE/$TIME"
+mkdir "$HOST_OUT_DIR"
+echo "Redirecting output to $HOST_OUT_DIR"
 export CMD_OUT_DIR="$HOST_OUT_DIR"
 
 # Calculate per-rank resources
@@ -102,6 +100,17 @@ elif [[ "$PLATFORM" == cori ]]; then
     NUMAS_PER_NODE=2
     GPUS_PER_NODE=8
     THREADS_PER_OMP=16
+    FB_PER_GPU=14500
+elif [[ "$PLATFORM" == pizdaint ]]; then
+    # 1 NUMA domain per node
+    # 1 NIC per node
+    # 12 cores per NUMA domain
+    # 64GB RAM per node
+    # 1 Tesla P100 GPU per node
+    # 16GB FB per GPU
+    NUMAS_PER_NODE=1
+    GPUS_PER_NODE=1
+    THREADS_PER_OMP=8
     FB_PER_GPU=14500
 else
     echo "Did not detect a supported cluster, assuming local-node run."
@@ -134,6 +143,8 @@ if [[ "$NODRIVER" != "1" ]]; then
         set -- --cores-per-node 42 --launcher jsrun "$@"
     elif [[ "$PLATFORM" == cori ]]; then
         set -- --launcher srun "$@"
+    elif [[ "$PLATFORM" == pizdaint ]]; then
+        set -- --launcher srun "$@"
     else
         # Local run
         true
@@ -159,6 +170,14 @@ elif [[ "$PLATFORM" == cori ]]; then
     else
         sbatch -J legate -A "$ACCOUNT" -p "$QUEUE" -t "$TIMELIMIT" -N "$NUM_NODES" --exclusive -C gpu -o "$HOST_OUT_DIR/out.txt" "$JOBSCRIPT" "$@"
     fi
+elif [[ "$PLATFORM" == pizdaint ]]; then
+    JOBSCRIPT="${JOBSCRIPT:-$SCRIPT_DIR/legate.slurm}"
+    QUEUE="${QUEUE:-normal}"
+    if [[ "$INTERACTIVE" == "1" ]]; then
+        salloc -J legate -A "$ACCOUNT" -p "$QUEUE" -t "$TIMELIMIT" -N "$NUM_NODES" -C gpu "$JOBSCRIPT" "$@"
+    else
+        sbatch -J legate -A "$ACCOUNT" -p "$QUEUE" -t "$TIMELIMIT" -N "$NUM_NODES" -C gpu -o "$HOST_OUT_DIR/out.txt" "$JOBSCRIPT" "$@"
+    fi
 else
     # Local run
     echo "Command: $@" | tee -a "$CMD_OUT_DIR/out.txt"
@@ -166,7 +185,7 @@ else
 fi
 
 # Wait for batch job to start
-if [[ "$INTERACTIVE" != "1" && "$NOWAIT" != "1" && "$PLATFORM" != ngc && "$PLATFORM" != other ]]; then
+if [[ "$INTERACTIVE" != "1" && "$NOWAIT" != "1" && "$PLATFORM" != other ]]; then
     echo "Waiting for job to start & piping output"
     echo "Press Ctrl-C anytime to exit (job will still run)"
     while [[ ! -f "$HOST_OUT_DIR/out.txt" ]]; do sleep 1; done

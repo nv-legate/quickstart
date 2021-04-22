@@ -20,14 +20,16 @@ function detect_platform {
         export PLATFORM=summit
     elif [[ "$(uname -n)" == "cori"* ]]; then
         export PLATFORM=cori
+    elif [[ "$(uname -n)" == *"daint"* ]]; then
+        export PLATFORM=pizdaint
     else
         export PLATFORM=other
     fi
 }
 
 function set_build_vars {
-    export CC=${CC:-gcc}
-    export CXX=${CXX:-g++}
+    export CC="${CC:-gcc}"
+    export CXX="${CXX:-g++}"
     # Set base build variables according to target platform
     if [[ "$PLATFORM" == summit ]]; then
         export CONDUIT=ibv
@@ -39,6 +41,10 @@ function set_build_vars {
         export NUM_HCAS=4
         # CUDA_HOME is already set (by module)
         export GPU_ARCH=volta
+    elif [[ "$PLATFORM" == pizdaint ]]; then
+        export CONDUIT=aries
+        # CUDA_HOME is already set (by module)
+        export GPU_ARCH=pascal
     else
         echo "Did not detect a supported cluster, assuming local-node build"
         export CONDUIT=none
@@ -141,6 +147,8 @@ function run_build {
         bsub -nnodes 1 -W 60 -P "$ACCOUNT" -I "$@"
     elif [[ "$PLATFORM" == cori ]]; then
         srun -C gpu -N 1 -t 60 -G 1 -c 10 -A "$ACCOUNT" "$@"
+    elif [[ "$PLATFORM" == pizdaint ]]; then
+        srun -N 1 -C gpu -t 60 -A "$ACCOUNT" "$@"
     else
         "$@"
     fi

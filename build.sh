@@ -51,7 +51,6 @@ if [[ -d "legate/core" ]]; then
                --with-cuda "$CUDA_HOME" \
                "$@"
     fi
-
     run_build ./install.py \
               --install-dir "$LEGATE_DIR" \
               --openmp \
