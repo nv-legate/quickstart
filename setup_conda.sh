@@ -38,8 +38,8 @@ fi
 export CONDA_ENV="${CONDA_ENV:-legate}"
 detect_platform && set_build_vars
 export PYTHON_VER="${PYTHON_VER:-3.8}"
-if [[ ! -n "${CUDA_VER+x}" ]]; then
-    if [[ "$GPU_ARCH_NUM" != none ]]; then
+if [[ -z "${CUDA_VER+x}" ]]; then
+    if command -v nvcc &> /dev/null; then
         export CUDA_VER="$(nvcc --version | grep release | awk '{ print $5 }' | sed 's/.$//')"
     else
         export CUDA_VER=none
@@ -93,7 +93,7 @@ if conda info --envs | grep -q "^$CONDA_ENV "; then
     echo "Error: Conda environment $CONDA_ENV already exists" 1>&2
     exit 1
 fi
-if [[ "$CUDA_VER" != "none" ]]; then
+if [[ "$CUDA_VER" != none ]]; then
     conda create --yes --name "$CONDA_ENV" \
         -c rapidsai-nightly -c nvidia -c conda-forge -c defaults \
         python="$PYTHON_VER" cudatoolkit="$CUDA_VER" rapids=0.19 \

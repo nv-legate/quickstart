@@ -23,9 +23,11 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "Arguments read from the environment:"
     echo "  CUDA_VER : CUDA version to use (default: 11.0)"
     echo "  DEBUG : compile with debug symbols and w/o optimizations (default: 0)"
+    echo "  GPU_ARCH : what CUDA architecture to build for (default: inferred based"
+    echo "             on target platform or local CUDA installation)"
     echo "  LINUX_VER : what distro to base the image on (default: ubuntu18.04)"
     echo "  OMPI_VER : OpenMPI version to use (default: 4.0.5)"
-    echo "  PLATFORM : what machine to build for"
+    echo "  PLATFORM : what machine to build for (default: generic single-node machine)"
     echo "  PYTHON_VER : Python version to use (default: 3.8)"
     exit
 fi
@@ -33,14 +35,11 @@ fi
 # Read arguments
 export CUDA_VER="${CUDA_VER:-11.0}"
 export DEBUG="${DEBUG:-0}"
+export GPU_ARCH="${GPU_ARCH:-auto}"
 export LINUX_VER="${LINUX_VER:-ubuntu18.04}"
-export LINUX_VER_URL="${LINUX_VER/./}"
 export OMPI_VER="${OMPI_VER:-4.0.5}"
-export OMPI_VER_URL="${OMPI_VER:0:3}"
-export OMPI_VER_URL="${OMPI_VER:0:3}"
-export PLATFORM="$PLATFORM"
+export PLATFORM="${PLATFORM:-other}"
 export PYTHON_VER="${PYTHON_VER:-3.8}"
-export GPU_ARCH="${GPU_ARCH:-""}"
 
 # Pull latest versions of legate libraries and Legion
 function git_pull {
@@ -63,12 +62,11 @@ TAG="$(date +%Y-%m-%d-%H%M%S)"
 DOCKER_BUILDKIT=1 docker build -t "$IMAGE:$TAG" -t "$IMAGE:latest" \
     --build-arg CUDA_VER="$CUDA_VER" \
     --build-arg DEBUG="$DEBUG" \
+    --build-arg GPU_ARCH="$GPU_ARCH" \
     --build-arg LINUX_VER="$LINUX_VER" \
-    --build-arg LINUX_VER_URL="$LINUX_VER_URL" \
     --build-arg OMPI_VER="$OMPI_VER" \
     --build-arg PLATFORM="$PLATFORM" \
     --build-arg PYTHON_VER="$PYTHON_VER" \
-    --build-arg GPU_ARCH="$GPU_ARCH" \
     "$@" .
 docker push "$IMAGE:$TAG"
 docker push "$IMAGE:latest"
