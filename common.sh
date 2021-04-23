@@ -30,6 +30,7 @@ function detect_platform {
 function set_build_vars {
     export CC="${CC:-gcc}"
     export CXX="${CXX:-g++}"
+    export FC="${FC:-gfortran}"
     # Set base build variables according to target platform
     if [[ "$PLATFORM" == summit ]]; then
         export CONDUIT=ibv
@@ -148,7 +149,7 @@ function run_build {
     elif [[ "$PLATFORM" == cori ]]; then
         srun -C gpu -N 1 -t 60 -G 1 -c 10 -A "$ACCOUNT" "$@"
     elif [[ "$PLATFORM" == pizdaint ]]; then
-        srun -N 1 -C gpu -t 60 -A "$ACCOUNT" "$@"
+        srun -N 1 -p debug -C gpu -t 30 -A "$ACCOUNT" "$@"
     else
         "$@"
     fi

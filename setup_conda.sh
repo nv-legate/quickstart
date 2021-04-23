@@ -97,13 +97,12 @@ if [[ "$CUDA_VER" != none ]]; then
     conda create --yes --name "$CONDA_ENV" \
         -c rapidsai-nightly -c nvidia -c conda-forge -c defaults \
         python="$PYTHON_VER" cudatoolkit="$CUDA_VER" rapids=0.19 \
-        cffi numpy dask cloudpickle tblib cytoolz toolz dask-cuda ucx-py \
         "$@"
 else
     conda create --yes --name "$CONDA_ENV" \
-        -c nvidia -c conda-forge -c defaults \
+        -c conda-forge -c defaults \
         python="$PYTHON_VER" \
-        cffi numpy dask cloudpickle tblib cytoolz toolz \
+        cffi numpy pyarrow=1.0.1 arrow-cpp=1.0.1 arrow-cpp-proc=3.0.0 \
         "$@"
 fi
 

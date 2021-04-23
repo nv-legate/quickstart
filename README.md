@@ -231,6 +231,7 @@ Add to `~/.bashrc`:
 
 ```
 module swap PrgEnv-cray PrgEnv-gnu/6.0.9
+module swap gcc/10.1.0 gcc/9.3.0
 module load daint-gpu
 module load cudatoolkit/11.0.2_3.33-7.0.2.1_3.1__g1ba0366
 source "<conda-install-dir>/etc/profile.d/conda.sh"
