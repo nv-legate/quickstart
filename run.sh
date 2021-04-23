@@ -81,7 +81,7 @@ export CMD_OUT_DIR="$HOST_OUT_DIR"
 # - 1 for the CPU processor
 # - 1 for the python processor
 # - 2 for the utility processors
-# - a few more for Realm workers threads and GPU processors
+# - a few more for Realm worker threads and GPU processors
 # and some memory:
 # - 1-2GB of framebuffer for the runtime and NCCL
 # - ~1GB of RAM for GASNet
