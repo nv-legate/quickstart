@@ -43,7 +43,7 @@ run_build bash -euo pipefail -c '
     TMP_DIR="$(mktemp -d)"
     git clone --recurse-submodules -b v1.10.x https://github.com/openucx/ucx "$TMP_DIR"
     cd "$TMP_DIR"
-    if [[ "$GPU_ARCH_NUM" != none ]]; then
+    if [[ "$GPU_ARCH" != none ]]; then
         wget -nv https://raw.githubusercontent.com/rapidsai/ucx-split-feedstock/master/recipe/cuda-alloc-rcache.patch
         git apply cuda-alloc-rcache.patch
     fi
@@ -62,7 +62,7 @@ run_build bash -euo pipefail -c '
                    --enable-optimizations \
                    --with-march)
     fi
-    if [[ "$GPU_ARCH_NUM" != none ]]; then
+    if [[ "$GPU_ARCH" != none ]]; then
         CONFIGURE+=(--with-dm \
                     --with-cuda="$CUDA_HOME")
     fi

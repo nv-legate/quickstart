@@ -51,7 +51,7 @@ script directly:
 
 ```
 # Legate NumPy 2d stencil example
-legate --gpus 1 --fbmem 15000 /opt/legate/legate.numpy/examples/stencil.py -n 1000 -t -b 10 
+legate --gpus 1 --fbmem 15000 /opt/legate/legate.numpy/examples/stencil.py -n 1000 -t -b 10
 # Legate Pandas join microbenchmark
 legate --gpus 1 --fbmem 15000 /opt/legate/legate.pandas/benchmarks/micro/merge.py --size_per_proc 10000 --num_runs 10
 ```
@@ -207,6 +207,43 @@ CONDA_ROOT=~/.conda <quickstart-dir>/setup_conda.sh
 source ~/.conda/etc/profile.d/conda.sh
 conda activate legate
 <quickstart-dir>/install_ib_ucx.sh
+cd /path/to/legate.core
+LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
+```
+
+Build additional Legate libraries:
+
+```
+cd /path/to/legate/lib
+LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
+```
+
+Run Legate programs:
+
+```
+LEGATE_DIR=<legate-install-dir> <quickstart-dir>/run.sh prog.py
+```
+
+PizDaint @ ETH
+==============
+
+Add to `~/.bashrc`:
+
+```
+module swap PrgEnv-cray PrgEnv-gnu/6.0.9
+module swap gcc/10.1.0 gcc/9.3.0
+module load daint-gpu
+module load cudatoolkit/11.0.2_3.33-7.0.2.1_3.1__g1ba0366
+source "<conda-install-dir>/etc/profile.d/conda.sh"
+conda activate legate
+```
+
+Log out and back in, then run:
+
+```
+CONDA_ROOT=<conda-install-dir> <quickstart-dir>/setup_conda.sh
+source "<conda-install-dir>/etc/profile.d/conda.sh"
+conda activate legate
 cd /path/to/legate.core
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
 ```

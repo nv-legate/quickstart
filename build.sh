@@ -27,7 +27,6 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "  DEBUG : compile with debug symbols and w/o optimizations (default: 0)"
     echo "  LEGATE_DIR : path to Legate installation directory"
     echo "  PLATFORM : what machine to build for (default: auto-detected)"
-    echo "  CLEAN : perform a clean build if set (default: no)"
     exit
 fi
 
@@ -35,10 +34,6 @@ fi
 export DEBUG="${DEBUG:-0}"
 export LEGATE_DIR="$LEGATE_DIR"
 detect_platform && set_build_vars
-
-if [[ -z ${CLEAN+x} ]]; then
-  set -- --no-clean "$@"
-fi 
 
 # Run appropriate build command for the target library
 if [[ -d "legate/core" ]]; then
@@ -50,14 +45,12 @@ if [[ -d "legate/core" ]]; then
                --conduit "$CONDUIT" \
                "$@"
     fi
-    if [[ -n "$GPU_ARCH" ]]; then
+    if [[ "$GPU_ARCH" != none ]]; then
         set -- --cuda \
                --arch "$GPU_ARCH" \
                --with-cuda "$CUDA_HOME" \
-               --no-hijack \
                "$@"
     fi
-
     run_build ./install.py \
               --install-dir "$LEGATE_DIR" \
               --openmp \
@@ -75,7 +68,7 @@ elif [[ -d "legate/numpy" ]]; then
               --with-core "$LEGATE_DIR" \
               "$@"
 elif [[ -d "legate/pandas" ]]; then
-    if [[ -n "$GPU_ARCH" ]]; then
+    if [[ "$GPU_ARCH" != none ]]; then
         set -- --with-rmm "$CONDA_PREFIX" \
                --with-nccl "$CONDA_PREFIX" \
                --with-cudf "$CONDA_PREFIX" \

@@ -15,6 +15,8 @@ set -u
 
 if [[ "$PLATFORM" == cori ]]; then
     true
+elif [[ "$PLATFORM" == pizdaint ]]; then
+    true
 else
     echo "Error: Unexpected platform $PLATFORM in SLURM script" 1>&2
     exit 1
