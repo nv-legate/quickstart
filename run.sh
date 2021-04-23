@@ -77,6 +77,18 @@ echo "Redirecting output to $HOST_OUT_DIR"
 export CMD_OUT_DIR="$HOST_OUT_DIR"
 
 # Calculate per-rank resources
+# Note that we need to set aside some CPU cores:
+# - 1 for the CPU processor
+# - 1 for the python processor
+# - 2 for the utility processors
+# - a few more for Realm workers threads and GPU processors
+# and some memory:
+# - 1-2GB of framebuffer for the runtime and NCCL
+# - ~1GB of RAM for GASNet
+# - ~1GB of RAM for the Legion runtime
+# - 256MB of RAM for sysmem/csize (reserved for the app, non-NUMA-aware)
+# - 256MB of RAM for ib_rsize (reserved for remote DMA transfers)
+# - 256MB of RAM for ib_csize (reserved for DMA transfers to/from the GPU)
 if [[ "$PLATFORM" == summit ]]; then
     # 2 NUMA domains per node
     # 2 NICs per NUMA domain (4 NICs per node)
@@ -86,6 +98,7 @@ if [[ "$PLATFORM" == summit ]]; then
     # 3 Tesla V100 GPUs per NUMA domain (6 GPUs per node)
     # 16GB FB per GPU
     NUMAS_PER_NODE=2
+    RAM_PER_NUMA=200000
     GPUS_PER_NODE=6
     THREADS_PER_OMP=16
     FB_PER_GPU=14500
@@ -94,10 +107,11 @@ elif [[ "$PLATFORM" == cori ]]; then
     # 2 NICs per NUMA domain (4 NICs per node)
     # 20 cores per NUMA domain (40 cores per node)
     # 2-way SMT per core
-    # 384GB RAM per node
+    # 192GB per NUMA domain (384GB RAM per node)
     # 4 Tesla V100 GPUs per NUMA domain (8 GPUs per node)
     # 16GB FB per GPU
     NUMAS_PER_NODE=2
+    RAM_PER_NUMA=150000
     GPUS_PER_NODE=8
     THREADS_PER_OMP=16
     FB_PER_GPU=14500
@@ -105,10 +119,12 @@ elif [[ "$PLATFORM" == pizdaint ]]; then
     # 1 NUMA domain per node
     # 1 NIC per node
     # 12 cores per NUMA domain
-    # 64GB RAM per node
+    # 2-way SMT per core
+    # 64GB RAM per NUMA domain
     # 1 Tesla P100 GPU per node
     # 16GB FB per GPU
     NUMAS_PER_NODE=1
+    RAM_PER_NUMA=55000
     GPUS_PER_NODE=1
     THREADS_PER_OMP=8
     FB_PER_GPU=14500
@@ -121,6 +137,8 @@ else
     # Auto-detect available resources
     NUM_SOCKETS="$(lscpu | grep 'Socket(s)' | awk '{print $2}')"
     NUMAS_PER_NODE="$NUM_SOCKETS"
+    RAM_PER_NODE="$(free -m | head -2 | tail -1 | awk '{print $2}')"
+    RAM_PER_NUMA=$(( RAM_PER_NODE * 4 / 5 / NUMAS_PER_NODE ))
     GPUS_PER_NODE="$(nvidia-smi -q | grep 'Attached GPUs' | awk '{print $4}')"
     CORES_PER_SOCKET=$(lscpu | grep 'Core(s) per socket' | awk '{print $4}')
     THREADS_PER_OMP=$(( CORES_PER_SOCKET - 4 ))
@@ -138,7 +156,8 @@ NUM_GPUS=$(( GPUS_PER_NODE * $NODE_RATIO ))
 if [[ "$NODRIVER" != "1" ]]; then
     set -- --nodes "$NUM_NODES" --verbose --logdir "$CMD_OUT_DIR" "$@"
     set -- --cpus 1 --omps "$NUM_OMPS" --ompthreads "$THREADS_PER_OMP" "$@"
-    set -- --numamem 4000 --gpus "$NUM_GPUS" --fbmem "$FB_PER_GPU" "$@"
+    set -- --sysmem 256 --numamem "$RAM_PER_NUMA" "$@"
+    set -- --gpus "$NUM_GPUS" --fbmem "$FB_PER_GPU" "$@"
     if [[ "$PLATFORM" == summit ]]; then
         set -- --cores-per-node 42 --launcher jsrun "$@"
     elif [[ "$PLATFORM" == cori ]]; then
