@@ -18,16 +18,18 @@ limitations under the License.
 Legate Quickstart
 =================
 
-Legate Quickstart provides a collection of scripts to simplify building,
-installing, and running Legate libraries. Currently there are two ways to
-use Legate: building from source and using a pre-built Docker image.
+Legate Quickstart provides two ways to simplify the use of Legate: Docker images
+containing all Legate libraries, and a collection of scripts for building Legate
+libraries from source and running Legate programs with appropriate defaults for
+a number of supported clusters.
 
-Using a pre-built Docker image
-==============================
+Using a Docker image
+====================
 
-At this time we provide two versions of an image containing all Legate
-libraries, for the Volta and Ampere CUDA architectures. The images are available
-on GitHub and can be used as follows:
+The `Dockerfile` in this repository describes how to build a Docker image
+containing all Legate libraries. At this time we provide two pre-built versions
+of this image, for single-node machines containing Volta or Ampere GPUs. The
+images are available on GitHub and can be used as follows:
 
 ```
 docker pull ghcr.io/nv-legate/legate-other-volta:latest
@@ -58,32 +60,38 @@ legate --gpus 1 --fbmem 15000 /opt/legate/legate.pandas/benchmarks/micro/merge.p
 
 Invoke any script with `-h` to see more available options.
 
-# Building from source
+Note the following general requirements for using Nvidia hardware within
+containers: To use Nvidia GPUs from inside a container the host needs to
+provide a CUDA installation at least as recent as the version used in the
+image, and a GPU-aware container execution engine like
+[nvidia-docker](https://github.com/NVIDIA/nvidia-docker). To use Nvidia
+networking hardware from inside a container the host and the image must use
+the same version of MOFED.
 
-Find your platform below and follow the instructions to set up Legate. If you
-are running on a supported cluster then all the scripts will automatically
-invoke the appropriate job scheduler commands, so you don't need to create
-jobscripts yourself.
+Building from source on supported clusters
+==========================================
 
-### Base requirements
+The scripts in this repository will detect if you are running on a supported
+cluster, and automatically use the appropriate flags to build and run Legate.
+The scripts will also automatically invoke the appropriate job scheduler
+commands, so you don't need to create jobscripts yourself. Please find your
+cluster below and follow the instructions to set up Legate.
 
-* gcc 5.4+
-* GNU build tools (make, autoconf, ...)
-* CUDA 10.1+ (if running on GPUs)
-* a PMI-based launcher (e.g. mpirun, jsrun, srun) (if running multi-node)
-* a networking stack compatible with [GASNet](https://gasnet.lbl.gov) (e.g.
-  Infiniband, RoCE, Aries) (if running multi-node)
+You can use the same scripts on your local machine (see next section), in which
+case the build/run flags will be set according to the detected hardware
+resources.
 
 ### Customizing installation
 
 * `setup_conda.sh`: This script will create a new conda environment suitable for
-  running Legate applications on GPUs. Use `CUDA_VER=none` to skip GPU support.
+  using all Legate libraries on GPUs. Use `CUDA_VER=none` to skip GPU support.
   You can skip the script entirely if you prefer to install the required
   packages manually; see the `conda/???.yml` files on the individual Legate
   libraries.
 * `install_ib_ucx.sh`: This script will remove the UCX conda package and build
-  UCX from source, adding Infiniband Verbs support. You can skip this if you
-  will not be running multi-node Rapids algorithms over Infiniband.
+  UCX from source, adding Infiniband Verbs support. This script will be useful
+  if you intend to run multi-node Rapids algorithms in conjunction with Legate
+  on Infiniband-based systems.
 * `~/.bashrc`: The commands we add to this file activate the environment we set
   up for Legate runs, and must be executed on every node in a multi-node run
   before invoking the Legate executable. Note that the order of commands
@@ -92,28 +100,20 @@ jobscripts yourself.
 
 ### Working on container-based clusters
 
-* On container-based clusters typically each user will prepare an image
-  ahead of time and provide it at job submission time, to be instantiated on
+* On container-based clusters typically each user prepares an image
+  ahead of time and provides it at job submission time, to be instantiated on
   each allocated node. The `run.sh` script can handle such worflows when run
   directly on the login node, but will need to be specialized for each
   particular cluster.
-* You can use `Dockerfile` as a starting point for generating custom
-  Legate images; you may need to remove parts of this recipe if your cluster
-  does not use Nvidia GPUs or networking hardware. Pre-built images for any
-  supported container-based clusters will be available on GitHub as
-  `ghcr.io/nv-legate/legate-<platform>`, and `run.sh` will automatically use
-  the latest version.
-* All paths on the Legate command line refer to files within the image. The
-  host's filesystem is not normally accessible while running; you need to
-  explicitly mount directories inside the container (see the `MOUNTS` argument
-  of `run.sh`).
-* When porting Legate to a new container-based cluster note the following: In
-  order to use Nvidia GPUs from inside a container the host needs to
-  provide a CUDA installation at least as recent as the version used in the
-  image, and a GPU-aware container execution engine like
-  [nvidia-docker](https://github.com/NVIDIA/nvidia-docker). To use Nvidia
-  networking hardware from inside a container the host and the image must use
-  the same version of MOFED.
+* Pre-built images for any supported container-based clusters will be available
+  on GitHub as `ghcr.io/nv-legate/legate-<platform>`, and `run.sh` will
+  automatically use the latest version.
+* Even though you are meant to invoke the `run.sh` script from the login node, 
+  any paths on the command line will refer to files within the image, not the
+  filesystem on the host cluster. If you wish to use files from a directory on
+  the host filesystem you need to explicitly mount that directory inside the
+  container (see the `MOUNTS` argument of `run.sh`).
+* See the general advice above on using the Legate Docker images.
 
 Local machine
 =============
@@ -206,7 +206,6 @@ Log out and back in, then run:
 CONDA_ROOT=~/.conda <quickstart-dir>/setup_conda.sh
 source ~/.conda/etc/profile.d/conda.sh
 conda activate legate
-<quickstart-dir>/install_ib_ucx.sh
 cd /path/to/legate.core
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
 ```
