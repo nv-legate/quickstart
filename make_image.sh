@@ -51,10 +51,10 @@ function git_pull {
     git pull --ff-only
     cd ..
 }
-git_pull git@github.com:nv-legate legate.core master
-git_pull git@github.com:nv-legate legate.hello main
-git_pull git@github.com:nv-legate legate.numpy master
-git_pull git@github.com:nv-legate legate.pandas master
+git_pull https://github.com/nv-legate legate.core master
+git_pull https://github.com/nv-legate legate.hello main
+git_pull https://github.com/nv-legate legate.numpy master
+git_pull https://github.com/nv-legate legate.pandas master
 
 # Build and push image
 IMAGE=ghcr.io/nv-legate/legate-"$PLATFORM"-"$GPU_ARCH"
