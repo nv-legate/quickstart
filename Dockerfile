@@ -62,12 +62,10 @@ RUN apt-get update \
     libnl-3-200 libnl-route-3-200 libnl-3-dev libnl-route-3-dev \
     `# requirements for UCX build` \
     libtool libnuma-dev \
-    `# ssh client, required to initialize MPI on kubernetes-based clusters` \
-    openssh-client \
   ; fi \
  && apt-get install -y --no-install-recommends \
     `# useful utilities` \
-    nsight-systems-cli numactl \
+    nsight-systems-cli numactl gdb \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
