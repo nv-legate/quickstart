@@ -16,7 +16,8 @@
 # Parent image
 ARG CUDA_VER
 ARG LINUX_VER
-FROM gpuci/miniconda-cuda:${CUDA_VER}-devel-${LINUX_VER}
+ARG PYTHON_VER
+FROM rapidsai/rapidsai-core-dev:0.19-cuda${CUDA_VER}-devel-${LINUX_VER}-py${PYTHON_VER}
 
 # Build arguments
 ARG CUDA_VER
@@ -33,6 +34,11 @@ ARG GPU_ARCH
 ENV GPU_ARCH=${GPU_ARCH}
 
 # Set compile-time & runtime paths
+# The order of directories is important: legate > conda > MOFED > distro
+# `source activate` will append conda dirs to PATH automaticaly
+ENV CPATH="/opt/conda/envs/rapids/include:${CPATH}"
+ENV LIBRARY_PATH="/opt/conda/envs/rapids/lib:${LIBRARY_PATH}"
+ENV LD_LIBRARY_PATH="/opt/conda/envs/rapids/lib:${LD_LIBRARY_PATH}"
 ENV LEGATE_DIR=/opt/legate/install
 ENV CUDA_HOME=/usr/local/cuda
 
@@ -93,23 +99,16 @@ RUN if [[ "$PLATFORM" != other ]]; then \
  && cp /opt/legate/quickstart/ibdev2netdev /usr/bin \
   ; fi
 
-# Setup conda environment
-RUN export CONDA_ROOT=/opt/conda \
- && /opt/legate/quickstart/setup_conda.sh \
- && source activate legate \
- && conda clean -afy \
- && sed -i 's/conda activate base/conda activate legate/g' ~/.bashrc
-
 # Build UCX with Verbs support
 RUN if [[ "$PLATFORM" != other ]]; then \
-    source activate legate \
+    source activate rapids \
  && export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${CUDA_HOME}/lib64/stubs \
  && /opt/legate/quickstart/install_ib_ucx.sh \
   ; fi
 
 # Build OpenMPI from source, to make sure it matches our version of UCX.
 RUN if [[ "$PLATFORM" != other ]]; then
-    source activate legate \
+    source activate rapids \
  && export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${CUDA_HOME}/lib64/stubs \
  && cd /tmp \
  && curl -fSsL https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.1.tar.gz | tar -xz \
@@ -131,20 +130,20 @@ RUN if [[ "$PLATFORM" != other ]]; then
 
 # Build GASNet, Legion and legate.core
 COPY legate.core /opt/legate/legate.core
-RUN source activate legate \
+RUN source activate rapids \
  && cd /opt/legate/legate.core \
  && export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${CUDA_HOME}/lib64/stubs \
  && bash -x /opt/legate/quickstart/build.sh
 
 # Build legate.hello
 COPY legate.hello /opt/legate/legate.hello
-RUN source activate legate \
+RUN source activate rapids \
  && cd /opt/legate/legate.hello \
  && bash -x /opt/legate/quickstart/build.sh
 
 # Build legate.pandas
 COPY legate.pandas /opt/legate/legate.pandas
-RUN source activate legate \
+RUN source activate rapids \
  && cd /opt/legate/legate.pandas \
  && bash -x /opt/legate/quickstart/build.sh
 
@@ -153,7 +152,7 @@ RUN chmod og+w /opt/legate/legate.pandas/tests/io
 
 # Build legate.numpy
 COPY legate.numpy /opt/legate/legate.numpy
-RUN source activate legate \
+RUN source activate rapids \
  && cd /opt/legate/legate.numpy \
  && bash -x /opt/legate/quickstart/build.sh
 

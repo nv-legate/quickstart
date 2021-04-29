@@ -16,7 +16,7 @@
 #
 
 source /opt/conda/etc/profile.d/conda.sh
-conda activate legate
+conda activate rapids
 if [[ -e /opt/mofed-ver ]]; then
     IMAGE_MOFED_VER="$(cat /opt/mofed-ver)"
     if [[ ! -e /sys/module/mlx5_core/version ]]; then
