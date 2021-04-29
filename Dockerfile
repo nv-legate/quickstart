@@ -54,9 +54,14 @@ RUN export LINUX_VER_URL="$(echo "$LINUX_VER" | tr '.' '')" \
  && curl -fsSL https://developer.download.nvidia.com/devtools/repos/${LINUX_VER_URL}/amd64/nvidia.pub | apt-key add - \
  && echo "deb https://developer.download.nvidia.com/devtools/repos/${LINUX_VER_URL}/amd64/ /" >> /etc/apt/sources.list.d/nsys.list
 
+# Copy quickstart to image
+COPY quickstart /opt/legate/quickstart
+
 # Install apt packages
-RUN apt-get update \
- && if [[ "$PLATFORM" != generic ]]; then \
+RUN source /opt/legate/quickstart/common.sh \
+ && set_build_vars \
+ && apt-get update \
+ && if [[ "$CONDUIT" == ibv || "$CONDUIT" == ucx ]]; then \
     apt-get install -y --no-install-recommends \
     `# requirements for MOFED packages` \
     libnl-3-200 libnl-route-3-200 libnl-3-dev libnl-route-3-dev \
@@ -69,12 +74,10 @@ RUN apt-get update \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
-# Copy quickstart to image
-COPY quickstart /opt/legate/quickstart
-
 # Install Verbs & RDMA-CM from MOFED
-RUN if [[ "$PLATFORM" != generic ]]; then \
-    source /opt/legate/quickstart/common.sh \
+RUN source /opt/legate/quickstart/common.sh \
+ && set_build_vars \
+ && if [[ "$CONDUIT" == ibv || "$CONDUIT" == ucx ]]; then \
  && set_mofed_vars \
  && export MOFED_ID=MLNX_OFED_LINUX-${MOFED_VER_LONG}-${LINUX_VER}-x86_64 \
  && cd /tmp \
@@ -98,14 +101,18 @@ RUN if [[ "$PLATFORM" != generic ]]; then \
   ; fi
 
 # Build UCX with Verbs support
-RUN if [[ "$PLATFORM" != generic ]]; then \
+RUN source /opt/legate/quickstart/common.sh \
+ && set_build_vars \
+ && if [[ "$CONDUIT" == ibv || "$CONDUIT" == ucx ]]; then \
     source activate rapids \
  && export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${CUDA_HOME}/lib64/stubs \
  && /opt/legate/quickstart/install_ib_ucx.sh \
   ; fi
 
 # Build OpenMPI from source, to make sure it matches our version of UCX.
-RUN if [[ "$PLATFORM" != generic ]]; then
+RUN source /opt/legate/quickstart/common.sh \
+ && set_build_vars \
+ && if [[ "$CONDUIT" == ibv || "$CONDUIT" == ucx ]]; then \
     source activate rapids \
  && export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${CUDA_HOME}/lib64/stubs \
  && cd /tmp \
