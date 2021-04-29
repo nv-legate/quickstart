@@ -56,7 +56,7 @@ RUN export LINUX_VER_URL="$(echo "$LINUX_VER" | tr '.' '')" \
 
 # Install apt packages
 RUN apt-get update \
- && if [[ "$PLATFORM" != other ]]; then \
+ && if [[ "$PLATFORM" != generic ]]; then \
     apt-get install -y --no-install-recommends \
     `# requirements for MOFED packages` \
     libnl-3-200 libnl-route-3-200 libnl-3-dev libnl-route-3-dev \
@@ -75,7 +75,7 @@ RUN apt-get update \
 COPY quickstart /opt/legate/quickstart
 
 # Install Verbs & RDMA-CM from MOFED
-RUN if [[ "$PLATFORM" != other ]]; then \
+RUN if [[ "$PLATFORM" != generic ]]; then \
     source /opt/legate/quickstart/common.sh \
  && set_mofed_vars \
  && export MOFED_ID=MLNX_OFED_LINUX-${MOFED_VER_LONG}-${LINUX_VER}-x86_64 \
@@ -100,14 +100,14 @@ RUN if [[ "$PLATFORM" != other ]]; then \
   ; fi
 
 # Build UCX with Verbs support
-RUN if [[ "$PLATFORM" != other ]]; then \
+RUN if [[ "$PLATFORM" != generic ]]; then \
     source activate rapids \
  && export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${CUDA_HOME}/lib64/stubs \
  && /opt/legate/quickstart/install_ib_ucx.sh \
   ; fi
 
 # Build OpenMPI from source, to make sure it matches our version of UCX.
-RUN if [[ "$PLATFORM" != other ]]; then
+RUN if [[ "$PLATFORM" != generic ]]; then
     source activate rapids \
  && export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${CUDA_HOME}/lib64/stubs \
  && cd /tmp \

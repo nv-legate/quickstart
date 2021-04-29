@@ -36,7 +36,7 @@ export CUDA_VER="${CUDA_VER:-11.0}"
 export DEBUG="${DEBUG:-0}"
 export GPU_ARCH="${GPU_ARCH:-auto}"
 export LINUX_VER="${LINUX_VER:-ubuntu18.04}"
-export PLATFORM="${PLATFORM:-other}"
+export PLATFORM="${PLATFORM:-generic}"
 export PYTHON_VER="${PYTHON_VER:-3.8}"
 
 # Pull latest versions of legate libraries and Legion
@@ -54,9 +54,16 @@ git_pull https://github.com/nv-legate legate.hello main
 git_pull https://github.com/nv-legate legate.numpy master
 git_pull https://github.com/nv-legate legate.pandas master
 
-# Build and push image
-IMAGE=ghcr.io/nv-legate/legate-"$PLATFORM"-"$GPU_ARCH"
+# Prepare image designation
+REPO=ghcr.io/nv-legate
+if [[ "$PLATFORM" == generic ]]; then
+    IMAGE="$REPO"/legate-generic-"$GPU_ARCH"
+else
+    IMAGE="$REPO"/legate-"$PLATFORM"
+fi
 TAG="$(date +%Y-%m-%d-%H%M%S)"
+
+# Build and push image
 DOCKER_BUILDKIT=1 docker build -t "$IMAGE:$TAG" -t "$IMAGE:latest" \
     --build-arg CUDA_VER="$CUDA_VER" \
     --build-arg DEBUG="$DEBUG" \

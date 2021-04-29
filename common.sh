@@ -23,7 +23,7 @@ function detect_platform {
     elif [[ "$(uname -n)" == *"daint"* ]]; then
         export PLATFORM=pizdaint
     else
-        export PLATFORM=other
+        export PLATFORM=generic
     fi
 }
 

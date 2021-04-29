@@ -204,7 +204,7 @@ else
 fi
 
 # Wait for batch job to start
-if [[ "$INTERACTIVE" != "1" && "$NOWAIT" != "1" && "$PLATFORM" != other ]]; then
+if [[ "$INTERACTIVE" != "1" && "$NOWAIT" != "1" && "$PLATFORM" != generic ]]; then
     echo "Waiting for job to start & piping output"
     echo "Press Ctrl-C anytime to exit (job will still run)"
     while [[ ! -f "$HOST_OUT_DIR/out.txt" ]]; do sleep 1; done
