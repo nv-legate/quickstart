@@ -161,7 +161,7 @@ RUN chmod og+w /opt/legate/legate.pandas/tests/io
 COPY legate.numpy /opt/legate/legate.numpy
 RUN source activate legate \
  && cd /opt/legate/legate.numpy \
- && /opt/legate/quickstart/build.sh
+ && bash -x /opt/legate/quickstart/build.sh
 
 # Create a new user
 RUN useradd -rm -d /home/legate-user -s /bin/bash -g root -G sudo -u 1001 legate-user
