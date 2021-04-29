@@ -19,7 +19,6 @@
 # load the conda commands in login shells.
 set -euo pipefail
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-source "$SCRIPT_DIR/common.sh"
 
 # Print usage if requested
 if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
@@ -29,14 +28,12 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "  CONDA_ROOT : where to install conda (if not already installed)"
     echo "  CUDA_VER : CUDA runtime version to install from conda"
     echo "             (default: match system version)"
-    echo "  PLATFORM : what machine to build for (default: auto-detected)"
     echo "  PYTHON_VER : Python version to use (default: 3.8)"
     exit
 fi
 
 # Read arguments
 export CONDA_ENV="${CONDA_ENV:-legate}"
-detect_platform && set_build_vars
 export PYTHON_VER="${PYTHON_VER:-3.8}"
 if [[ -z "${CUDA_VER+x}" ]]; then
     if command -v nvcc &> /dev/null; then

@@ -24,9 +24,10 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "  CUDA_VER : CUDA version to use (default: 11.2)"
     echo "  DEBUG : compile with debug symbols and w/o optimizations (default: 0)"
     echo "  GPU_ARCH : what CUDA architecture to build for (default: inferred based"
-    echo "             on target platform or local CUDA installation)"
+    echo "             on target platform or local machine hardware)"
     echo "  LINUX_VER : what distro to base the image on (default: ubuntu20.04)"
-    echo "  PLATFORM : what machine to build for (default: generic single-node machine)"
+    echo "  PLATFORM : what machine to build for (default: generic single-node"
+    echo "             machine with GPUs)"
     echo "  PYTHON_VER : Python version to use (default: 3.8)"
     exit
 fi
