@@ -26,7 +26,6 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "  GPU_ARCH : what CUDA architecture to build for (default: inferred based"
     echo "             on target platform or local CUDA installation)"
     echo "  LINUX_VER : what distro to base the image on (default: ubuntu18.04)"
-    echo "  OMPI_VER : OpenMPI version to use (default: 4.0.5)"
     echo "  PLATFORM : what machine to build for (default: generic single-node machine)"
     echo "  PYTHON_VER : Python version to use (default: 3.8)"
     exit
@@ -37,7 +36,6 @@ export CUDA_VER="${CUDA_VER:-11.0}"
 export DEBUG="${DEBUG:-0}"
 export GPU_ARCH="${GPU_ARCH:-auto}"
 export LINUX_VER="${LINUX_VER:-ubuntu18.04}"
-export OMPI_VER="${OMPI_VER:-4.0.5}"
 export PLATFORM="${PLATFORM:-other}"
 export PYTHON_VER="${PYTHON_VER:-3.8}"
 
@@ -64,7 +62,6 @@ DOCKER_BUILDKIT=1 docker build -t "$IMAGE:$TAG" -t "$IMAGE:latest" \
     --build-arg DEBUG="$DEBUG" \
     --build-arg GPU_ARCH="$GPU_ARCH" \
     --build-arg LINUX_VER="$LINUX_VER" \
-    --build-arg OMPI_VER="$OMPI_VER" \
     --build-arg PLATFORM="$PLATFORM" \
     --build-arg PYTHON_VER="$PYTHON_VER" \
     "$@" .

@@ -25,8 +25,6 @@ ARG DEBUG
 ENV DEBUG=${DEBUG}
 ARG LINUX_VER
 ENV LINUX_VER=${LINUX_VER}
-ARG OMPI_VER
-ENV OMPI_VER=${OMPI_VER}
 ARG PLATFORM
 ENV PLATFORM=${PLATFORM}
 ARG PYTHON_VER
@@ -110,16 +108,12 @@ RUN if [[ "$PLATFORM" != other ]]; then \
   ; fi
 
 # Build OpenMPI from source, to make sure it matches our version of UCX.
-# We also need to make sure MPI binaries and all refeferenced libraries are in
-# /usr/local, otherwise the NGC kubernetes launcher won't find them when
-# starting the MPI daemon.
 RUN if [[ "$PLATFORM" != other ]]; then
     source activate legate \
- && export OMPI_VER_URL="$(echo "$OMPI_VER" | cut -c1-3)" \
  && export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${CUDA_HOME}/lib64/stubs \
  && cd /tmp \
- && curl -fSsL "https://download.open-mpi.org/release/open-mpi/v${OMPI_VER_URL}/openmpi-${OMPI_VER}.tar.gz" | tar -xz \
- && cd openmpi-${OMPI_VER} \
+ && curl -fSsL https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.1.tar.gz | tar -xz \
+ && cd openmpi-* \
  && mkdir build \
  && cd build \
  && ../configure \
@@ -131,7 +125,7 @@ RUN if [[ "$PLATFORM" != other ]]; then
     --with-libevent=internal \
  && make -j install \
  && cd /tmp \
- && rm -rf openmpi-${OMPI_VER} \
+ && rm -rf openmpi-* \
  && ldconfig \
   ; fi
 
