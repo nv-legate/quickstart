@@ -34,16 +34,17 @@ function set_build_vars {
     # Set base build variables according to target platform
     if [[ "$PLATFORM" == summit ]]; then
         export CONDUIT=ibv
-        export NUM_HCAS=4
+        export NUM_NICS=4
         export CUDA_HOME="$CUDA_DIR"
         export GPU_ARCH=volta
     elif [[ "$PLATFORM" == cori ]]; then
         export CONDUIT=ibv
-        export NUM_HCAS=4
+        export NUM_NICS=4
         # CUDA_HOME is already set (by module)
         export GPU_ARCH=volta
     elif [[ "$PLATFORM" == pizdaint ]]; then
         export CONDUIT=aries
+        export NUM_NICS=1
         # CUDA_HOME is already set (by module)
         export GPU_ARCH=pascal
     else
