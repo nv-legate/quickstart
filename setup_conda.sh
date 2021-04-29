@@ -46,32 +46,6 @@ if [[ -z "${CUDA_VER+x}" ]]; then
     fi
 fi
 
-# Check for Rapids compatibility, if building with GPU support
-if [[ "$CUDA_VER" != "none" ]]; then
-    case "$CUDA_VER" in
-        10.1|10.2|11.0)
-            ;;
-        11.1|11.2)
-            echo "Warning: CUDA version $CUDA_VER is not yet supported by Rapids, pulling version 11.0" 1>&2
-            echo "conda packages instead. This may result in mixing system and conda packages compiled" 1>&2
-            echo "against potentially incompatible CUDA versions." 1>&2
-            export CUDA_VER=11.0
-            ;;
-        *)
-            echo "Error: CUDA version $CUDA_VER is not supported by Rapids" 1>&2
-            exit 1
-            ;;
-    esac
-    case "$PYTHON_VER" in
-        3.7|3.8)
-            ;;
-        *)
-            echo "Error: Python version $PYTHON_VER is not supported by Rapids" 1>&2
-            exit 1
-            ;;
-    esac
-fi
-
 # Install conda
 if command -v conda &> /dev/null; then
     echo "Conda already installed, skipping conda installation"
