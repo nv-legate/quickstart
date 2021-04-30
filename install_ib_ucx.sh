@@ -25,8 +25,6 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "Arguments read from the environment:"
     echo "  ACCOUNT : account/group/project to submit build job under (if applicable)"
     echo "  DEBUG : compile with debug symbols and w/o optimizations (default: 0)"
-    echo "  GPU_ARCH : what CUDA architecture to build for (default: inferred based"
-    echo "             on target platform or local machine hardware)"
     echo "  PLATFORM : what machine to build for (default: auto-detected)"
     exit
 fi

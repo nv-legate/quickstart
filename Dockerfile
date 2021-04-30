@@ -30,8 +30,6 @@ ARG PLATFORM
 ENV PLATFORM=${PLATFORM}
 ARG PYTHON_VER
 ENV PYTHON_VER=${PYTHON_VER}
-ARG GPU_ARCH
-ENV GPU_ARCH=${GPU_ARCH}
 
 # Set compile-time & runtime paths
 # The order of directories is important: legate > conda > MOFED > distro

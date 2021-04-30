@@ -23,7 +23,7 @@ function detect_platform {
     elif [[ "$(uname -n)" == *"daint"* ]]; then
         export PLATFORM=pizdaint
     else
-        export PLATFORM=generic
+        export PLATFORM=other
     fi
 }
 
@@ -47,16 +47,17 @@ function set_build_vars {
         export NUM_NICS=1
         # CUDA_HOME is already set (by module)
         export GPU_ARCH=pascal
+    elif [[ "$PLATFORM" == generic-* ]]; then
+        export CONDUIT=none
+        export GPU_ARCH="${PLATFORM#generic-}"
     else
+        if grep -q docker /proc/self/cgroup; then
+            echo "Error: Detected a docker build for an unknown target platform" 1>&2
+            exit 1
+        fi
         echo "Did not detect a supported cluster, assuming local-node build"
         export CONDUIT=none
-        if [[ -z "${CUDA_HOME:-x}" ]]; then
-            if command -v nvcc &> /dev/null; then
-                NVCC_PATH="$(which nvcc | head -1)"
-                export CUDA_HOME="${NVCC_PATH%/bin/nvcc}"
-            fi
-        fi
-        if [[ -z "${GPU_ARCH:-x}" || "$GPU_ARCH" == auto ]]; then
+        if [[ -z "${GPU_ARCH:-x}" ]]; then
             if command -v nvcc &> /dev/null; then
                 TEST_SRC="$(mktemp --suffix .cc)"
                 echo "
@@ -89,6 +90,12 @@ function set_build_vars {
             else
                 export GPU_ARCH=none
             fi
+        fi
+    fi
+    if [[ -z "${CUDA_HOME:-x}" ]]; then
+        if command -v nvcc &> /dev/null; then
+            NVCC_PATH="$(which nvcc | head -1)"
+            export CUDA_HOME="${NVCC_PATH%/bin/nvcc}"
         fi
     fi
 }

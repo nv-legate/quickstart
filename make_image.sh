@@ -23,11 +23,9 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "Arguments read from the environment:"
     echo "  CUDA_VER : CUDA version to use (default: 11.2)"
     echo "  DEBUG : compile with debug symbols and w/o optimizations (default: 0)"
-    echo "  GPU_ARCH : what CUDA architecture to build for (default: inferred based"
-    echo "             on target platform or local machine hardware)"
     echo "  LINUX_VER : what distro to base the image on (default: ubuntu20.04)"
     echo "  PLATFORM : what machine to build for (default: generic single-node"
-    echo "             machine with GPUs)"
+    echo "             machine with volta GPUs)"
     echo "  PYTHON_VER : Python version to use (default: 3.8)"
     exit
 fi
@@ -35,9 +33,8 @@ fi
 # Read arguments
 export CUDA_VER="${CUDA_VER:-11.2}"
 export DEBUG="${DEBUG:-0}"
-export GPU_ARCH="${GPU_ARCH:-auto}"
 export LINUX_VER="${LINUX_VER:-ubuntu20.04}"
-export PLATFORM="${PLATFORM:-generic}"
+export PLATFORM="${PLATFORM:-generic-volta}"
 export PYTHON_VER="${PYTHON_VER:-3.8}"
 
 # Pull latest versions of legate libraries and Legion
@@ -57,18 +54,13 @@ git_pull https://github.com/nv-legate legate.pandas master
 
 # Prepare image designation
 REPO=ghcr.io/nv-legate
-if [[ "$PLATFORM" == generic ]]; then
-    IMAGE="$REPO"/legate-generic-"$GPU_ARCH"
-else
-    IMAGE="$REPO"/legate-"$PLATFORM"
-fi
+IMAGE="$REPO"/legate-"$PLATFORM"
 TAG="$(date +%Y-%m-%d-%H%M%S)"
 
 # Build and push image
 DOCKER_BUILDKIT=1 docker build -t "$IMAGE:$TAG" -t "$IMAGE:latest" \
     --build-arg CUDA_VER="$CUDA_VER" \
     --build-arg DEBUG="$DEBUG" \
-    --build-arg GPU_ARCH="$GPU_ARCH" \
     --build-arg LINUX_VER="$LINUX_VER" \
     --build-arg PLATFORM="$PLATFORM" \
     --build-arg PYTHON_VER="$PYTHON_VER" \
