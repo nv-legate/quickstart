@@ -29,8 +29,6 @@ if [[ $# -lt 2 || ! "$1" =~ ^(1/)?[0-9]+$ ]]; then
     echo "           see the Legion README for options accepted by Legion"
     echo "Arguments read from the environment:"
     echo "  ACCOUNT : account/group/project to submit the job under (if applicable)"
-    echo "  ENTRYPOINT : entrypoint script to use (for container-based clusters)"
-    echo "               (default : /opt/legate/quickstart/entrypoint.sh)"
     echo "  IMAGE : which image to use (for container-based clusters)"
     echo "          (default : ghcr.io/nv-legate/legate-\$PLATFORM:latest)"
     echo "  INTERACTIVE : submit an interactive rather than a batch job (defaut: 0)"
@@ -57,10 +55,22 @@ else
 fi
 shift
 detect_platform
-export ENTRYPOINT="${ENTRYPOINT:-/opt/legate/quickstart/entrypoint.sh}"
+if [[ "$PLATFORM" == summit ]]; then
+    CONTAINER_BASED=0
+elif [[ "$PLATFORM" == cori ]]; then
+    CONTAINER_BASED=0
+elif [[ "$PLATFORM" == pizdaint ]]; then
+    CONTAINER_BASED=0
+else
+    CONTAINER_BASED=0
+fi
 export IMAGE="${IMAGE:-ghcr.io/nv-legate/legate-$PLATFORM:latest}"
 export INTERACTIVE="${INTERACTIVE:-0}"
-true "$LEGATE_DIR"
+if [[ "$CONTAINER_BASED" == 1 ]]; then
+    export LEGATE_DIR=/opt/legate/install
+else
+    true "$LEGATE_DIR"
+fi
 export MOUNTS="${MOUNTS:-}"
 export NODRIVER="${NODRIVER:-0}"
 export NOWAIT="${NOWAIT:-0}"
@@ -74,7 +84,11 @@ mkdir -p "$SCRATCH/$DATE"
 export HOST_OUT_DIR="$SCRATCH/$DATE/$TIME"
 mkdir "$HOST_OUT_DIR"
 echo "Redirecting output to $HOST_OUT_DIR"
-export CMD_OUT_DIR="$HOST_OUT_DIR"
+if [[ "$CONTAINER_BASED" == 1 ]]; then
+    export CMD_OUT_DIR=/result
+else
+    export CMD_OUT_DIR="$HOST_OUT_DIR"
+fi
 
 # Calculate per-rank resources
 # Note that we need to set aside some CPU cores:

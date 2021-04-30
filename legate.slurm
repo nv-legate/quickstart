@@ -21,7 +21,6 @@ set -u
 #   CMD_OUT_DIR : output directory to use on the commands
 #     Will be mounted appropriately on container-based clusters, to match
 #     $HOST_OUT_DIR. Ignored on bare-metal clusters.
-#   ENTRYPOINT : entrypoint script to use (for container-based clusters)
 #   IMAGE : which image to use (for container-based clusters)
 #   INTERACTIVE : submit an interactive rather than a batch job
 #   HOST_OUT_DIR : output directory on the host filesystem
