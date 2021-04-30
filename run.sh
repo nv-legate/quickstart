@@ -130,6 +130,7 @@ elif [[ "$PLATFORM" == pizdaint ]]; then
     FB_PER_GPU=14500
 else
     echo "Did not detect a supported cluster, assuming local-node run."
+    export NOWAIT=1
     if [[ "$NUM_NODES" != 1 ]]; then
         echo "Error: Only 1 node is available, but $NUM_NODES were requested" 1>&2
         exit 1
@@ -204,7 +205,7 @@ else
 fi
 
 # Wait for batch job to start
-if [[ "$INTERACTIVE" != "1" && "$NOWAIT" != "1" && "$PLATFORM" != other ]]; then
+if [[ "$INTERACTIVE" != "1" && "$NOWAIT" != "1" ]]; then
     echo "Waiting for job to start & piping output"
     echo "Press Ctrl-C anytime to exit (job will still run)"
     while [[ ! -f "$HOST_OUT_DIR/out.txt" ]]; do sleep 1; done

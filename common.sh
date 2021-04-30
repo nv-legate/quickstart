@@ -34,28 +34,30 @@ function set_build_vars {
     # Set base build variables according to target platform
     if [[ "$PLATFORM" == summit ]]; then
         export CONDUIT=ibv
-        export NUM_HCAS=4
+        export NUM_NICS=4
         export CUDA_HOME="$CUDA_DIR"
         export GPU_ARCH=volta
     elif [[ "$PLATFORM" == cori ]]; then
         export CONDUIT=ibv
-        export NUM_HCAS=4
+        export NUM_NICS=4
         # CUDA_HOME is already set (by module)
         export GPU_ARCH=volta
     elif [[ "$PLATFORM" == pizdaint ]]; then
         export CONDUIT=aries
+        export NUM_NICS=1
         # CUDA_HOME is already set (by module)
         export GPU_ARCH=pascal
+    elif [[ "$PLATFORM" == generic-* ]]; then
+        export CONDUIT=none
+        export GPU_ARCH="${PLATFORM#generic-}"
     else
+        if grep -q docker /proc/self/cgroup; then
+            echo "Error: Detected a docker build for an unknown target platform" 1>&2
+            exit 1
+        fi
         echo "Did not detect a supported cluster, assuming local-node build"
         export CONDUIT=none
-        if [[ -z "${CUDA_HOME:-x}" ]]; then
-            if command -v nvcc &> /dev/null; then
-                NVCC_PATH="$(which nvcc | head -1)"
-                export CUDA_HOME="${NVCC_PATH%/bin/nvcc}"
-            fi
-        fi
-        if [[ -z "${GPU_ARCH:-x}" || "$GPU_ARCH" == auto ]]; then
+        if [[ -z "${GPU_ARCH:-x}" ]]; then
             if command -v nvcc &> /dev/null; then
                 TEST_SRC="$(mktemp --suffix .cc)"
                 echo "
@@ -71,7 +73,7 @@ function set_build_vars {
                 " > "$TEST_SRC"
                 TEST_EXE="$(mktemp)"
                 nvcc -o "$TEST_EXE" "$TEST_SRC"
-                export GPU_ARCH_NUM="$( "$TEST_EXE" )"
+                GPU_ARCH_NUM="$( "$TEST_EXE" )"
                 rm "$TEST_EXE" "$TEST_SRC"
                 case "$GPU_ARCH_NUM" in
                     20) export GPU_ARCH=fermi   ;;
@@ -90,22 +92,21 @@ function set_build_vars {
             fi
         fi
     fi
-    # Fill other info using base build variables
-    case "$GPU_ARCH" in
-        fermi)   export GPU_ARCH_NUM=20 ;;
-        kepler)  export GPU_ARCH_NUM=30 ;;
-        k20)     export GPU_ARCH_NUM=35 ;;
-        k80)     export GPU_ARCH_NUM=37 ;;
-        maxwell) export GPU_ARCH_NUM=52 ;;
-        pascal)  export GPU_ARCH_NUM=60 ;;
-        volta)   export GPU_ARCH_NUM=70 ;;
-        turing)  export GPU_ARCH_NUM=75 ;;
-        ampere)  export GPU_ARCH_NUM=80 ;;
-        *) echo "Error: Unsupported GPU architecture $GPU_ARCH" 1>&2; exit 1 ;;
-    esac
+    if [[ -z "${CUDA_HOME:-x}" ]]; then
+        if command -v nvcc &> /dev/null; then
+            NVCC_PATH="$(which nvcc | head -1)"
+            export CUDA_HOME="${NVCC_PATH%/bin/nvcc}"
+        fi
+    fi
 }
 
 function set_mofed_vars {
+    if [[ -n "${MOFED_VER+x}" ]]; then
+        true
+    else
+        echo "Error: Unknown MOFED version for platform $PLATFORM" 1>&2
+        exit 1
+    fi
     # Fill other info based on MOFED version
     case "$MOFED_VER" in
         4.5-1.0.1)   export MOFED_VER_LONG=4.5-1.0.1.0 ;;

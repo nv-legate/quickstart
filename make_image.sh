@@ -15,30 +15,26 @@
 # limitations under the License.
 #
 
-set -euox pipefail
+set -euo pipefail
 
 # Print usage if requested
 if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "Usage: $(basename "${BASH_SOURCE[0]}") [extra docker-build flags]"
     echo "Arguments read from the environment:"
-    echo "  CUDA_VER : CUDA version to use (default: 11.0)"
+    echo "  CUDA_VER : CUDA version to use (default: 11.2)"
     echo "  DEBUG : compile with debug symbols and w/o optimizations (default: 0)"
-    echo "  GPU_ARCH : what CUDA architecture to build for (default: inferred based"
-    echo "             on target platform or local CUDA installation)"
-    echo "  LINUX_VER : what distro to base the image on (default: ubuntu18.04)"
-    echo "  OMPI_VER : OpenMPI version to use (default: 4.0.5)"
-    echo "  PLATFORM : what machine to build for (default: generic single-node machine)"
+    echo "  LINUX_VER : what distro to base the image on (default: ubuntu20.04)"
+    echo "  PLATFORM : what machine to build for (default: generic single-node"
+    echo "             machine with volta GPUs)"
     echo "  PYTHON_VER : Python version to use (default: 3.8)"
     exit
 fi
 
 # Read arguments
-export CUDA_VER="${CUDA_VER:-11.0}"
+export CUDA_VER="${CUDA_VER:-11.2}"
 export DEBUG="${DEBUG:-0}"
-export GPU_ARCH="${GPU_ARCH:-auto}"
-export LINUX_VER="${LINUX_VER:-ubuntu18.04}"
-export OMPI_VER="${OMPI_VER:-4.0.5}"
-export PLATFORM="${PLATFORM:-other}"
+export LINUX_VER="${LINUX_VER:-ubuntu20.04}"
+export PLATFORM="${PLATFORM:-generic-volta}"
 export PYTHON_VER="${PYTHON_VER:-3.8}"
 
 # Pull latest versions of legate libraries and Legion
@@ -56,15 +52,16 @@ git_pull https://github.com/nv-legate legate.hello main
 git_pull https://github.com/nv-legate legate.numpy master
 git_pull https://github.com/nv-legate legate.pandas master
 
-# Build and push image
-IMAGE=ghcr.io/nv-legate/legate-"$PLATFORM"-"$GPU_ARCH"
+# Prepare image designation
+REPO=ghcr.io/nv-legate
+IMAGE="$REPO"/legate-"$PLATFORM"
 TAG="$(date +%Y-%m-%d-%H%M%S)"
+
+# Build and push image
 DOCKER_BUILDKIT=1 docker build -t "$IMAGE:$TAG" -t "$IMAGE:latest" \
     --build-arg CUDA_VER="$CUDA_VER" \
     --build-arg DEBUG="$DEBUG" \
-    --build-arg GPU_ARCH="$GPU_ARCH" \
     --build-arg LINUX_VER="$LINUX_VER" \
-    --build-arg OMPI_VER="$OMPI_VER" \
     --build-arg PLATFORM="$PLATFORM" \
     --build-arg PYTHON_VER="$PYTHON_VER" \
     "$@" .

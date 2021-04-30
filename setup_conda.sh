@@ -19,7 +19,6 @@
 # load the conda commands in login shells.
 set -euo pipefail
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-source "$SCRIPT_DIR/common.sh"
 
 # Print usage if requested
 if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
@@ -29,14 +28,12 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "  CONDA_ROOT : where to install conda (if not already installed)"
     echo "  CUDA_VER : CUDA runtime version to install from conda"
     echo "             (default: match system version)"
-    echo "  PLATFORM : what machine to build for (default: auto-detected)"
     echo "  PYTHON_VER : Python version to use (default: 3.8)"
     exit
 fi
 
 # Read arguments
 export CONDA_ENV="${CONDA_ENV:-legate}"
-detect_platform && set_build_vars
 export PYTHON_VER="${PYTHON_VER:-3.8}"
 if [[ -z "${CUDA_VER+x}" ]]; then
     if command -v nvcc &> /dev/null; then
@@ -44,32 +41,6 @@ if [[ -z "${CUDA_VER+x}" ]]; then
     else
         export CUDA_VER=none
     fi
-fi
-
-# Check for Rapids compatibility, if building with GPU support
-if [[ "$CUDA_VER" != "none" ]]; then
-    case "$CUDA_VER" in
-        10.1|10.2|11.0)
-            ;;
-        11.1|11.2)
-            echo "Warning: CUDA version $CUDA_VER is not yet supported by Rapids, pulling version 11.0" 1>&2
-            echo "conda packages instead. This may result in mixing system and conda packages compiled" 1>&2
-            echo "against potentially incompatible CUDA versions." 1>&2
-            export CUDA_VER=11.0
-            ;;
-        *)
-            echo "Error: CUDA version $CUDA_VER is not supported by Rapids" 1>&2
-            exit 1
-            ;;
-    esac
-    case "$PYTHON_VER" in
-        3.7|3.8)
-            ;;
-        *)
-            echo "Error: Python version $PYTHON_VER is not supported by Rapids" 1>&2
-            exit 1
-            ;;
-    esac
 fi
 
 # Install conda

@@ -38,7 +38,7 @@ detect_platform && set_build_vars
 # Run appropriate build command for the target library
 if [[ -d "legate/core" ]]; then
     if [[ "$CONDUIT" == ibv ]]; then
-        export GASNET_EXTRA_CONFIGURE_ARGS="--enable-ibv-multirail --with-ibv-max-hcas=$NUM_HCAS"
+        export GASNET_EXTRA_CONFIGURE_ARGS="--enable-ibv-multirail --with-ibv-max-hcas=$NUM_NICS"
     fi
     if [[ "$CONDUIT" != none ]]; then
         set -- --gasnet \
