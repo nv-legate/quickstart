@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-set -euox pipefail
+set -euo pipefail
 
 # Print usage if requested
 if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then

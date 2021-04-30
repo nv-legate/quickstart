@@ -48,12 +48,13 @@ RUN cd ${CUDA_HOME}/lib64/stubs \
  && ln -s libcuda.so libcuda.so.1
 
 # Add third-party apt repos
-RUN export LINUX_VER_URL="$(echo "$LINUX_VER" | tr '.' '')" \
+RUN export LINUX_VER_URL="$(echo "$LINUX_VER" | tr -d '.')" \
  && curl -fsSL https://developer.download.nvidia.com/devtools/repos/${LINUX_VER_URL}/amd64/nvidia.pub | apt-key add - \
  && echo "deb https://developer.download.nvidia.com/devtools/repos/${LINUX_VER_URL}/amd64/ /" >> /etc/apt/sources.list.d/nsys.list
 
-# Copy quickstart to image
-COPY quickstart /opt/legate/quickstart
+# Copy quickstart scripts to image (don't copy the entire directory; that would
+# include the library repo checkouts, that we want to place elsewhere)
+COPY build.sh common.sh entrypoint.sh install_ib_ucx.sh run.sh /opt/legate/quickstart/
 
 # Install apt packages
 RUN source /opt/legate/quickstart/common.sh \
@@ -67,6 +68,8 @@ RUN source /opt/legate/quickstart/common.sh \
     libtool libnuma-dev \
   ; fi \
  && apt-get install -y --no-install-recommends \
+    `# requirements for OpenBLAS build` \
+    gfortran \
     `# useful utilities` \
     nsight-systems-cli numactl gdb \
  && apt-get clean \
@@ -76,7 +79,7 @@ RUN source /opt/legate/quickstart/common.sh \
 RUN source /opt/legate/quickstart/common.sh \
  && set_build_vars \
  && if [[ "$CONDUIT" == ibv || "$CONDUIT" == ucx ]]; then \
- && set_mofed_vars \
+    set_mofed_vars \
  && export MOFED_ID=MLNX_OFED_LINUX-${MOFED_VER_LONG}-${LINUX_VER}-x86_64 \
  && cd /tmp \
  && curl -fSsL http://content.mellanox.com/ofed/MLNX_OFED-${MOFED_VER_LONG}/${MOFED_ID}.tgz | tar -xz \
@@ -95,8 +98,8 @@ RUN source /opt/legate/quickstart/common.sh \
  && cd /tmp \
  && rm -rf ${MOFED_ID} \
  && echo ${MOFED_VER} > /opt/mofed-ver \
- && cp /opt/legate/quickstart/ibdev2netdev /usr/bin \
   ; fi
+COPY ibdev2netdev /usr/bin/
 
 # Build UCX with Verbs support
 RUN source /opt/legate/quickstart/common.sh \
