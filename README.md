@@ -32,11 +32,11 @@ of this image, for single-node machines containing Volta or Ampere GPUs. The
 images are available on GitHub and can be used as follows:
 
 ```
-docker pull ghcr.io/nv-legate/legate-other-volta:latest
-docker run -it --rm ghcr.io/nv-legate/legate-other-volta:latest /bin/bash
+docker pull ghcr.io/nv-legate/legate-generic-volta:latest
+docker run -it --rm --gpus all ghcr.io/nv-legate/legate-generic-volta:latest /bin/bash
 ```
 
-and correspondingly for the `legate-other-ampere` image.
+and correspondingly for the `legate-generic-ampere` image.
 
 After entering the container, you can try running some examples:
 
