@@ -168,7 +168,7 @@ fi
 NUM_GPUS=$(( GPUS_PER_NODE * $NODE_RATIO ))
 
 # Add legate driver to command
-if [[ "$NODRIVER" != "1" ]]; then
+if [[ "$NODRIVER" != 1 ]]; then
     set -- --nodes "$NUM_NODES" --verbose --logdir "$CMD_OUT_DIR" "$@"
     set -- --cpus 1 --omps "$NUM_OMPS" --ompthreads "$THREADS_PER_OMP" "$@"
     set -- --sysmem 256 --numamem "$RAM_PER_NUMA" "$@"
@@ -190,7 +190,7 @@ fi
 if [[ "$PLATFORM" == summit ]]; then
     JOBSCRIPT="${JOBSCRIPT:-$SCRIPT_DIR/legate.lsf}"
     QUEUE="${QUEUE:-batch}"
-    if [[ "$INTERACTIVE" == "1" ]]; then
+    if [[ "$INTERACTIVE" == 1 ]]; then
         bsub -J legate -P "$ACCOUNT" -q "$QUEUE" -W "$TIMELIMIT" -nnodes "$NUM_NODES" -alloc_flags smt1 -Is "$JOBSCRIPT" "$@"
     else
         bsub -J legate -P "$ACCOUNT" -q "$QUEUE" -W "$TIMELIMIT" -nnodes "$NUM_NODES" -alloc_flags smt1 -o "$HOST_OUT_DIR/out.txt" "$JOBSCRIPT" "$@"
@@ -198,7 +198,7 @@ if [[ "$PLATFORM" == summit ]]; then
 elif [[ "$PLATFORM" == cori ]]; then
     JOBSCRIPT="${JOBSCRIPT:-$SCRIPT_DIR/legate.slurm}"
     QUEUE="${QUEUE:-debug}"
-    if [[ "$INTERACTIVE" == "1" ]]; then
+    if [[ "$INTERACTIVE" == 1 ]]; then
         echo "Error: Interactive jobs not supported on this cluster (yet)" 1>&2
         exit 1
     else
@@ -207,7 +207,7 @@ elif [[ "$PLATFORM" == cori ]]; then
 elif [[ "$PLATFORM" == pizdaint ]]; then
     JOBSCRIPT="${JOBSCRIPT:-$SCRIPT_DIR/legate.slurm}"
     QUEUE="${QUEUE:-normal}"
-    if [[ "$INTERACTIVE" == "1" ]]; then
+    if [[ "$INTERACTIVE" == 1 ]]; then
         salloc -J legate -A "$ACCOUNT" -p "$QUEUE" -t "$TIMELIMIT" -N "$NUM_NODES" -C gpu "$JOBSCRIPT" "$@"
     else
         sbatch -J legate -A "$ACCOUNT" -p "$QUEUE" -t "$TIMELIMIT" -N "$NUM_NODES" -C gpu -o "$HOST_OUT_DIR/out.txt" "$JOBSCRIPT" "$@"
@@ -219,7 +219,7 @@ else
 fi
 
 # Wait for batch job to start
-if [[ "$INTERACTIVE" != "1" && "$NOWAIT" != "1" ]]; then
+if [[ "$INTERACTIVE" != 1 && "$NOWAIT" != 1 ]]; then
     echo "Waiting for job to start & piping output"
     echo "Press Ctrl-C anytime to exit (job will still run)"
     while [[ ! -f "$HOST_OUT_DIR/out.txt" ]]; do sleep 1; done
