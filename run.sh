@@ -42,6 +42,8 @@ if [[ $# -lt 2 || ! "$1" =~ ^(1/)?[0-9]+$ ]]; then
     echo "  QUEUE : what queue/partition to submit the job to (default: depends on cluster)"
     echo "  SCRATCH : where to create an output directory (default: .)"
     echo "  TIMELIMIT : how much time to request for the job, in minutes (defaut: 60)"
+    echo "  USE_CUDA : run with CUDA enabled (defaut: 1)"
+    echo "  USE_OPENMP : run with OpenMP enabled (defaut: 1)"
     exit
 fi
 
@@ -76,6 +78,8 @@ export NODRIVER="${NODRIVER:-0}"
 export NOWAIT="${NOWAIT:-0}"
 export SCRATCH="${SCRATCH:-.}"
 export TIMELIMIT="${TIMELIMIT:-60}"
+export USE_CUDA="${USE_CUDA:-1}"
+export USE_OPENMP="${USE_OPENMP:-1}"
 
 # Prepare output directory
 DATE="$(date +%Y/%m/%d)"
@@ -171,9 +175,17 @@ NUM_GPUS=$(( GPUS_PER_NODE * $NODE_RATIO ))
 # Add legate driver to command
 if [[ "$NODRIVER" != 1 ]]; then
     set -- --nodes "$NUM_NODES" --verbose --logdir "$CMD_OUT_DIR" "$@"
-    set -- --cpus 1 --omps "$NUM_OMPS" --ompthreads "$THREADS_PER_OMP" "$@"
-    set -- --sysmem 256 --numamem "$RAM_PER_NUMA" "$@"
-    set -- --gpus "$NUM_GPUS" --fbmem "$FB_PER_GPU" "$@"
+    if [[ "$USE_CUDA" == 1 ]]; then
+        set -- --gpus "$NUM_GPUS" --fbmem "$FB_PER_GPU" "$@"
+    fi
+    if [[ "$USE_OPENMP" == 1 ]]; then
+        set -- --cpus 1 --sysmem 256 "$@"
+        set -- --omps "$NUM_OMPS" --ompthreads "$THREADS_PER_OMP" "$@"
+        set -- --numamem "$RAM_PER_NUMA" "$@"
+    else
+        set -- --cpus $(( NUM_OMPS * THREADS_PER_OMP )) "$@"
+        set -- --sysmem $(( NUM_OMPS * RAM_PER_NUMA )) "$@"
+    fi
     if [[ "$PLATFORM" == summit ]]; then
         set -- --cores-per-node 42 --launcher jsrun "$@"
     elif [[ "$PLATFORM" == cori ]]; then
