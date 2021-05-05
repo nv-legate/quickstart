@@ -80,9 +80,9 @@ RUN source /opt/legate/quickstart/common.sh \
  && set_build_vars \
  && if [[ "$CONDUIT" == ibv || "$CONDUIT" == ucx ]]; then \
     set_mofed_vars \
- && export MOFED_ID=MLNX_OFED_LINUX-${MOFED_VER_LONG}-${LINUX_VER}-x86_64 \
+ && export MOFED_ID=MLNX_OFED_LINUX-${MOFED_VER}-${LINUX_VER}-x86_64 \
  && cd /tmp \
- && curl -fSsL http://content.mellanox.com/ofed/MLNX_OFED-${MOFED_VER_LONG}/${MOFED_ID}.tgz | tar -xz \
+ && curl -fSsL http://content.mellanox.com/ofed/MLNX_OFED-${MOFED_VER}/${MOFED_ID}.tgz | tar -xz \
  && cd ${MOFED_ID} \
  && dpkg -i $(echo $(find . -false \
     -or -name ibverbs-providers_${MOFED_DEB_VER}'*.deb' \

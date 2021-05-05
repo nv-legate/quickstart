@@ -108,34 +108,7 @@ function set_mofed_vars {
         exit 1
     fi
     # Fill other info based on MOFED version
-    case "$MOFED_VER" in
-        4.5-1.0.1)   export MOFED_VER_LONG=4.5-1.0.1.0 ;;
-        4.6-1.0.1)   export MOFED_VER_LONG=4.6-1.0.1.1 ;;
-        4.7-1.0.0)   export MOFED_VER_LONG=4.7-1.0.0.1 ;;
-        4.7-3.2.9)   export MOFED_VER_LONG=4.7-3.2.9.0 ;;
-        5.0-1.0.0.0) export MOFED_VER_LONG=5.0-1.0.0.0 ;;
-        5.0-2.1.8)   export MOFED_VER_LONG=5.0-2.1.8.0 ;;
-        5.1-0.6.6)   export MOFED_VER_LONG=5.1-0.6.6.0 ;;
-        5.1-2.3.7)   export MOFED_VER_LONG=5.1-2.3.7.1 ;;
-        5.1-2.5.8)   export MOFED_VER_LONG=5.1-2.5.8.0 ;;
-        5.2-1.0.4)   export MOFED_VER_LONG=5.2-1.0.4.0 ;;
-        5.2-2.2.0)   export MOFED_VER_LONG=5.2-2.2.0.0 ;;
-        *) echo "Error: Unsupported MOFED version $MOFED_VER" 1>&2; exit 1 ;;
-    esac
-    case "$MOFED_VER" in
-        4.5-1.0.1)   export MOFED_DEB_VER=45 ;;
-        4.6-1.0.1)   export MOFED_DEB_VER=46 ;;
-        4.7-1.0.0)   export MOFED_DEB_VER=47 ;;
-        4.7-3.2.9)   export MOFED_DEB_VER=47 ;;
-        5.0-1.0.0.0) export MOFED_DEB_VER=50 ;;
-        5.0-2.1.8)   export MOFED_DEB_VER=50 ;;
-        5.1-0.6.6)   export MOFED_DEB_VER=51 ;;
-        5.1-2.3.7)   export MOFED_DEB_VER=51 ;;
-        5.1-2.5.8)   export MOFED_DEB_VER=51 ;;
-        5.2-1.0.4)   export MOFED_DEB_VER=52 ;;
-        5.2-2.2.0)   export MOFED_DEB_VER=52 ;;
-        *) echo "Error: Unsupported MOFED version $MOFED_VER" 1>&2; exit 1 ;;
-    esac
+    export MOFED_DEB_VER="${MOFED_VER:0:1}${MOFED_VER:2:1}"
 }
 
 function run_build {
