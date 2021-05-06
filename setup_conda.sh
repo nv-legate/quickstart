@@ -81,4 +81,5 @@ fi
 set +u
 conda activate "$CONDA_ENV"
 set -u
+mkdir -p "$CONDA_PREFIX/etc"
 cp -r "$SCRIPT_DIR/conda" "$CONDA_PREFIX/etc"

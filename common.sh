@@ -16,7 +16,7 @@
 function detect_platform {
     if [[ -n "${PLATFORM+x}" ]]; then
         return
-    elif [[ "$(dnsdomainname)" == *"summit"* ]]; then
+    elif command -v dnsdomainname &> /dev/null && [[ "$(dnsdomainname)" == *"summit"* ]]; then
         export PLATFORM=summit
     elif [[ "$(uname -n)" == "cori"* ]]; then
         export PLATFORM=cori
@@ -51,13 +51,13 @@ function set_build_vars {
         export CONDUIT=none
         export GPU_ARCH="${PLATFORM#generic-}"
     else
-        if grep -q docker /proc/self/cgroup; then
+        if [[ -f /proc/self/cgroup ]] && grep -q docker /proc/self/cgroup; then
             echo "Error: Detected a docker build for an unknown target platform" 1>&2
             exit 1
         fi
         echo "Did not detect a supported cluster, assuming local-node build"
         export CONDUIT=none
-        if [[ -z "${GPU_ARCH:-x}" ]]; then
+        if [[ -z "${GPU_ARCH+x}" ]]; then
             if command -v nvcc &> /dev/null; then
                 TEST_SRC="$(mktemp --suffix .cc)"
                 echo "
@@ -92,7 +92,7 @@ function set_build_vars {
             fi
         fi
     fi
-    if [[ -z "${CUDA_HOME:-x}" ]]; then
+    if [[ -z "${CUDA_HOME+x}" ]]; then
         if command -v nvcc &> /dev/null; then
             NVCC_PATH="$(which nvcc | head -1)"
             export CUDA_HOME="${NVCC_PATH%/bin/nvcc}"
@@ -114,7 +114,7 @@ function set_mofed_vars {
 function run_build {
     # Invoke launcher if building on a bare-metal cluster outside of docker, and
     # only if not already inside an allocation
-    if grep -q docker /proc/self/cgroup; then
+    if [[ -f /proc/self/cgroup ]] && grep -q docker /proc/self/cgroup; then
         "$@"
     elif [[ -n "${SLURM_JOBID+x}" || -n "${LSB_JOBID+x}" ]]; then
         "$@"
