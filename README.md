@@ -26,7 +26,7 @@ a number of supported clusters.
 Using a Docker image
 ====================
 
-The `Dockerfile` in this repository describes how to build a Docker image
+The `make_image.sh` script in this repository can be used to build Docker images
 containing all Legate libraries. At this time we provide two pre-built versions
 of this image, for single-node machines containing Volta or Ampere GPUs. The
 images are available on GitHub and can be used as follows:
@@ -108,7 +108,7 @@ resources.
 * Pre-built images for any supported container-based clusters will be available
   on GitHub as `ghcr.io/nv-legate/legate-<platform>`, and `run.sh` will
   automatically use the latest version.
-* Even though you are meant to invoke the `run.sh` script from the login node, 
+* Even though you are meant to invoke the `run.sh` script from the login node,
   any paths on the command line will refer to files within the image, not the
   filesystem on the host cluster. If you wish to use files from a directory on
   the host filesystem you need to explicitly mount that directory inside the

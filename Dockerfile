@@ -13,6 +13,8 @@
 # limitations under the License.
 #
 
+# PLEASE USE make_image.sh INSTEAD OF USING THIS DOCKERFILE DIRECTLY
+
 # Parent image
 ARG CUDA_VER
 ARG LINUX_VER
