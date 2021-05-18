@@ -52,18 +52,19 @@ git_pull https://github.com/nv-legate/legate.hello.git legate.hello main
 git_pull https://github.com/nv-legate/legate.numpy.git legate.numpy master
 git_pull https://github.com/nv-legate/legate.pandas.git legate.pandas master
 
-# Prepare image designation
-REPO=ghcr.io/nv-legate
-IMAGE="$REPO"/legate-"$PLATFORM"
-TAG="$(date +%Y-%m-%d-%H%M%S)"
-
 # Build and push image
-DOCKER_BUILDKIT=1 docker build -t "$IMAGE:$TAG" -t "$IMAGE:latest" \
+IMAGE=legate-"$PLATFORM"
+TAG="$(date +%Y-%m-%d-%H%M%S)"
+DOCKER_BUILDKIT=1 docker build -t "$IMAGE:$TAG" \
     --build-arg CUDA_VER="$CUDA_VER" \
     --build-arg DEBUG="$DEBUG" \
     --build-arg LINUX_VER="$LINUX_VER" \
     --build-arg PLATFORM="$PLATFORM" \
     --build-arg PYTHON_VER="$PYTHON_VER" \
     "$@" .
-docker push "$IMAGE:$TAG"
-docker push "$IMAGE:latest"
+for REPO in ghcr.io/nv-legate; do
+    docker tag "$IMAGE:$TAG" "$REPO/$IMAGE:$TAG"
+    docker tag "$IMAGE:$TAG" "$REPO/$IMAGE:latest"
+    docker push "$REPO/$IMAGE:$TAG"
+    docker push "$REPO/$IMAGE:latest"
+done
