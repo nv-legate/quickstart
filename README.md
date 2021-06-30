@@ -260,6 +260,40 @@ Run Legate programs:
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/run.sh prog.py
 ```
 
+Lassen @ LLNL
+=============
+
+Add to `~/.bashrc`:
+
+```
+module load gcc/8.3.1 cuda/11.1.0
+source "<conda-install-dir>/etc/profile.d/conda.sh"
+conda activate legate
+```
+
+Log out and back in, then run:
+
+```
+CUDA_VER=none CONDA_ROOT=<conda-install-dir> <quickstart-dir>/setup_conda.sh
+source "<conda-install-dir>/etc/profile.d/conda.sh"
+conda activate legate
+cd /path/to/legate.core
+LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
+```
+
+Build additional Legate libraries:
+
+```
+cd /path/to/legate/lib
+LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
+```
+
+Run Legate programs:
+
+```
+LEGATE_DIR=<legate-install-dir> <quickstart-dir>/run.sh prog.py
+```
+
 Questions
 =========
 

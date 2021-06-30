@@ -22,6 +22,8 @@ function detect_platform {
         export PLATFORM=cori
     elif [[ "$(uname -n)" == *"daint"* ]]; then
         export PLATFORM=pizdaint
+    elif [[ "$(uname -n)" == *"lassen"* ]]; then
+        export PLATFORM=lassen
     else
         export PLATFORM=other
     fi
@@ -47,6 +49,11 @@ function set_build_vars {
         export NUM_NICS=1
         # CUDA_HOME is already set (by module)
         export GPU_ARCH=pascal
+    elif [[ "$PLATFORM" == lassen ]]; then
+        export CONDUIT=ibv
+        export NUM_NICS=4
+        # CUDA_HOME is already set (by module)
+        export GPU_ARCH=volta
     elif [[ "$PLATFORM" == generic-* ]]; then
         export CONDUIT=none
         export GPU_ARCH="${PLATFORM#generic-}"
@@ -124,6 +131,8 @@ function run_build {
         srun -C gpu -N 1 -t 60 -G 1 -c 10 -A "$ACCOUNT" "$@"
     elif [[ "$PLATFORM" == pizdaint ]]; then
         srun -N 1 -p debug -C gpu -t 30 -A "$ACCOUNT" "$@"
+    elif [[ "$PLATFORM" == lassen ]]; then
+        lalloc 1 -q pdebug -W 60 -G "$GROUP" "$@"
     else
         "$@"
     fi

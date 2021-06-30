@@ -15,6 +15,28 @@
 # limitations under the License.
 #
 
+set -u
+
+# This script reads the following variables from the environment:
+#   CMD_OUT_DIR : output directory to use on the commands
+#     Will be mounted appropriately on container-based clusters, to match
+#     $HOST_OUT_DIR. Ignored on bare-metal clusters.
+#   IMAGE : which image to use (for container-based clusters)
+#   INTERACTIVE : submit an interactive rather than a batch job
+#   HOST_OUT_DIR : output directory on the host filesystem
+#   MOUNTS : comma-separated list of volume mounts (for container-based clusters)
+#   PLATFORM : what machine we are executing on
+#   $@ : the command to execute
+
+if [[ "$PLATFORM" == summit ]]; then
+    true
+elif [[ "$PLATFORM" == lassen ]]; then
+    true
+else
+    echo "Error: Unexpected platform $PLATFORM in LSF script" 1>&2
+    exit 1
+fi
+
 echo "Job ID: $LSB_JOBID"
 echo "Submitted from: $(pwd)"
 echo "Started on: $(date)"

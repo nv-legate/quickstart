@@ -63,6 +63,8 @@ elif [[ "$PLATFORM" == cori ]]; then
     CONTAINER_BASED=0
 elif [[ "$PLATFORM" == pizdaint ]]; then
     CONTAINER_BASED=0
+elif [[ "$PLATFORM" == lassen ]]; then
+    CONTAINER_BASED=0
 else
     CONTAINER_BASED=0
 fi
@@ -146,6 +148,19 @@ elif [[ "$PLATFORM" == pizdaint ]]; then
     GPUS_PER_NODE=1
     THREADS_PER_OMP=8
     FB_PER_GPU=14500
+elif [[ "$PLATFORM" == lassen ]]; then
+    # 2 NUMA domains per node
+    # 2 NICs per NUMA domain (4 NICs per node)
+    # 20 cores per NUMA domain (2 more reserved for OS) (40 cores per node)
+    # 4-way SMT per core
+    # 128GB RAM per NUMA domain (256GB RAM per node)
+    # 2 Tesla V100 GPUs per NUMA domain (4 GPUs per node)
+    # 16GB FB per GPU
+    NUMAS_PER_NODE=2
+    RAM_PER_NUMA=100000
+    GPUS_PER_NODE=4
+    THREADS_PER_OMP=16
+    FB_PER_GPU=14500
 else
     echo "Did not detect a supported cluster, assuming local-node run."
     export NOWAIT=1
@@ -192,6 +207,8 @@ if [[ "$NODRIVER" != 1 ]]; then
         set -- --launcher srun "$@"
     elif [[ "$PLATFORM" == pizdaint ]]; then
         set -- --launcher srun "$@"
+    elif [[ "$PLATFORM" == lassen ]]; then
+        set -- --cores-per-node 40 --launcher jsrun "$@"
     else
         # Local run
         true
@@ -224,6 +241,14 @@ elif [[ "$PLATFORM" == pizdaint ]]; then
         salloc -J legate -A "$ACCOUNT" -p "$QUEUE" -t "$TIMELIMIT" -N "$NUM_NODES" -C gpu "$JOBSCRIPT" "$@"
     else
         sbatch -J legate -A "$ACCOUNT" -p "$QUEUE" -t "$TIMELIMIT" -N "$NUM_NODES" -C gpu -o "$HOST_OUT_DIR/out.txt" "$JOBSCRIPT" "$@"
+    fi
+elif [[ "$PLATFORM" == lassen ]]; then
+    JOBSCRIPT="${JOBSCRIPT:-$SCRIPT_DIR/legate.lsf}"
+    QUEUE="${QUEUE:-pbatch}"
+    if [[ "$INTERACTIVE" == 1 ]]; then
+        bsub -J legate -P "$ACCOUNT" -q "$QUEUE" -W "$TIMELIMIT" -nnodes "$NUM_NODES" -alloc_flags smt1 -Is "$JOBSCRIPT" "$@"
+    else
+        bsub -J legate -P "$ACCOUNT" -q "$QUEUE" -W "$TIMELIMIT" -nnodes "$NUM_NODES" -alloc_flags smt1 -o "$HOST_OUT_DIR/out.txt" "$JOBSCRIPT" "$@"
     fi
 else
     # Local run
