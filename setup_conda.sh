@@ -67,7 +67,7 @@ fi
 if [[ "$CUDA_VER" != none ]]; then
     conda create --yes --name "$CONDA_ENV" \
         -c rapidsai-nightly -c nvidia -c conda-forge -c defaults \
-        python="$PYTHON_VER" cudatoolkit="$CUDA_VER" rapids=0.19 \
+        python="$PYTHON_VER" cudatoolkit="$CUDA_VER" rapids=21.08 \
         "$@"
 else
     conda create --yes --name "$CONDA_ENV" \

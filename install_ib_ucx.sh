@@ -41,12 +41,8 @@ fi
 # Run build command
 run_build bash -euo pipefail -c '
     TMP_DIR="$(mktemp -d)"
-    git clone --recurse-submodules -b v1.10.x https://github.com/openucx/ucx "$TMP_DIR"
+    git clone --recurse-submodules -b v1.11.x https://github.com/openucx/ucx "$TMP_DIR"
     cd "$TMP_DIR"
-    if [[ "$GPU_ARCH" != none ]]; then
-        wget -nv https://raw.githubusercontent.com/rapidsai/ucx-split-feedstock/master/recipe/cuda-alloc-rcache.patch
-        git apply cuda-alloc-rcache.patch
-    fi
     ./autogen.sh
     mkdir build
     cd build
