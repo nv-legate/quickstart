@@ -84,10 +84,10 @@ resources.
 ### Customizing installation
 
 * `setup_conda.sh`: This script will create a new conda environment suitable for
-  using all Legate libraries on GPUs. Use `CUDA_VER=none` to skip GPU support.
-  You can skip the script entirely if you prefer to install the required
-  packages manually; see the `conda/???.yml` files on the individual Legate
-  libraries.
+  using all Legate libraries on GPUs. Use `USE_RAPIDS=0` to skip Rapids packages
+  (required for running legate.pandas on GPUs). You can skip the script entirely
+  if you prefer to install the required packages manually; see the
+  `conda/???.yml` files on the individual Legate libraries.
 * `install_ib_ucx.sh`: This script will remove the UCX conda package and build
   UCX from source, adding Infiniband Verbs support. This script will be useful
   if you intend to run multi-node Rapids algorithms in conjunction with Legate
@@ -162,7 +162,8 @@ conda activate legate
 Log out and back in, then run:
 
 ```
-CUDA_VER=none CONDA_ROOT=<conda-install-dir> <quickstart-dir>/setup_conda.sh
+# Rapids conda packages are not distributed for PowerPC
+USE_RAPIDS=0 CONDA_ROOT=<conda-install-dir> <quickstart-dir>/setup_conda.sh
 source "<conda-install-dir>/etc/profile.d/conda.sh"
 conda activate legate
 cd /path/to/legate.core
@@ -185,26 +186,20 @@ LEGATE_DIR=<legate-install-dir> <quickstart-dir>/run.sh prog.py
 CoriGPU @ LBL
 =============
 
-Add to `~/.bash_profile`:
-
-```
-source ~/.bashrc
-```
-
 Add to `~/.bashrc`:
 
 ```
 module purge
-module load esslurm cuda/10.2.89 gcc/8.3.0 python/3.7-anaconda-2019.10 openmpi/4.0.2
-source ~/.conda/etc/profile.d/conda.sh
+module load esslurm cudatoolkit/10.2.89_3.28-7.0.1.1_2.1__g88d3d59 gcc/8.3.0 python/3.8-anaconda-2020.11 openmpi/4.0.2
+eval "$(conda shell.bash hook)"
 conda activate legate
 ```
 
 Log out and back in, then run:
 
 ```
-CONDA_ROOT=~/.conda <quickstart-dir>/setup_conda.sh
-source ~/.conda/etc/profile.d/conda.sh
+# Rapids conda packages require CUDA >= 11.0
+USE_RAPIDS=0 <quickstart-dir>/setup_conda.sh
 conda activate legate
 cd /path/to/legate.core
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
@@ -274,7 +269,8 @@ conda activate legate
 Log out and back in, then run:
 
 ```
-CUDA_VER=none CONDA_ROOT=<conda-install-dir> <quickstart-dir>/setup_conda.sh
+# Rapids conda packages are not distributed for PowerPC
+USE_RAPIDS=0 CONDA_ROOT=<conda-install-dir> <quickstart-dir>/setup_conda.sh
 source "<conda-install-dir>/etc/profile.d/conda.sh"
 conda activate legate
 cd /path/to/legate.core

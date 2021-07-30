@@ -24,9 +24,4 @@ function path_remove {
 }
 export CPATH="$( path_remove "$CPATH" "$CONDA_PREFIX/include" )"
 export LIBRARY_PATH="$( path_remove "$LIBRARY_PATH" "$CONDA_PREFIX/lib" )"
-if [[ "$(uname -s)" == "Darwin" ]]; then
-    export DYLD_LIBRARY_PATH="$( path_remove "$DYLD_LIBRARY_PATH" "$CONDA_PREFIX/lib" )"
-else
-    export LD_LIBRARY_PATH="$( path_remove "$LD_LIBRARY_PATH" "$CONDA_PREFIX/lib" )"
-fi
 # $CONDA_PREFIX/bin is removed from PATH automatically

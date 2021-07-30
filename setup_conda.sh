@@ -26,22 +26,23 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "Arguments read from the environment:"
     echo "  CONDA_ENV : name of conda environment to create (default: legate)"
     echo "  CONDA_ROOT : where to install conda (if not already installed)"
-    echo "  CUDA_VER : CUDA runtime version to install from conda"
-    echo "             (default: match system version)"
+    echo "  CUDA_VER : CUDA runtime version to install from conda (if installing"
+    echo "             Rapids) (default: match system version)"
     echo "  PYTHON_VER : Python version to use (default: 3.8)"
+    echo "  USE_RAPIDS : whether to install Rapids (required for running"
+    echo "               legate.pandas on GPUs) (default: 1)"
     exit
 fi
 
 # Read arguments
 export CONDA_ENV="${CONDA_ENV:-legate}"
-export PYTHON_VER="${PYTHON_VER:-3.8}"
 if [[ -z "${CUDA_VER+x}" ]]; then
     if command -v nvcc &> /dev/null; then
         export CUDA_VER="$(nvcc --version | grep release | awk '{ print $5 }' | sed 's/.$//')"
-    else
-        export CUDA_VER=none
     fi
 fi
+export PYTHON_VER="${PYTHON_VER:-3.8}"
+export USE_RAPIDS="${USE_RAPIDS:-1}"
 
 # Install conda
 if command -v conda &> /dev/null; then
@@ -64,7 +65,7 @@ if conda info --envs | grep -q "^$CONDA_ENV "; then
     echo "Error: Conda environment $CONDA_ENV already exists" 1>&2
     exit 1
 fi
-if [[ "$CUDA_VER" != none ]]; then
+if [[ "$USE_RAPIDS" == 1 ]]; then
     conda create --yes --name "$CONDA_ENV" \
         -c rapidsai-nightly -c nvidia -c conda-forge -c defaults \
         python="$PYTHON_VER" cudatoolkit="$CUDA_VER" rapids=21.08 \
