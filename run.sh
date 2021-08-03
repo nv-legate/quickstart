@@ -125,6 +125,7 @@ if [[ "$PLATFORM" == summit ]]; then
     NUMAS_PER_NODE=2
     RAM_PER_NUMA=200000
     GPUS_PER_NODE=6
+    CORES_PER_NUMA=21
     THREADS_PER_OMP=16
     FB_PER_GPU=14500
 elif [[ "$PLATFORM" == cori ]]; then
@@ -138,6 +139,7 @@ elif [[ "$PLATFORM" == cori ]]; then
     NUMAS_PER_NODE=2
     RAM_PER_NUMA=150000
     GPUS_PER_NODE=8
+    CORES_PER_NUMA=20
     THREADS_PER_OMP=16
     FB_PER_GPU=14500
 elif [[ "$PLATFORM" == pizdaint ]]; then
@@ -151,6 +153,7 @@ elif [[ "$PLATFORM" == pizdaint ]]; then
     NUMAS_PER_NODE=1
     RAM_PER_NUMA=55000
     GPUS_PER_NODE=1
+    CORES_PER_NUMA=12
     THREADS_PER_OMP=8
     FB_PER_GPU=14500
 elif [[ "$PLATFORM" == lassen ]]; then
@@ -164,6 +167,7 @@ elif [[ "$PLATFORM" == lassen ]]; then
     NUMAS_PER_NODE=2
     RAM_PER_NUMA=100000
     GPUS_PER_NODE=4
+    CORES_PER_NUMA=20
     THREADS_PER_OMP=16
     FB_PER_GPU=14500
 else
@@ -174,13 +178,12 @@ else
         exit 1
     fi
     # Auto-detect available resources
-    NUM_SOCKETS="$(lscpu | grep 'Socket(s)' | awk '{print $2}')"
-    NUMAS_PER_NODE="$NUM_SOCKETS"
+    NUMAS_PER_NODE="$(lscpu | grep 'Socket(s)' | awk '{print $2}')"
     RAM_PER_NODE="$(free -m | head -2 | tail -1 | awk '{print $2}')"
     RAM_PER_NUMA=$(( RAM_PER_NODE * 4 / 5 / NUMAS_PER_NODE ))
     GPUS_PER_NODE="$(nvidia-smi -q | grep 'Attached GPUs' | awk '{print $4}')"
-    CORES_PER_SOCKET=$(lscpu | grep 'Core(s) per socket' | awk '{print $4}')
-    THREADS_PER_OMP=$(( CORES_PER_SOCKET - 4 ))
+    CORES_PER_NUMA=$(lscpu | grep 'Core(s) per socket' | awk '{print $4}')
+    THREADS_PER_OMP=$(( CORES_PER_NUMA - 4 ))
     FB_PER_GPU="$(nvidia-smi --format=csv,noheader,nounits --query-gpu=memory.total -i 0)"
     FB_PER_GPU=$(( FB_PER_GPU - 2000 ))
 fi
@@ -190,6 +193,7 @@ if [[ $NUM_OMPS -lt 1 ]]; then
     THREADS_PER_OMP=$(( THREADS_PER_OMP * NUMAS_PER_NODE * $NODE_RATIO ))
     RAM_PER_NUMA=$(( RAM_PER_NUMA * NUMAS_PER_NODE * $NODE_RATIO ))
 fi
+NUM_CORES=$(( NUMAS_PER_NODE * CORES_PER_NUMA * $NODE_RATIO ))
 NUM_GPUS=$(( GPUS_PER_NODE * $NODE_RATIO ))
 
 # Add legate driver to command
@@ -207,13 +211,13 @@ if [[ "$NODRIVER" != 1 ]]; then
         set -- --sysmem $(( NUM_OMPS * RAM_PER_NUMA )) "$@"
     fi
     if [[ "$PLATFORM" == summit ]]; then
-        set -- --cores-per-node 42 --launcher jsrun "$@"
+        set -- --cores-per-node $(( NUMAS_PER_NODE * CORES_PER_NUMA)) --launcher jsrun "$@"
     elif [[ "$PLATFORM" == cori ]]; then
         set -- --launcher srun "$@"
     elif [[ "$PLATFORM" == pizdaint ]]; then
         set -- --launcher srun "$@"
     elif [[ "$PLATFORM" == lassen ]]; then
-        set -- --cores-per-node 40 --launcher jsrun "$@"
+        set -- --cores-per-node $(( NUMAS_PER_NODE * CORES_PER_NUMA)) --launcher jsrun "$@"
     else
         # Local run
         true
