@@ -44,9 +44,12 @@ fi
 export PYTHON_VER="${PYTHON_VER:-3.8}"
 export USE_RAPIDS="${USE_RAPIDS:-1}"
 
-# Install conda
+# Install conda & load conda functions into this subshell
 if command -v conda &> /dev/null; then
     echo "Conda already installed, skipping conda installation"
+    set +u
+    eval "$(conda shell.bash hook)"
+    set -u
 else
     echo "Installing conda under $CONDA_ROOT"
     INSTALLER="$(mktemp --suffix .sh)"
@@ -54,7 +57,6 @@ else
     chmod +x "$INSTALLER"
     "$INSTALLER" -b -p "$CONDA_ROOT"
     rm "$INSTALLER"
-    # Load conda functions into this subshell
     set +u
     source "$CONDA_ROOT"/etc/profile.d/conda.sh
     set -u
