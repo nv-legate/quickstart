@@ -228,38 +228,54 @@ fi
 # Submit job to appropriate scheduler
 if [[ "$PLATFORM" == summit ]]; then
     JOBSCRIPT="${JOBSCRIPT:-$SCRIPT_DIR/legate.lsf}"
+    set -- "$JOBSCRIPT" "$@"
     QUEUE="${QUEUE:-batch}"
     if [[ "$INTERACTIVE" == 1 ]]; then
-        bsub -J legate -P "$ACCOUNT" -q "$QUEUE" -W "$TIMELIMIT" -nnodes "$NUM_NODES" -alloc_flags smt1 -Is "$JOBSCRIPT" "$@"
+        set -- -Is "$@"
     else
-        bsub -J legate -P "$ACCOUNT" -q "$QUEUE" -W "$TIMELIMIT" -nnodes "$NUM_NODES" -alloc_flags smt1 -o "$HOST_OUT_DIR/out.txt" "$JOBSCRIPT" "$@"
+        set -- -o "$HOST_OUT_DIR/out.txt" "$@"
     fi
+    set -- bsub -J legate -P "$ACCOUNT" -q "$QUEUE" -W "$TIMELIMIT" -nnodes "$NUM_NODES" -alloc_flags smt1 "$@"
+    echo "Submitted: $@"
+    "$@"
 elif [[ "$PLATFORM" == cori ]]; then
     # Use the first NIC from each pair
     export GASNET_IBV_PORTS=mlx5_0+mlx5_2+mlx5_4+mlx5_6
     JOBSCRIPT="${JOBSCRIPT:-$SCRIPT_DIR/legate.slurm}"
+    set -- "$JOBSCRIPT" "$@"
     # We double the number of cores because SLURM counts virtual cores
+    set -- -J legate -A "$ACCOUNT" -t "$TIMELIMIT" -N "$NUM_NODES" --ntasks-per-node 1 -c $(( 2 * $NUM_CORES )) -C gpu --gpus-per-task "$NUM_GPUS" "$@"
     if [[ "$INTERACTIVE" == 1 ]]; then
-        salloc -J legate -A "$ACCOUNT" -q interactive -t "$TIMELIMIT" -N "$NUM_NODES" --ntasks-per-node 1 -c $(( 2 * $NUM_CORES )) -C gpu --gpus-per-task "$NUM_GPUS" "$JOBSCRIPT" "$@"
+        set -- salloc -q interactive "$@"
     else
-        sbatch -J legate -A "$ACCOUNT" -q regular -t "$TIMELIMIT" -N "$NUM_NODES" --ntasks-per-node 1 -c $(( 2 * $NUM_CORES )) -C gpu --gpus-per-task "$NUM_GPUS" -o "$HOST_OUT_DIR/out.txt" "$JOBSCRIPT" "$@"
+        set -- sbatch -q regular -o "$HOST_OUT_DIR/out.txt" "$@"
     fi
+    echo "Submitted: $@"
+    "$@"
 elif [[ "$PLATFORM" == pizdaint ]]; then
     JOBSCRIPT="${JOBSCRIPT:-$SCRIPT_DIR/legate.slurm}"
+    set -- "$JOBSCRIPT" "$@"
     QUEUE="${QUEUE:-normal}"
+    set -- -J legate -A "$ACCOUNT" -p "$QUEUE" -t "$TIMELIMIT" -N "$NUM_NODES" -C gpu "$@"
     if [[ "$INTERACTIVE" == 1 ]]; then
-        salloc -J legate -A "$ACCOUNT" -p "$QUEUE" -t "$TIMELIMIT" -N "$NUM_NODES" -C gpu "$JOBSCRIPT" "$@"
+        set -- salloc "$@"
     else
-        sbatch -J legate -A "$ACCOUNT" -p "$QUEUE" -t "$TIMELIMIT" -N "$NUM_NODES" -C gpu -o "$HOST_OUT_DIR/out.txt" "$JOBSCRIPT" "$@"
+        set -- sbatch -o "$HOST_OUT_DIR/out.txt" "$@"
     fi
+    echo "Submitted: $@"
+    "$@"
 elif [[ "$PLATFORM" == lassen ]]; then
     JOBSCRIPT="${JOBSCRIPT:-$SCRIPT_DIR/legate.lsf}"
+    set -- "$JOBSCRIPT" "$@"
     QUEUE="${QUEUE:-pbatch}"
     if [[ "$INTERACTIVE" == 1 ]]; then
-        bsub -J legate -P "$ACCOUNT" -q "$QUEUE" -W "$TIMELIMIT" -nnodes "$NUM_NODES" -alloc_flags smt1 -Is "$JOBSCRIPT" "$@"
+        set -- -Is "$@"
     else
-        bsub -J legate -P "$ACCOUNT" -q "$QUEUE" -W "$TIMELIMIT" -nnodes "$NUM_NODES" -alloc_flags smt1 -o "$HOST_OUT_DIR/out.txt" "$JOBSCRIPT" "$@"
+        set -- -o "$HOST_OUT_DIR/out.txt" "$@"
     fi
+    set -- bsub -J legate -P "$ACCOUNT" -q "$QUEUE" -W "$TIMELIMIT" -nnodes "$NUM_NODES" -alloc_flags smt1 "$@"
+    echo "Submitted: $@"
+    "$@"
 else
     # Local run
     echo "Command: $@" | tee -a "$CMD_OUT_DIR/out.txt"
