@@ -69,14 +69,14 @@ if conda info --envs | grep -q "^$CONDA_ENV "; then
 fi
 if [[ "$USE_RAPIDS" == 1 ]]; then
     conda create --yes --name "$CONDA_ENV" \
-        -c rapidsai-nightly -c nvidia -c conda-forge -c defaults \
-        python="$PYTHON_VER" cudatoolkit="$CUDA_VER" rapids=21.08 \
+        -c rapidsai -c nvidia -c conda-forge -c defaults \
+        python="$PYTHON_VER" cudatoolkit="$CUDA_VER" rapids=0.19 \
         "$@"
 else
     conda create --yes --name "$CONDA_ENV" \
         -c conda-forge -c defaults \
         python="$PYTHON_VER" \
-        cffi numpy pyarrow=1.0.1 arrow-cpp=1.0.1 arrow-cpp-proc=3.0.0 \
+        cffi numpy pyarrow arrow-cpp arrow-cpp-proc \
         "$@"
 fi
 
