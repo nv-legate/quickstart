@@ -189,17 +189,19 @@ CoriGPU @ LBL
 Add to `~/.bashrc`:
 
 ```
-module purge
-module load esslurm cudatoolkit/10.2.89_3.28-7.0.1.1_2.1__g88d3d59 gcc/8.3.0 python/3.8-anaconda-2020.11 openmpi/4.0.2
-eval "$(conda shell.bash hook)"
-conda activate legate
+# Cori runs even sub-shells in login mode, so guard these from running more than once
+if [[ -z $CONDA_PREFIX ]]; then
+    module purge
+    module load cgpu esslurm cudatoolkit/10.2.89_3.28-7.0.1.1_2.1__g88d3d59 gcc/8.3.0 python/3.8-anaconda-2020.11 openmpi/4.0.2
+    eval "$(conda shell.bash hook)"
+    conda activate legate
+fi
 ```
 
 Log out and back in, then run:
 
 ```
-# Rapids conda packages require CUDA >= 11.0
-USE_RAPIDS=0 <quickstart-dir>/setup_conda.sh
+<quickstart-dir>/setup_conda.sh
 conda activate legate
 cd /path/to/legate.core
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh

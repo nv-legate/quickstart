@@ -235,13 +235,14 @@ if [[ "$PLATFORM" == summit ]]; then
         bsub -J legate -P "$ACCOUNT" -q "$QUEUE" -W "$TIMELIMIT" -nnodes "$NUM_NODES" -alloc_flags smt1 -o "$HOST_OUT_DIR/out.txt" "$JOBSCRIPT" "$@"
     fi
 elif [[ "$PLATFORM" == cori ]]; then
+    # Use the first NIC from each pair
+    export GASNET_IBV_PORTS=mlx5_0+mlx5_2+mlx5_4+mlx5_6
     JOBSCRIPT="${JOBSCRIPT:-$SCRIPT_DIR/legate.slurm}"
-    QUEUE="${QUEUE:-debug}"
+    # We double the number of cores because SLURM counts virtual cores
     if [[ "$INTERACTIVE" == 1 ]]; then
-        echo "Error: Interactive jobs not supported on this cluster (yet)" 1>&2
-        exit 1
+        salloc -J legate -A "$ACCOUNT" -q interactive -t "$TIMELIMIT" -N "$NUM_NODES" --ntasks-per-node 1 -c $(( 2 * $NUM_CORES )) -C gpu --gpus-per-task "$NUM_GPUS" "$JOBSCRIPT" "$@"
     else
-        sbatch -J legate -A "$ACCOUNT" -p "$QUEUE" -t "$TIMELIMIT" -N "$NUM_NODES" --exclusive -C gpu -o "$HOST_OUT_DIR/out.txt" "$JOBSCRIPT" "$@"
+        sbatch -J legate -A "$ACCOUNT" -q regular -t "$TIMELIMIT" -N "$NUM_NODES" --ntasks-per-node 1 -c $(( 2 * $NUM_CORES )) -C gpu --gpus-per-task "$NUM_GPUS" -o "$HOST_OUT_DIR/out.txt" "$JOBSCRIPT" "$@"
     fi
 elif [[ "$PLATFORM" == pizdaint ]]; then
     JOBSCRIPT="${JOBSCRIPT:-$SCRIPT_DIR/legate.slurm}"
