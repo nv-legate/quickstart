@@ -86,7 +86,11 @@ export USE_OPENMP="${USE_OPENMP:-1}"
 # We explicitly add the Conda lib dir, to ensure the Conda libraries we load
 # will look there for their dependencies first, instead of trying to link with
 # the corresponding system-wide versions.
-export LD_LIBRARY_PATH="$CONDA_PREFIX"/lib:"$LD_LIBRARY_PATH"
+if [[ "$(uname)" == "Darwin" ]]; then
+    export DYLD_LIBRARY_PATH="$CONDA_PREFIX"/lib:"$DYLD_LIBRARY_PATH"
+else
+    export LD_LIBRARY_PATH="$CONDA_PREFIX"/lib:"$LD_LIBRARY_PATH"
+fi
 
 # Prepare output directory
 DATE="$(date +%Y/%m/%d)"
