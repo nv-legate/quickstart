@@ -154,18 +154,15 @@ Summit @ ORNL
 Add to `~/.bashrc`:
 
 ```
-module load cuda/11.0.3 gcc/9.3.0
-source "<conda-install-dir>/etc/profile.d/conda.sh"
-conda activate legate
+module load cuda/11.0.3 gcc/9.3.0 openblas/0.3.9-omp
+module load ums
+module load ums-gen119
+module load nvidia-rapids/21.08
 ```
 
 Log out and back in, then run:
 
 ```
-# Rapids conda packages are not distributed for PowerPC
-USE_RAPIDS=0 CONDA_ROOT=<conda-install-dir> <quickstart-dir>/setup_conda.sh
-source "<conda-install-dir>/etc/profile.d/conda.sh"
-conda activate legate
 cd /path/to/legate.core
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
 ```
@@ -173,7 +170,9 @@ LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
 Build additional Legate libraries:
 
 ```
-cd /path/to/legate/lib
+cd /path/to/legate/numpy
+LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh --with-openblas /autofs/nccs-svm1_sw/summit/.swci/1-compute/opt/spack/20180914/linux-rhel7-ppc64le/gcc-9.3.0/openblas-0.3.9-2jwtqbpq7gm2uh4cddg4a76gf2nkdsdf
+cd /path/to/legate/pandas
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
 ```
 
