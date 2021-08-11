@@ -114,8 +114,6 @@ function set_mofed_vars {
         echo "Error: Unknown MOFED version for platform $PLATFORM" 1>&2
         exit 1
     fi
-    # Fill other info based on MOFED version
-    export MOFED_DEB_VER="${MOFED_VER:0:1}${MOFED_VER:2:1}"
 }
 
 function run_build {

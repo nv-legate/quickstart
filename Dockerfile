@@ -84,19 +84,12 @@ RUN source /opt/legate/quickstart/common.sh \
     set_mofed_vars \
  && export MOFED_ID=MLNX_OFED_LINUX-${MOFED_VER}-${LINUX_VER}-x86_64 \
  && cd /tmp \
- && curl -fSsL http://content.mellanox.com/ofed/MLNX_OFED-${MOFED_VER}/${MOFED_ID}.tgz | tar -xz \
+ && curl -fsSL http://content.mellanox.com/ofed/MLNX_OFED-${MOFED_VER}/${MOFED_ID}.tgz | tar -xz \
  && cd ${MOFED_ID} \
  && dpkg -i $(echo $(find . -false \
-    -or -name ibverbs-providers_${MOFED_DEB_VER}'*.deb' \
-    -or -name libibverbs-dev_${MOFED_DEB_VER}'*.deb' \
-    -or -name libibverbs1_${MOFED_DEB_VER}'*.deb' \
-    -or -name libibverbs1-dbg_${MOFED_DEB_VER}'*.deb' \
-    -or -name libmlx5-1_${MOFED_DEB_VER}'*.deb' \
-    -or -name libmlx5-1-dbg_${MOFED_DEB_VER}'*.deb' \
-    -or -name libmlx5-dev_${MOFED_DEB_VER}'*.deb' \
-    -or -name librdmacm-dev_${MOFED_DEB_VER}'*.deb' \
-    -or -name librdmacm1_${MOFED_DEB_VER}'*.deb' \
-    -or -name librdmacm1-dbg_${MOFED_DEB_VER}'*.deb')) \
+    -or -name 'ibverbs-providers*.deb' \
+    -or -name 'libibverbs*.deb' \
+    -or -name 'librdmacm*.deb')) \
  && cd /tmp \
  && rm -rf ${MOFED_ID} \
  && echo ${MOFED_VER} > /opt/mofed-ver \
@@ -119,7 +112,7 @@ RUN source /opt/legate/quickstart/common.sh \
     source activate rapids \
  && export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${CUDA_HOME}/lib64/stubs \
  && cd /tmp \
- && curl -fSsL https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.1.tar.gz | tar -xz \
+ && curl -fsSL https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.1.tar.gz | tar -xz \
  && cd openmpi-* \
  && mkdir build \
  && cd build \
