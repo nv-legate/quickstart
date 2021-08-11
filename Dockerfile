@@ -136,21 +136,6 @@ RUN source activate rapids \
  && export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${CUDA_HOME}/lib64/stubs \
  && bash -x /opt/legate/quickstart/build.sh
 
-# Build legate.hello
-COPY legate.hello /opt/legate/legate.hello
-RUN source activate rapids \
- && cd /opt/legate/legate.hello \
- && bash -x /opt/legate/quickstart/build.sh
-
-# Build legate.pandas
-COPY legate.pandas /opt/legate/legate.pandas
-RUN source activate rapids \
- && cd /opt/legate/legate.pandas \
- && bash -x /opt/legate/quickstart/build.sh
-
-# Needed for Pandas IO tests
-RUN chmod og+w /opt/legate/legate.pandas/tests/io
-
 # Build legate.numpy
 COPY legate.numpy /opt/legate/legate.numpy
 RUN source activate rapids \

@@ -40,17 +40,14 @@ export PYTHON_VER="${PYTHON_VER:-3.8}"
 # Pull latest versions of legate libraries and Legion
 function git_pull {
     if [[ ! -e "$2" ]]; then
-        git clone -b "$3" "$1" "$2"
+        git clone "$1" "$2"
     fi
     cd "$2"
-    git checkout "$3"
     git pull --ff-only
     cd ..
 }
-git_pull https://github.com/nv-legate/legate.core.git legate.core master
-git_pull https://github.com/nv-legate/legate.hello.git legate.hello main
-git_pull https://github.com/nv-legate/legate.numpy.git legate.numpy master
-git_pull https://github.com/nv-legate/legate.pandas.git legate.pandas master
+git_pull https://github.com/nv-legate/legate.core.git legate.core
+git_pull https://github.com/nv-legate/legate.numpy.git legate.numpy
 
 # Build and push image
 IMAGE=legate-"$PLATFORM"
