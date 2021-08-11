@@ -25,7 +25,7 @@ if [[ $# -lt 2 || ! "$1" =~ ^(1/)?[0-9]+$ ]]; then
     echo "Positional arguments:"
     echo "  <num-nodes> : positive integer or ratio < 1 (e.g. 1/4, for partial-node runs)"
     echo "  <argI> : arguments to the program itself, Legate or Legion"
-    echo "           see $LEGATE_DIR/bin/legate -h for options accepted by Legate"
+    echo "           see \$LEGATE_DIR/bin/legate -h for options accepted by Legate"
     echo "           see the Legion README for options accepted by Legion"
     echo "Arguments read from the environment:"
     echo "  ACCOUNT : account/group/project to submit the job under (if applicable)"
@@ -86,10 +86,12 @@ export USE_OPENMP="${USE_OPENMP:-1}"
 # We explicitly add the Conda lib dir, to ensure the Conda libraries we load
 # will look there for their dependencies first, instead of trying to link with
 # the corresponding system-wide versions.
-if [[ "$(uname)" == "Darwin" ]]; then
-    export DYLD_LIBRARY_PATH="$CONDA_PREFIX"/lib:"$DYLD_LIBRARY_PATH"
-else
-    export LD_LIBRARY_PATH="$CONDA_PREFIX"/lib:"$LD_LIBRARY_PATH"
+if [[ "$CONTAINER_BASED" == 0 ]]; then
+    if [[ "$(uname)" == "Darwin" ]]; then
+        export DYLD_LIBRARY_PATH="$CONDA_PREFIX"/lib:"${DYLD_LIBRARY_PATH:-}"
+    else
+        export LD_LIBRARY_PATH="$CONDA_PREFIX"/lib:"${LD_LIBRARY_PATH:-}"
+    fi
 fi
 
 # Prepare output directory
