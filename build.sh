@@ -27,6 +27,8 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "  DEBUG : compile with debug symbols and w/o optimizations (default: 0)"
     echo "  LEGATE_DIR : path to Legate installation directory"
     echo "  PLATFORM : what machine to build for (default: auto-detected)"
+    echo "  USE_CUDA : include CUDA support (default: auto-detected)"
+    echo "  USE_OPENMP : include OpenMP support (default: auto-detected)"
     exit
 fi
 
@@ -45,15 +47,18 @@ if [[ -d "legate/core" ]]; then
                --conduit "$CONDUIT" \
                "$@"
     fi
-    if [[ "$GPU_ARCH" != none ]]; then
+    if [[ "$USE_CUDA" == 1 ]]; then
         set -- --cuda \
                --arch "$GPU_ARCH" \
                --with-cuda "$CUDA_HOME" \
                "$@"
     fi
+    if [[ "$USE_OPENMP" == 1 ]]; then
+        set -- --openmp \
+               "$@"
+    fi
     run_build ./install.py \
               --install-dir "$LEGATE_DIR" \
-              --openmp \
               "$@"
 elif [[ -d "legate/dask" ]]; then
     run_build ./install.py \
@@ -68,7 +73,7 @@ elif [[ -d "legate/numpy" ]]; then
               --with-core "$LEGATE_DIR" \
               "$@"
 elif [[ -d "legate/pandas" ]]; then
-    if [[ "$GPU_ARCH" != none ]]; then
+    if [[ "$USE_CUDA" == 1 ]]; then
         set -- --with-rmm "$CONDA_PREFIX" \
                --with-nccl "$CONDA_PREFIX" \
                --with-cudf "$CONDA_PREFIX" \

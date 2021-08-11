@@ -33,6 +33,8 @@ function set_build_vars {
     export CC="${CC:-gcc}"
     export CXX="${CXX:-g++}"
     export FC="${FC:-gfortran}"
+    export USE_CUDA="${USE_CUDA:-1}"
+    export USE_OPENMP="${USE_OPENMP:-1}"
     # Set base build variables according to target platform
     if [[ "$PLATFORM" == summit ]]; then
         export CONDUIT=ibv
@@ -95,8 +97,11 @@ function set_build_vars {
                     *) echo "Error: Unsupported GPU architecture $GPU_ARCH_NUM" 1>&2; exit 1 ;;
                 esac
             else
-                export GPU_ARCH=none
+                export USE_CUDA=0
             fi
+        fi
+        if ! echo "int main(){}" | "$CXX" -x c++ -fopenmp - &> /dev/null; then
+            export USE_OPENMP=0
         fi
     fi
     if [[ -z "${CUDA_HOME+x}" ]]; then

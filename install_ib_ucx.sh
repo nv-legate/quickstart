@@ -26,6 +26,7 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "  ACCOUNT : account/group/project to submit build job under (if applicable)"
     echo "  DEBUG : compile with debug symbols and w/o optimizations (default: 0)"
     echo "  PLATFORM : what machine to build for (default: auto-detected)"
+    echo "  USE_CUDA : include CUDA support (default: auto-detected)"
     exit
 fi
 
@@ -58,7 +59,7 @@ run_build bash -euo pipefail -c '
                    --enable-optimizations \
                    --with-march)
     fi
-    if [[ "$GPU_ARCH" != none ]]; then
+    if [[ "$USE_CUDA" == 1 ]]; then
         CONFIGURE+=(--with-dm \
                     --with-cuda="$CUDA_HOME")
     fi
