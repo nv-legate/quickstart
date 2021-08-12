@@ -48,13 +48,8 @@ if [[ -d "legate/core" ]]; then
                "$@"
     fi
     if [[ "$USE_CUDA" == 1 ]]; then
-        set -- --cuda \
-               --arch "$GPU_ARCH" \
+        set -- --arch "$GPU_ARCH" \
                --with-cuda "$CUDA_HOME" \
-               "$@"
-    fi
-    if [[ "$USE_OPENMP" == 1 ]]; then
-        set -- --openmp \
                "$@"
     fi
     run_build ./install.py \
