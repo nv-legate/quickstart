@@ -42,8 +42,8 @@ if [[ $# -lt 2 || ! "$1" =~ ^(1/)?[0-9]+$ ]]; then
     echo "  QUEUE : what queue/partition to submit the job to (default: depends on cluster)"
     echo "  SCRATCH : where to create an output directory (default: .)"
     echo "  TIMELIMIT : how much time to request for the job, in minutes (defaut: 60)"
-    echo "  USE_CUDA : run with CUDA enabled (defaut: 1)"
-    echo "  USE_OPENMP : run with OpenMP enabled (defaut: 1)"
+    echo "  USE_CUDA : run with CUDA enabled (defaut: auto-detected)"
+    echo "  USE_OPENMP : run with OpenMP enabled (defaut: auto-detected)"
     exit
 fi
 
@@ -81,7 +81,13 @@ export NOWAIT="${NOWAIT:-0}"
 export SCRATCH="${SCRATCH:-.}"
 export TIMELIMIT="${TIMELIMIT:-60}"
 export USE_CUDA="${USE_CUDA:-1}"
+if ! grep -q '#define REALM_USE_CUDA' "$LEGATE_DIR"/include/realm_defines.h; then
+    export USE_CUDA=0
+fi
 export USE_OPENMP="${USE_OPENMP:-1}"
+if ! grep -q '#define REALM_USE_OPENMP' "$LEGATE_DIR"/include/realm_defines.h; then
+    export USE_OPENMP=0
+fi
 
 # We explicitly add the Conda lib dir, to ensure the Conda libraries we load
 # will look there for their dependencies first, instead of trying to link with
@@ -187,11 +193,12 @@ else
     NUMAS_PER_NODE="$(lscpu | grep 'Socket(s)' | awk '{print $2}')"
     RAM_PER_NODE="$(free -m | head -2 | tail -1 | awk '{print $2}')"
     RAM_PER_NUMA=$(( RAM_PER_NODE * 4 / 5 / NUMAS_PER_NODE ))
-    GPUS_PER_NODE="$(nvidia-smi -q | grep 'Attached GPUs' | awk '{print $4}')"
     CORES_PER_NUMA=$(lscpu | grep 'Core(s) per socket' | awk '{print $4}')
     THREADS_PER_OMP=$(( CORES_PER_NUMA - 4 ))
-    FB_PER_GPU="$(nvidia-smi --format=csv,noheader,nounits --query-gpu=memory.total -i 0)"
-    FB_PER_GPU=$(( FB_PER_GPU - 2000 ))
+    if [[ "$USE_CUDA" == 1 ]]; then
+        GPUS_PER_NODE="$(nvidia-smi -q | grep 'Attached GPUs' | awk '{print $4}')"
+        FB_PER_GPU=$(( $(nvidia-smi --format=csv,noheader,nounits --query-gpu=memory.total -i 0) - 2000 ))
+    fi
 fi
 NUM_OMPS=$(( NUMAS_PER_NODE * $NODE_RATIO ))
 if [[ $NUM_OMPS -lt 1 ]]; then
@@ -200,7 +207,9 @@ if [[ $NUM_OMPS -lt 1 ]]; then
     RAM_PER_NUMA=$(( RAM_PER_NUMA * NUMAS_PER_NODE * $NODE_RATIO ))
 fi
 NUM_CORES=$(( NUMAS_PER_NODE * CORES_PER_NUMA * $NODE_RATIO ))
-NUM_GPUS=$(( GPUS_PER_NODE * $NODE_RATIO ))
+if [[ "$USE_CUDA" == 1 ]]; then
+    NUM_GPUS=$(( GPUS_PER_NODE * $NODE_RATIO ))
+fi
 
 # Add legate driver to command
 if [[ "$NODRIVER" != 1 ]]; then
