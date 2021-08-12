@@ -190,10 +190,16 @@ else
         exit 1
     fi
     # Auto-detect available resources
-    NUMAS_PER_NODE="$(lscpu | grep 'Socket(s)' | awk '{print $2}')"
-    RAM_PER_NODE="$(free -m | head -2 | tail -1 | awk '{print $2}')"
-    RAM_PER_NUMA=$(( RAM_PER_NODE * 4 / 5 / NUMAS_PER_NODE ))
-    CORES_PER_NUMA=$(lscpu | grep 'Core(s) per socket' | awk '{print $4}')
+    if [[ "$(uname)" == "Darwin" ]]; then
+        NUMAS_PER_NODE=1
+        RAM_PER_NODE=$(( $(sysctl -n hw.memsize) / 1024 / 1024 ))
+        CORES_PER_NUMA="$(sysctl -n machdep.cpu.core_count)"
+    else
+        NUMAS_PER_NODE="$(lscpu | grep 'Socket(s)' | awk '{print $2}')"
+        RAM_PER_NODE="$(free -m | head -2 | tail -1 | awk '{print $2}')"
+        CORES_PER_NUMA="$(lscpu | grep 'Core(s) per socket' | awk '{print $4}')"
+    fi
+    RAM_PER_NUMA=$(( RAM_PER_NODE / 2 / NUMAS_PER_NODE ))
     THREADS_PER_OMP=$(( CORES_PER_NUMA - 4 ))
     if [[ "$USE_CUDA" == 1 ]]; then
         GPUS_PER_NODE="$(nvidia-smi -q | grep 'Attached GPUs' | awk '{print $4}')"
