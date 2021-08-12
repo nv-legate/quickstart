@@ -60,10 +60,6 @@ if [[ -d "legate/core" ]]; then
     run_build ./install.py \
               --install-dir "$LEGATE_DIR" \
               "$@"
-elif [[ -d "legate/dask" ]]; then
-    run_build ./install.py \
-              --with-core "$LEGATE_DIR" \
-              "$@"
 elif [[ -d "legate/hello" ]]; then
     run_build ./install.py \
               --with-core "$LEGATE_DIR" \
