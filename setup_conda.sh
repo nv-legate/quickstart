@@ -70,7 +70,7 @@ fi
 if [[ "$USE_RAPIDS" == 1 ]]; then
     conda create --yes --name "$CONDA_ENV" \
         -c rapidsai -c nvidia -c conda-forge -c defaults \
-        python="$PYTHON_VER" cudatoolkit="$CUDA_VER" rapids=0.19 \
+        python="$PYTHON_VER" cudatoolkit="$CUDA_VER" cudf=0.19 \
         "$@"
 else
     conda create --yes --name "$CONDA_ENV" \
