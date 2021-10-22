@@ -59,7 +59,7 @@ elif [[ -d "legate/hello" ]]; then
     run_build ./install.py \
               --with-core "$LEGATE_DIR" \
               "$@"
-elif [[ -d "legate/numpy" ]]; then
+elif [[ -d "cunumeric" ]]; then
     run_build ./install.py \
               --with-core "$LEGATE_DIR" \
               "$@"

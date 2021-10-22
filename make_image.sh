@@ -47,7 +47,7 @@ function git_pull {
     cd ..
 }
 git_pull https://github.com/nv-legate/legate.core.git legate.core
-git_pull https://github.com/nv-legate/legate.numpy.git legate.numpy
+git_pull https://github.com/nv-legate/cunumeric.git cunumeric
 
 # Build and push image
 IMAGE=legate-"$PLATFORM"

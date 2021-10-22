@@ -136,10 +136,10 @@ RUN source activate rapids \
  && export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${CUDA_HOME}/lib64/stubs \
  && bash -x /opt/legate/quickstart/build.sh
 
-# Build legate.numpy
-COPY legate.numpy /opt/legate/legate.numpy
+# Build cunumeric
+COPY cunumeric /opt/legate/cunumeric
 RUN source activate rapids \
- && cd /opt/legate/legate.numpy \
+ && cd /opt/legate/cunumeric \
  && bash -x /opt/legate/quickstart/build.sh
 
 # Create a new user
