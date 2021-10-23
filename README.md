@@ -41,8 +41,8 @@ and correspondingly for the `legate-generic-ampere` image.
 After entering the container, you can try running some examples:
 
 ```
-# Legate NumPy 2d stencil example
-/opt/legate/quickstart/run.sh 1 /opt/legate/legate.numpy/examples/stencil.py -n 1000 -t -b 10
+# CuNumeric 2d stencil example
+/opt/legate/quickstart/run.sh 1 /opt/legate/cunumeric/examples/stencil.py -n 1000 -t -b 10
 # Legate Pandas join microbenchmark
 /opt/legate/quickstart/run.sh 1 /opt/legate/legate.pandas/benchmarks/micro/merge.py --size_per_proc 10000 --num_runs 10
 ```
@@ -52,8 +52,8 @@ container. If you wish to control that further, you can use the `legate` launche
 script directly:
 
 ```
-# Legate NumPy 2d stencil example
-legate --gpus 1 --fbmem 15000 /opt/legate/legate.numpy/examples/stencil.py -n 1000 -t -b 10
+# CuNumeric 2d stencil example
+legate --gpus 1 --fbmem 15000 /opt/legate/cunumeric/examples/stencil.py -n 1000 -t -b 10
 # Legate Pandas join microbenchmark
 legate --gpus 1 --fbmem 15000 /opt/legate/legate.pandas/benchmarks/micro/merge.py --size_per_proc 10000 --num_runs 10
 ```
@@ -170,7 +170,7 @@ LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
 Build additional Legate libraries:
 
 ```
-cd /path/to/legate/numpy
+cd /path/to/cunumeric
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh --with-openblas /autofs/nccs-svm1_sw/summit/.swci/1-compute/opt/spack/20180914/linux-rhel7-ppc64le/gcc-9.3.0/openblas-0.3.9-2jwtqbpq7gm2uh4cddg4a76gf2nkdsdf
 cd /path/to/legate/pandas
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
