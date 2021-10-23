@@ -81,12 +81,16 @@ export NOWAIT="${NOWAIT:-0}"
 export SCRATCH="${SCRATCH:-.}"
 export TIMELIMIT="${TIMELIMIT:-60}"
 export USE_CUDA="${USE_CUDA:-1}"
-if ! grep -q '#define REALM_USE_CUDA' "$LEGATE_DIR"/include/realm_defines.h; then
-    export USE_CUDA=0
-fi
 export USE_OPENMP="${USE_OPENMP:-1}"
-if ! grep -q '#define REALM_USE_OPENMP' "$LEGATE_DIR"/include/realm_defines.h; then
-    export USE_OPENMP=0
+
+# Verify that all requested hardware is available
+if [[ "$CONTAINER_BASED" == 0 ]]; then
+    if ! grep -q '#define REALM_USE_CUDA' "$LEGATE_DIR"/include/realm_defines.h; then
+        export USE_CUDA=0
+    fi
+    if ! grep -q '#define REALM_USE_OPENMP' "$LEGATE_DIR"/include/realm_defines.h; then
+        export USE_OPENMP=0
+    fi
 fi
 
 # We explicitly add the Conda lib dir, to ensure the Conda libraries we load
