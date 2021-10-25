@@ -2,5 +2,5 @@
 legate.core
 legate.dask
 legate.hello
-legate.numpy
+cunumeric
 legate.pandas
