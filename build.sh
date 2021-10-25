@@ -54,14 +54,16 @@ if [[ -d "legate/core" ]]; then
     fi
     run_build ./install.py \
               --install-dir "$LEGATE_DIR" \
+              --max-dim 4 \
               "$@"
 elif [[ -d "legate/hello" ]]; then
     run_build ./install.py \
               --with-core "$LEGATE_DIR" \
               "$@"
-elif [[ -d "cunumeric" ]]; then
+elif [[ -d "legate/numpy" ]]; then
     run_build ./install.py \
               --with-core "$LEGATE_DIR" \
+              --with-openblas "$CONDA_PREFIX" \
               "$@"
 elif [[ -d "legate/pandas" ]]; then
     if [[ "$USE_CUDA" == 1 ]]; then
