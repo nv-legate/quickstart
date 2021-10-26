@@ -245,7 +245,11 @@ if [[ "$NODRIVER" != 1 ]]; then
         set -- --cores-per-node $(( NUMAS_PER_NODE * CORES_PER_NUMA)) --launcher jsrun "$@"
     else
         # Local run
-        true
+        if grep -q '#define GASNET_CONDUIT_MPI' "$LEGATE_DIR"/include/realm_defines.h; then
+            set -- --launcher mpirun "$@"
+        else
+            set -- --launcher none "$@"
+        fi
     fi
     set -- "$LEGATE_DIR/bin/legate" "$@" -logfile "$CMD_OUT_DIR"/%.log
 fi
