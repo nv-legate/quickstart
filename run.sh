@@ -33,7 +33,6 @@ if [[ $# -lt 2 || ! "$1" =~ ^(1/)?[0-9]+(:[0-9]+)?$ ]]; then
     echo "  IMAGE : which image to use (for container-based clusters)"
     echo "          (default : ghcr.io/nv-legate/legate-\$PLATFORM:latest)"
     echo "  INTERACTIVE : submit an interactive rather than a batch job (defaut: 0)"
-    echo "  JOBSCRIPT : what jobscript to submit (defaut: appropriate script in $SCRIPT_DIR)"
     echo "  LEGATE_DIR : path to Legate installation directory"
     echo "  MOUNTS : comma-separated list of volume mounts (for container-based clusters)"
     echo "           (syntax depends on cluster) (default: none)"
@@ -273,8 +272,7 @@ fi
 
 # Submit job to appropriate scheduler
 if [[ "$PLATFORM" == summit ]]; then
-    JOBSCRIPT="${JOBSCRIPT:-$SCRIPT_DIR/legate.lsf}"
-    set -- "$JOBSCRIPT" "$@"
+    set -- "$SCRIPT_DIR/legate.lsf" "$@"
     QUEUE="${QUEUE:-batch}"
     if [[ "$INTERACTIVE" == 1 ]]; then
         set -- -Is "$@"
@@ -287,8 +285,7 @@ if [[ "$PLATFORM" == summit ]]; then
 elif [[ "$PLATFORM" == cori ]]; then
     # Use the first NIC from each pair
     export GASNET_IBV_PORTS=mlx5_0+mlx5_2+mlx5_4+mlx5_6
-    JOBSCRIPT="${JOBSCRIPT:-$SCRIPT_DIR/legate.slurm}"
-    set -- "$JOBSCRIPT" "$@"
+    set -- "$SCRIPT_DIR/legate.slurm" "$@"
     # We double the number of cores because SLURM counts virtual cores
     set -- -J legate -A "$ACCOUNT" -t "$TIMELIMIT" -N "$NUM_NODES" -C gpu "$@"
     set -- --ntasks-per-node "$RANKS_PER_NODE" -c $(( 2 * NUM_CORES )) --gpus-per-task "$NUM_GPUS" "$@"
@@ -300,8 +297,7 @@ elif [[ "$PLATFORM" == cori ]]; then
     echo "Submitted: $@"
     "$@"
 elif [[ "$PLATFORM" == pizdaint ]]; then
-    JOBSCRIPT="${JOBSCRIPT:-$SCRIPT_DIR/legate.slurm}"
-    set -- "$JOBSCRIPT" "$@"
+    set -- "$SCRIPT_DIR/legate.slurm" "$@"
     QUEUE="${QUEUE:-normal}"
     set -- -J legate -A "$ACCOUNT" -p "$QUEUE" -t "$TIMELIMIT" -N "$NUM_NODES" -C gpu "$@"
     if [[ "$INTERACTIVE" == 1 ]]; then
@@ -312,8 +308,7 @@ elif [[ "$PLATFORM" == pizdaint ]]; then
     echo "Submitted: $@"
     "$@"
 elif [[ "$PLATFORM" == lassen ]]; then
-    JOBSCRIPT="${JOBSCRIPT:-$SCRIPT_DIR/legate.lsf}"
-    set -- "$JOBSCRIPT" "$@"
+    set -- "$SCRIPT_DIR/legate.lsf" "$@"
     QUEUE="${QUEUE:-pbatch}"
     if [[ "$INTERACTIVE" == 1 ]]; then
         set -- -Is "$@"
