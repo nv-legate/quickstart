@@ -253,13 +253,13 @@ if [[ "$NODRIVER" != 1 ]]; then
         set -- --sysmem $(( NUM_OMPS * RAM_PER_OMP )) "$@"
     fi
     if [[ "$PLATFORM" == summit ]]; then
-        set -- --cores-per-node $(( NUMAS_PER_NODE * CORES_PER_NUMA)) --launcher jsrun "$@"
+        set -- --launcher jsrun "$@"
     elif [[ "$PLATFORM" == cori ]]; then
         set -- --launcher srun "$@"
     elif [[ "$PLATFORM" == pizdaint ]]; then
         set -- --launcher srun "$@"
     elif [[ "$PLATFORM" == lassen ]]; then
-        set -- --cores-per-node $(( NUMAS_PER_NODE * CORES_PER_NUMA)) --launcher jsrun "$@"
+        set -- --launcher jsrun "$@"
     else
         # Local run
         if grep -q '#define GASNET_CONDUIT_MPI' "$LEGATE_DIR"/include/realm_defines.h; then
