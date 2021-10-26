@@ -20,10 +20,11 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$SCRIPT_DIR/common.sh"
 
 # Print usage if requested
-if [[ $# -lt 2 || ! "$1" =~ ^(1/)?[0-9]+$ ]]; then
-    echo "Usage: $(basename "${BASH_SOURCE[0]}") <num-nodes> <prog.py> <arg1> <arg2> ..."
+if [[ $# -lt 2 || ! "$1" =~ ^(1/)?[0-9]+(:[0-9]+)?$ ]]; then
+    echo "Usage: $(basename "${BASH_SOURCE[0]}") <num-nodes>[:<ranks-per-node>] <prog.py> <arg1> <arg2> ..."
     echo "Positional arguments:"
     echo "  <num-nodes> : positive integer or ratio < 1 (e.g. 1/4, for partial-node runs)"
+    echo "  <ranks-per-node> : positive integer (default: 1)"
     echo "  <argI> : arguments to the program itself, Legate or Legion"
     echo "           see \$LEGATE_DIR/bin/legate -h for options accepted by Legate"
     echo "           see the Legion README for options accepted by Legion"
@@ -49,13 +50,21 @@ if [[ $# -lt 2 || ! "$1" =~ ^(1/)?[0-9]+$ ]]; then
 fi
 
 # Read arguments
-if [[ "$1" =~ [0-9]+/[0-9]+ ]]; then
-    NUM_NODES=1
-    NODE_RATIO="$1"
+NODE_STR="$1"
+if [[ "$1" == *":"* ]]; then
+    RANKS_PER_NODE="${NODE_STR#*:}"
+    NODE_STR="${NODE_STR%%:*}"
 else
-    NUM_NODES="$1"
+    RANKS_PER_NODE=1
+fi
+if [[ "$NODE_STR" =~ [0-9]+/[0-9]+ ]]; then
+    NUM_NODES=1
+    NODE_RATIO="$NODE_STR"
+else
+    NUM_NODES="$NODE_STR"
     NODE_RATIO=1
 fi
+NODE_RATIO="$NODE_RATIO / $RANKS_PER_NODE"
 shift
 detect_platform
 if [[ "$PLATFORM" == summit ]]; then
@@ -230,7 +239,8 @@ fi
 
 # Add legate driver to command
 if [[ "$NODRIVER" != 1 ]]; then
-    set -- --nodes "$NUM_NODES" --verbose --logdir "$CMD_OUT_DIR" "$@"
+    set -- --nodes "$NUM_NODES" --ranks-per-node "$RANKS_PER_NODE" "$@"
+    set -- --verbose --logdir "$CMD_OUT_DIR" "$@"
     if [[ "$USE_CUDA" == 1 ]]; then
         set -- --gpus "$NUM_GPUS" --fbmem "$FB_PER_GPU" "$@"
     fi
@@ -280,7 +290,8 @@ elif [[ "$PLATFORM" == cori ]]; then
     JOBSCRIPT="${JOBSCRIPT:-$SCRIPT_DIR/legate.slurm}"
     set -- "$JOBSCRIPT" "$@"
     # We double the number of cores because SLURM counts virtual cores
-    set -- -J legate -A "$ACCOUNT" -t "$TIMELIMIT" -N "$NUM_NODES" --ntasks-per-node 1 -c $(( 2 * $NUM_CORES )) -C gpu --gpus-per-task "$NUM_GPUS" "$@"
+    set -- -J legate -A "$ACCOUNT" -t "$TIMELIMIT" -N "$NUM_NODES" -C gpu "$@"
+    set -- --ntasks-per-node "$RANKS_PER_NODE" -c $(( 2 * NUM_CORES )) --gpus-per-task "$NUM_GPUS" "$@"
     if [[ "$INTERACTIVE" == 1 ]]; then
         set -- salloc -q interactive "$@"
     else
