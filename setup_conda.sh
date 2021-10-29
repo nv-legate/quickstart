@@ -70,6 +70,7 @@ if conda info --envs | grep -q "^$CONDA_ENV "; then
     echo "Error: Conda environment $CONDA_ENV already exists" 1>&2
     exit 1
 fi
+set -- cffi numpy scipy pyarrow arrow-cpp arrow-cpp-proc "$@"
 if [[ "$USE_CUDA" == 1 && "$USE_CUDF" == 1 ]]; then
      conda create --yes --name "$CONDA_ENV" \
          -c rapidsai -c nvidia -c conda-forge -c defaults \
@@ -84,7 +85,6 @@ else
     conda create --yes --name "$CONDA_ENV" \
         -c conda-forge -c defaults \
         python="$PYTHON_VER" \
-        cffi numpy pyarrow arrow-cpp arrow-cpp-proc \
         "$@"
 fi
 
