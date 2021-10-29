@@ -27,6 +27,8 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "  PLATFORM : what machine to build for (default: generic single-node"
     echo "             machine with volta GPUs)"
     echo "  PYTHON_VER : Python version to use (default: 3.8)"
+    echo "  TAG : Tag to use for the produced image (default: \`date +%Y-%m-%d-%H%M%S\`)"
+    echo "  TAG_LATEST : Whether to also tag the image as latest (default: 0)"
     exit
 fi
 
@@ -36,6 +38,8 @@ export DEBUG="${DEBUG:-0}"
 export LINUX_VER="${LINUX_VER:-ubuntu20.04}"
 export PLATFORM="${PLATFORM:-generic-volta}"
 export PYTHON_VER="${PYTHON_VER:-3.8}"
+export TAG="${TAG:-$(date +%Y-%m-%d-%H%M%S)}"
+export TAG_LATEST="${TAG_LATEST:-0}"
 
 # Pull latest versions of legate libraries and Legion
 function git_pull {
@@ -51,7 +55,6 @@ git_pull https://github.com/nv-legate/cunumeric.git cunumeric
 
 # Build and push image
 IMAGE=legate-"$PLATFORM"
-TAG="$(date +%Y-%m-%d-%H%M%S)"
 DOCKER_BUILDKIT=1 docker build -t "$IMAGE:$TAG" \
     --build-arg CUDA_VER="$CUDA_VER" \
     --build-arg DEBUG="$DEBUG" \
@@ -61,7 +64,9 @@ DOCKER_BUILDKIT=1 docker build -t "$IMAGE:$TAG" \
     "$@" .
 for REPO in ghcr.io/nv-legate; do
     docker tag "$IMAGE:$TAG" "$REPO/$IMAGE:$TAG"
-    docker tag "$IMAGE:$TAG" "$REPO/$IMAGE:latest"
     docker push "$REPO/$IMAGE:$TAG"
-    docker push "$REPO/$IMAGE:latest"
+    if [[ "$TAG_LATEST" == 1 ]]; then
+        docker tag "$IMAGE:$TAG" "$REPO/$IMAGE:latest"
+        docker push "$REPO/$IMAGE:latest"
+    fi
 done
