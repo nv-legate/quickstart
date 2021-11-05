@@ -131,21 +131,23 @@ Run basic setup:
 CONDA_ROOT=<conda-install-dir> <quickstart-dir>/setup_conda.sh
 source "<conda-install-dir>/etc/profile.d/conda.sh"
 conda activate legate
+```
+
+Build Legate libraries:
+
+```
 cd /path/to/legate.core
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
-```
-
-Build additional Legate libraries:
-
-```
-cd /path/to/legate/lib
+cd /path/to/cunumeric
+LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
+cd /path/to/legate.pandas
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
 ```
 
 Run Legate programs:
 
 ```
-LEGATE_DIR=<legate-install-dir> <quickstart-dir>/run.sh prog.py
+LEGATE_DIR=<legate-install-dir> <quickstart-dir>/run.sh <num-nodes> <py-program>
 ```
 
 Summit @ ORNL
@@ -160,26 +162,21 @@ module load ums-gen119
 module load nvidia-rapids/21.08
 ```
 
-Log out and back in, then run:
+Build Legate libraries:
 
 ```
 cd /path/to/legate.core
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
-```
-
-Build additional Legate libraries:
-
-```
 cd /path/to/cunumeric
-LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh --with-openblas /autofs/nccs-svm1_sw/summit/.swci/1-compute/opt/spack/20180914/linux-rhel7-ppc64le/gcc-9.3.0/openblas-0.3.9-2jwtqbpq7gm2uh4cddg4a76gf2nkdsdf
-cd /path/to/legate/pandas
+LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
+cd /path/to/legate.pandas
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
 ```
 
 Run Legate programs:
 
 ```
-LEGATE_DIR=<legate-install-dir> <quickstart-dir>/run.sh prog.py
+LEGATE_DIR=<legate-install-dir> <quickstart-dir>/run.sh <num-nodes> <py-program>
 ```
 
 CoriGPU @ LBL
@@ -202,21 +199,23 @@ Log out and back in, then run:
 ```
 <quickstart-dir>/setup_conda.sh
 conda activate legate
+```
+
+Build Legate libraries:
+
+```
 cd /path/to/legate.core
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
-```
-
-Build additional Legate libraries:
-
-```
-cd /path/to/legate/lib
+cd /path/to/cunumeric
+LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
+cd /path/to/legate.pandas
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
 ```
 
 Run Legate programs:
 
 ```
-LEGATE_DIR=<legate-install-dir> <quickstart-dir>/run.sh prog.py
+LEGATE_DIR=<legate-install-dir> <quickstart-dir>/run.sh <num-nodes> <py-program>
 ```
 
 PizDaint @ ETH
@@ -238,21 +237,23 @@ Log out and back in, then run:
 CONDA_ROOT=<conda-install-dir> <quickstart-dir>/setup_conda.sh
 source "<conda-install-dir>/etc/profile.d/conda.sh"
 conda activate legate
+```
+
+Build Legate libraries:
+
+```
 cd /path/to/legate.core
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
-```
-
-Build additional Legate libraries:
-
-```
-cd /path/to/legate/lib
+cd /path/to/cunumeric
+LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
+cd /path/to/legate.pandas
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
 ```
 
 Run Legate programs:
 
 ```
-LEGATE_DIR=<legate-install-dir> <quickstart-dir>/run.sh prog.py
+LEGATE_DIR=<legate-install-dir> <quickstart-dir>/run.sh <num-nodes> <py-program>
 ```
 
 Lassen @ LLNL
@@ -273,21 +274,22 @@ Log out and back in, then run:
 USE_RAPIDS=0 CONDA_ROOT=<conda-install-dir> <quickstart-dir>/setup_conda.sh
 source "<conda-install-dir>/etc/profile.d/conda.sh"
 conda activate legate
+```
+
+Build Legate libraries:
+
+```
 cd /path/to/legate.core
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
-```
-
-Build additional Legate libraries:
-
-```
-cd /path/to/legate/lib
+cd /path/to/cunumeric
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
+# Legate.pandas will not work on GPUs without CuDF from Rapids
 ```
 
 Run Legate programs:
 
 ```
-LEGATE_DIR=<legate-install-dir> <quickstart-dir>/run.sh prog.py
+LEGATE_DIR=<legate-install-dir> <quickstart-dir>/run.sh <num-nodes> <py-program>
 ```
 
 Questions
