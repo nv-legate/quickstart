@@ -66,8 +66,6 @@ RUN source /opt/legate/quickstart/common.sh \
     apt-get install -y --no-install-recommends \
     `# requirements for MOFED packages` \
     libnl-3-200 libnl-route-3-200 libnl-3-dev libnl-route-3-dev \
-    `# requirements for UCX build` \
-    libtool libnuma-dev \
   ; fi \
  && apt-get install -y --no-install-recommends \
     `# requirements for OpenBLAS build` \
@@ -77,7 +75,7 @@ RUN source /opt/legate/quickstart/common.sh \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
-# Install Verbs & RDMA-CM from MOFED
+# Install Verbs, RDMA-CM, OpenMPI and UCX from MOFED
 RUN source /opt/legate/quickstart/common.sh \
  && set_build_vars \
  && if [[ "$CONDUIT" == ibv || "$CONDUIT" == ucx ]]; then \
@@ -89,45 +87,19 @@ RUN source /opt/legate/quickstart/common.sh \
  && dpkg -i $(echo $(find . -false \
     -or -name 'ibverbs-providers*.deb' \
     -or -name 'libibverbs*.deb' \
-    -or -name 'librdmacm*.deb')) \
+    -or -name 'librdmacm*.deb' \
+    -or -name 'openmpi_*.deb' \
+    -or -name 'ucx_*.deb')) \
  && cd /tmp \
  && rm -rf ${MOFED_ID} \
  && echo ${MOFED_VER} > /opt/mofed-ver \
   ; fi
+
+# Copy MOFED executables to /usr/bin
+RUN for APP in mpicc mpicxx mpif90 mpirun; do \
+    ln -s /usr/mpi/gcc/openmpi-*/bin/"$APP" /usr/bin/"$APP" \
+  ; done
 COPY ibdev2netdev /usr/bin/
-
-# Build UCX with Verbs support
-RUN source /opt/legate/quickstart/common.sh \
- && set_build_vars \
- && if [[ "$CONDUIT" == ibv || "$CONDUIT" == ucx ]]; then \
-    source activate rapids \
- && export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${CUDA_HOME}/lib64/stubs \
- && /opt/legate/quickstart/install_ib_ucx.sh \
-  ; fi
-
-# Build OpenMPI from source, to make sure it matches our version of UCX.
-RUN source /opt/legate/quickstart/common.sh \
- && set_build_vars \
- && if [[ "$CONDUIT" == ibv || "$CONDUIT" == ucx ]]; then \
-    source activate rapids \
- && export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${CUDA_HOME}/lib64/stubs \
- && cd /tmp \
- && curl -fsSL https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.1.tar.gz | tar -xz \
- && cd openmpi-* \
- && mkdir build \
- && cd build \
- && ../configure \
-    --with-verbs \
-    --with-cuda=${CUDA_HOME} \
-    --with-ucx=${CONDA_PREFIX} \
-    --enable-mca-no-build=btl-uct \
-    --with-hwloc=internal \
-    --with-libevent=internal \
- && make -j install \
- && cd /tmp \
- && rm -rf openmpi-* \
- && ldconfig \
-  ; fi
 
 # Build GASNet, Legion and legate.core (in no-clean mode, so we don't override
 # the Legion checkout)
