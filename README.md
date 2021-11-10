@@ -84,7 +84,7 @@ resources.
 ### Customizing installation
 
 * `setup_conda.sh`: This script will create a new conda environment suitable for
-  using all Legate libraries on GPUs. Use `USE_RAPIDS=0` to skip Rapids packages
+  using all Legate libraries on GPUs. Use `USE_CUDF=0` to skip Rapids packages
   (required for running legate.pandas on GPUs). You can skip the script entirely
   if you prefer to install the required packages manually; see the
   `conda/???.yml` files on the individual Legate libraries.
@@ -271,7 +271,7 @@ Log out and back in, then run:
 
 ```
 # Rapids conda packages are not distributed for PowerPC
-USE_RAPIDS=0 CONDA_ROOT=<conda-install-dir> <quickstart-dir>/setup_conda.sh
+USE_CUDF=0 CONDA_ROOT=<conda-install-dir> <quickstart-dir>/setup_conda.sh
 source "<conda-install-dir>/etc/profile.d/conda.sh"
 conda activate legate
 ```
