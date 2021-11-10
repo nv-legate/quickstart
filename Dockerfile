@@ -18,8 +18,7 @@
 # Parent image
 ARG CUDA_VER
 ARG LINUX_VER
-ARG PYTHON_VER
-FROM rapidsai/rapidsai-core-dev:0.19-cuda${CUDA_VER}-devel-${LINUX_VER}-py${PYTHON_VER}
+FROM gpuci/miniconda-cuda:${CUDA_VER}-devel-${LINUX_VER}
 
 # Build arguments
 ARG CUDA_VER
@@ -34,13 +33,10 @@ ARG PYTHON_VER
 ENV PYTHON_VER=${PYTHON_VER}
 
 # Set compile-time & runtime paths
-# The order of directories is important: legate > conda > MOFED > distro
-# `source activate` will append conda dirs to PATH automaticaly
-ENV CPATH="/opt/conda/envs/rapids/include:${CPATH}"
-ENV LIBRARY_PATH="/opt/conda/envs/rapids/lib:${LIBRARY_PATH}"
-ENV LD_LIBRARY_PATH="/opt/conda/envs/rapids/lib:${LD_LIBRARY_PATH}"
 ENV LEGATE_DIR=/opt/legate/install
 ENV CUDA_HOME=/usr/local/cuda
+# Our activation scripts will append conda dirs to PATH, CPATH and LIBRARY_PATH
+# automaticaly on `conda activate`.
 
 # Execute RUN commands in strict mode
 SHELL [ "/bin/bash", "-eo", "pipefail", "-c" ]
@@ -56,7 +52,8 @@ RUN export LINUX_VER_URL="$(echo "$LINUX_VER" | tr -d '.')" \
 
 # Copy quickstart scripts to image (don't copy the entire directory; that would
 # include the library repo checkouts, that we want to place elsewhere)
-COPY build.sh common.sh entrypoint.sh install_ib_ucx.sh run.sh /opt/legate/quickstart/
+COPY build.sh common.sh entrypoint.sh setup_conda.sh /opt/legate/quickstart/
+COPY conda /opt/legate/quickstart/conda
 
 # Install apt packages
 RUN source /opt/legate/quickstart/common.sh \
@@ -101,17 +98,22 @@ RUN for APP in mpicc mpicxx mpif90 mpirun; do \
   ; done
 COPY ibdev2netdev /usr/bin/
 
+# Create conda environment (no need for CuDF, since we're not including
+# legate.pandas at the moment)
+RUN export USE_CUDF=0 \
+ && bash -x /opt/legate/quickstart/setup_conda.sh
+
 # Build GASNet, Legion and legate.core (in no-clean mode, so we don't override
 # the Legion checkout)
 COPY legate.core /opt/legate/legate.core
-RUN source activate rapids \
+RUN source activate legate \
  && cd /opt/legate/legate.core \
  && export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${CUDA_HOME}/lib64/stubs \
  && bash -x /opt/legate/quickstart/build.sh --no-clean
 
 # Build cunumeric
 COPY cunumeric /opt/legate/cunumeric
-RUN source activate rapids \
+RUN source activate legate \
  && cd /opt/legate/cunumeric \
  && bash -x /opt/legate/quickstart/build.sh
 
