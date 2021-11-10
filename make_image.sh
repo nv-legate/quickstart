@@ -44,13 +44,19 @@ export TAG_LATEST="${TAG_LATEST:-0}"
 # Pull latest versions of legate libraries and Legion
 function git_pull {
     if [[ ! -e "$2" ]]; then
-        git clone "$1" "$2"
+        if [[ "$#" -ge 3 ]]; then
+            git clone "$1" "$2" -b "$3"
+        else
+            git clone "$1" "$2"
+        fi
+    else
+        cd "$2"
+        git pull --ff-only
+        cd -
     fi
-    cd "$2"
-    git pull --ff-only
-    cd ..
 }
 git_pull https://github.com/nv-legate/legate.core.git legate.core
+git_pull https://gitlab.com/StanfordLegion/legion.git legate.core/legion control_replication
 git_pull https://github.com/nv-legate/cunumeric.git cunumeric
 
 # Build and push image

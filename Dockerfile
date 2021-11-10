@@ -129,12 +129,13 @@ RUN source /opt/legate/quickstart/common.sh \
  && ldconfig \
   ; fi
 
-# Build GASNet, Legion and legate.core
+# Build GASNet, Legion and legate.core (in no-clean mode, so we don't override
+# the Legion checkout)
 COPY legate.core /opt/legate/legate.core
 RUN source activate rapids \
  && cd /opt/legate/legate.core \
  && export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${CUDA_HOME}/lib64/stubs \
- && bash -x /opt/legate/quickstart/build.sh
+ && bash -x /opt/legate/quickstart/build.sh --no-clean
 
 # Build cunumeric
 COPY cunumeric /opt/legate/cunumeric
