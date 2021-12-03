@@ -26,23 +26,23 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "Arguments read from the environment:"
     echo "  CONDA_ENV : name of conda environment to create (default: legate)"
     echo "  CONDA_ROOT : where to install conda (if not already installed)"
-    echo "  CUDA_VER : CUDA runtime version to install from conda (if applicable)"
+    echo "  CUDA_VER : CUDA runtime version to request from conda (if applicable)"
     echo "             (default: match system version)"
     echo "  PYTHON_VER : Python version to use (default: 3.8)"
-    echo "  USE_CUDF : install cuDF from Rapids (required for running legate.pandas "
-    echo "             on GPUs) (default: 1)"
+    echo "  USE_CUDA : include CUDA support (default: auto-detected)"
     exit
 fi
 
 # Read arguments
 export CONDA_ENV="${CONDA_ENV:-legate}"
-export PYTHON_VER="${PYTHON_VER:-3.8}"
-export USE_CUDF="${USE_CUDF:-1}"
-if [[ "$USE_CUDF" == 1 && -z "${CUDA_VER+x}" ]]; then
-    if command -v nvcc &> /dev/null; then
-        export CUDA_VER="$(nvcc --version | grep release | awk '{ print $5 }' | sed 's/.$//')"
-    fi
+export USE_CUDA="${USE_CUDA:-1}"
+if ! command -v nvcc &> /dev/null; then
+    export USE_CUDA=0
 fi
+if [[ "$USE_CUDA" == 1 && -z "${CUDA_VER+x}" ]]; then
+    export CUDA_VER="$(nvcc --version | grep release | awk '{ print $5 }' | sed 's/.$//')"
+fi
+export PYTHON_VER="${PYTHON_VER:-3.8}"
 
 # Install conda & load conda functions into this subshell
 if command -v conda &> /dev/null; then
@@ -67,11 +67,11 @@ if conda info --envs | grep -q "^$CONDA_ENV "; then
     echo "Error: Conda environment $CONDA_ENV already exists" 1>&2
     exit 1
 fi
-set -- cffi numpy scipy pyarrow arrow-cpp arrow-cpp-proc "$@"
-if [[ "$USE_CUDF" == 1 ]]; then
-     conda create --yes --name "$CONDA_ENV" \
-         -c rapidsai -c nvidia -c conda-forge -c defaults \
-         python="$PYTHON_VER" cudatoolkit="$CUDA_VER" cudf=0.19 \
+set -- cffi numpy pyarrow scipy "$@"
+if [[ "$USE_CUDA" == 1 ]]; then
+    conda create --yes --name "$CONDA_ENV" \
+        -c nvidia -c conda-forge -c defaults \
+        python="$PYTHON_VER" cudatoolkit="$CUDA_VER" \
         "$@"
 else
     conda create --yes --name "$CONDA_ENV" \

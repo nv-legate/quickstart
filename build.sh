@@ -63,17 +63,6 @@ elif [[ -d "cunumeric" ]]; then
     run_build ./install.py \
               --with-core "$LEGATE_DIR" \
               "$@"
-elif [[ -d "legate/pandas" ]]; then
-    if [[ "$USE_CUDA" == 1 ]]; then
-        set -- --with-rmm "$CONDA_PREFIX" \
-               --with-nccl "$CONDA_PREFIX" \
-               --with-cudf "$CONDA_PREFIX" \
-               "$@"
-    fi
-    run_build ./install.py \
-              --with-core "$LEGATE_DIR" \
-              --with-arrow "$CONDA_PREFIX" \
-              "$@"
 else
     echo "Error: Unsupported library" 1>&2
     exit 1

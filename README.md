@@ -43,8 +43,6 @@ After entering the container, you can try running some examples:
 ```
 # CuNumeric 2d stencil example
 /opt/legate/quickstart/run.sh 1 /opt/legate/cunumeric/examples/stencil.py -n 1000 -t -b 10
-# Legate Pandas join microbenchmark
-/opt/legate/quickstart/run.sh 1 /opt/legate/legate.pandas/benchmarks/micro/merge.py --size_per_proc 10000 --num_runs 10
 ```
 
 The `run.sh` script will automatically detect the resources available in the
@@ -54,8 +52,6 @@ script directly:
 ```
 # CuNumeric 2d stencil example
 legate --gpus 1 --fbmem 15000 /opt/legate/cunumeric/examples/stencil.py -n 1000 -t -b 10
-# Legate Pandas join microbenchmark
-legate --gpus 1 --fbmem 15000 /opt/legate/legate.pandas/benchmarks/micro/merge.py --size_per_proc 10000 --num_runs 10
 ```
 
 Invoke any script with `-h` to see more available options.
@@ -84,10 +80,9 @@ resources.
 ### Customizing installation
 
 * `setup_conda.sh`: This script will create a new conda environment suitable for
-  using all Legate libraries on GPUs. Use `USE_CUDF=0` to skip Rapids packages
-  (required for running legate.pandas on GPUs). You can skip the script entirely
-  if you prefer to install the required packages manually; see the
-  `conda/???.yml` files on the individual Legate libraries.
+  using all Legate libraries on GPUs. You can skip the script entirely if you
+  prefer to install the required packages manually; see the `conda/???.yml`
+  files on the individual Legate libraries.
 * `install_ib_ucx.sh`: This script will remove the UCX conda package and build
   UCX from source, adding Infiniband Verbs support. This script will be useful
   if you intend to run multi-node Rapids algorithms in conjunction with Legate
@@ -140,8 +135,6 @@ cd /path/to/legate.core
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
 cd /path/to/cunumeric
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
-cd /path/to/legate.pandas
-LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
 ```
 
 Run Legate programs:
@@ -168,8 +161,6 @@ Build Legate libraries:
 cd /path/to/legate.core
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
 cd /path/to/cunumeric
-LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
-cd /path/to/legate.pandas
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
 ```
 
@@ -208,8 +199,6 @@ cd /path/to/legate.core
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
 cd /path/to/cunumeric
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
-cd /path/to/legate.pandas
-LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
 ```
 
 Run Legate programs:
@@ -246,8 +235,6 @@ cd /path/to/legate.core
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
 cd /path/to/cunumeric
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
-cd /path/to/legate.pandas
-LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
 ```
 
 Run Legate programs:
@@ -270,8 +257,7 @@ conda activate legate
 Log out and back in, then run:
 
 ```
-# Rapids conda packages are not distributed for PowerPC
-USE_CUDF=0 CONDA_ROOT=<conda-install-dir> <quickstart-dir>/setup_conda.sh
+CONDA_ROOT=<conda-install-dir> <quickstart-dir>/setup_conda.sh
 source "<conda-install-dir>/etc/profile.d/conda.sh"
 conda activate legate
 ```
@@ -283,7 +269,6 @@ cd /path/to/legate.core
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
 cd /path/to/cunumeric
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
-# Legate.pandas will not work on GPUs without CuDF from Rapids
 ```
 
 Run Legate programs:
