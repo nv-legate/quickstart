@@ -98,10 +98,8 @@ RUN for APP in mpicc mpicxx mpif90 mpirun; do \
   ; done
 COPY ibdev2netdev /usr/bin/
 
-# Create conda environment (no need for CuDF, since we're not including
-# legate.pandas at the moment)
-RUN export USE_CUDF=0 \
- && bash -x /opt/legate/quickstart/setup_conda.sh
+# Create conda environment
+RUN bash -x /opt/legate/quickstart/setup_conda.sh
 
 # Build GASNet, Legion and legate.core (in no-clean mode, so we don't override
 # the Legion checkout)
