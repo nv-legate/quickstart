@@ -60,6 +60,10 @@ elif [[ -d "legate/hello" ]]; then
               --with-core "$LEGATE_DIR" \
               "$@"
 elif [[ -d "cunumeric" ]]; then
+    if [[ "$USE_CUDA" == 1 ]]; then
+        set -- --with-cutensor "$CONDA_PREFIX" \
+               "$@"
+    fi
     run_build ./install.py \
               --with-core "$LEGATE_DIR" \
               "$@"

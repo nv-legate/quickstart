@@ -67,11 +67,11 @@ if conda info --envs | grep -q "^$CONDA_ENV "; then
     echo "Error: Conda environment $CONDA_ENV already exists" 1>&2
     exit 1
 fi
-set -- cffi numpy pyarrow scipy "$@"
+set -- cffi numpy opt_einsum pyarrow scipy "$@"
 if [[ "$USE_CUDA" == 1 ]]; then
     conda create --yes --name "$CONDA_ENV" \
         -c nvidia -c conda-forge -c defaults \
-        python="$PYTHON_VER" cudatoolkit="$CUDA_VER" \
+        python="$PYTHON_VER" cudatoolkit="$CUDA_VER" 'cutensor>=1.3.3' \
         "$@"
 else
     conda create --yes --name "$CONDA_ENV" \
