@@ -67,6 +67,8 @@ RUN source /opt/legate/quickstart/common.sh \
  && apt-get install -y --no-install-recommends \
     `# requirements for OpenBLAS build` \
     gfortran \
+    `# requirements for Legion` \
+    zlib1g-dev \
     `# useful utilities` \
     nsight-systems-cli numactl gdb \
  && apt-get clean \
