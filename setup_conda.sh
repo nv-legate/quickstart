@@ -69,7 +69,7 @@ if conda info --envs | grep -q "^$CONDA_ENV "; then
 fi
 set -- cffi numpy opt_einsum pyarrow python="$PYTHON_VER" scipy 'setuptools<60' "$@"
 if [[ "$USE_CUDA" == 1 ]]; then
-    set -- cudatoolkit="$CUDA_VER" 'cutensor>=1.3.3'
+    set -- cudatoolkit="$CUDA_VER" 'cutensor>=1.3.3' "$@"
 fi
 conda create --yes --name "$CONDA_ENV" -c conda-forge -c defaults "$@"
 
