@@ -21,7 +21,7 @@ set -euo pipefail
 if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "Usage: $(basename "${BASH_SOURCE[0]}") [extra docker-build flags]"
     echo "Arguments read from the environment:"
-    echo "  CUDA_VER : CUDA version to use (default: 11.2)"
+    echo "  CUDA_VER : CUDA version to use (default: 11.5)"
     echo "  DEBUG : compile with debug symbols and w/o optimizations (default: 0)"
     echo "  LINUX_VER : what distro to base the image on (default: ubuntu20.04)"
     echo "  PLATFORM : what machine to build for (default: generic single-node"
@@ -33,7 +33,7 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
 fi
 
 # Read arguments
-export CUDA_VER="${CUDA_VER:-11.2}"
+export CUDA_VER="${CUDA_VER:-11.5}"
 export DEBUG="${DEBUG:-0}"
 export LINUX_VER="${LINUX_VER:-ubuntu20.04}"
 export PLATFORM="${PLATFORM:-generic-volta}"
