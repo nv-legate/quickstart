@@ -50,6 +50,7 @@ if [[ -d "legate/core" ]]; then
     if [[ "$USE_CUDA" == 1 ]]; then
         set -- --arch "$GPU_ARCH" \
                --with-cuda "$CUDA_HOME" \
+               --with-nccl "$CONDA_PREFIX" \
                "$@"
     fi
     run_build ./install.py \
