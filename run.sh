@@ -120,7 +120,7 @@ TIME="$(date +%H%M%S)"
 mkdir -p "$SCRATCH/$DATE"
 export HOST_OUT_DIR="$SCRATCH/$DATE/$TIME"
 mkdir "$HOST_OUT_DIR"
-echo "Redirecting output to $HOST_OUT_DIR"
+echo "Redirecting stdout, stderr and logs to $HOST_OUT_DIR"
 if [[ "$CONTAINER_BASED" == 1 ]]; then
     export CMD_OUT_DIR=/result
 else
@@ -239,7 +239,7 @@ fi
 # Add legate driver to command
 if [[ "$NODRIVER" != 1 ]]; then
     set -- --nodes "$NUM_NODES" --ranks-per-node "$RANKS_PER_NODE" "$@"
-    set -- --verbose --logdir "$CMD_OUT_DIR" "$@"
+    set -- --verbose --logdir "$CMD_OUT_DIR" --log-to-file "$@"
     if [[ "$USE_CUDA" == 1 ]]; then
         set -- --gpus "$NUM_GPUS" --fbmem "$FB_PER_GPU" "$@"
     fi
@@ -267,7 +267,7 @@ if [[ "$NODRIVER" != 1 ]]; then
             set -- --launcher none "$@"
         fi
     fi
-    set -- "$LEGATE_DIR/bin/legate" "$@" -logfile "$CMD_OUT_DIR"/%.log
+    set -- "$LEGATE_DIR/bin/legate" "$@"
 fi
 
 # Submit job to appropriate scheduler
@@ -321,12 +321,12 @@ elif [[ "$PLATFORM" == lassen ]]; then
 else
     # Local run
     echo "Command: $@" | tee -a "$CMD_OUT_DIR/out.txt"
-    "$@" | tee -a "$CMD_OUT_DIR/out.txt"
+    "$@" 2>&1 | tee -a "$CMD_OUT_DIR/out.txt"
 fi
 
 # Wait for batch job to start
 if [[ "$INTERACTIVE" != 1 && "$NOWAIT" != 1 ]]; then
-    echo "Waiting for job to start & piping output"
+    echo "Waiting for job to start & piping stdout/stderr"
     echo "Press Ctrl-C anytime to exit (job will still run)"
     while [[ ! -f "$HOST_OUT_DIR/out.txt" ]]; do sleep 1; done
     echo "Job started"
