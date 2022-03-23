@@ -23,6 +23,7 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "Arguments read from the environment:"
     echo "  CUDA_VER : CUDA version to use (default: 11.5)"
     echo "  DEBUG : compile with debug symbols and w/o optimizations (default: 0)"
+    echo "  DEBUG_RELEASE : compile with optimizations and some debug symbols (default: 0)"
     echo "  LINUX_VER : what distro to base the image on (default: ubuntu20.04)"
     echo "  PLATFORM : what machine to build for (default: generic single-node"
     echo "             machine with volta GPUs)"
@@ -35,6 +36,7 @@ fi
 # Read arguments
 export CUDA_VER="${CUDA_VER:-11.5}"
 export DEBUG="${DEBUG:-0}"
+export DEBUG_RELEASE="${DEBUG_RELEASE:-0}"
 export LINUX_VER="${LINUX_VER:-ubuntu20.04}"
 export PLATFORM="${PLATFORM:-generic-volta}"
 export PYTHON_VER="${PYTHON_VER:-3.8}"
@@ -64,6 +66,7 @@ IMAGE=legate-"$PLATFORM"
 DOCKER_BUILDKIT=1 docker build -t "$IMAGE:$TAG" \
     --build-arg CUDA_VER="$CUDA_VER" \
     --build-arg DEBUG="$DEBUG" \
+    --build-arg DEBUG_RELEASE="$DEBUG_RELEASE" \
     --build-arg LINUX_VER="$LINUX_VER" \
     --build-arg PLATFORM="$PLATFORM" \
     --build-arg PYTHON_VER="$PYTHON_VER" \
