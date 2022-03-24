@@ -243,6 +243,40 @@ Run Legate programs:
 LEGATE_DIR=<legate-install-dir> <quickstart-dir>/run.sh <num-nodes> <py-program>
 ```
 
+Sapling @ Stanford
+==================
+
+Add to `~/.bashrc`:
+
+```
+module load slurm/20.11.4
+source "<conda-install-dir>/etc/profile.d/conda.sh"
+conda activate legate
+```
+
+Log out and back in, then run:
+
+```
+USE_CUDA=1 CUDA_VER=11.1 CONDA_ROOT=<conda-install-dir> <quickstart-dir>/setup_conda.sh
+source "<conda-install-dir>/etc/profile.d/conda.sh"
+conda activate legate
+```
+
+Build Legate libraries:
+
+```
+cd /path/to/legate.core
+LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
+cd /path/to/cunumeric
+LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
+```
+
+Run Legate programs:
+
+```
+LEGATE_DIR=<legate-install-dir> <quickstart-dir>/run.sh <num-nodes> <py-program>
+```
+
 Lassen @ LLNL
 =============
 
