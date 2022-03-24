@@ -24,9 +24,9 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "  CUDA_VER : CUDA version to use (default: 11.5)"
     echo "  DEBUG : compile with debug symbols and w/o optimizations (default: 0)"
     echo "  DEBUG_RELEASE : compile with optimizations and some debug symbols (default: 0)"
-    echo "  LEGION_BRANCH : Legion branch to use (default: use current branch of"
-    echo "                  ./legate.core/legion if it exists, otherwise pull"
-    echo "                  control_replication)"
+    echo "  LEGION_REF : Legion branch/commit/tag to use (default: use current branch of"
+    echo "               ./legate.core/legion if that dir exists, otherwise pull"
+    echo "               control_replication branch)"
     echo "  LINUX_VER : what distro to base the image on (default: ubuntu20.04)"
     echo "  PLATFORM : what machine to build for (default: generic single-node"
     echo "             machine with volta GPUs)"
@@ -40,7 +40,7 @@ fi
 export CUDA_VER="${CUDA_VER:-11.5}"
 export DEBUG="${DEBUG:-0}"
 export DEBUG_RELEASE="${DEBUG_RELEASE:-0}"
-export LEGION_BRANCH="${LEGION_BRANCH:-HEAD}"
+export LEGION_REF="${LEGION_REF:-HEAD}"
 export LINUX_VER="${LINUX_VER:-ubuntu20.04}"
 export PLATFORM="${PLATFORM:-generic-volta}"
 export PYTHON_VER="${PYTHON_VER:-3.8}"
@@ -58,11 +58,13 @@ function git_pull {
     fi
     cd "$2"
     git checkout "$4"
-    git pull --ff-only
+    if [[ "$(git branch --show-current)" != "" ]]; then
+        git pull --ff-only
+    fi
     cd -
 }
 git_pull https://github.com/nv-legate/legate.core.git legate.core HEAD HEAD
-git_pull https://gitlab.com/StanfordLegion/legion.git legate.core/legion control_replication "$LEGION_BRANCH"
+git_pull https://gitlab.com/StanfordLegion/legion.git legate.core/legion control_replication "$LEGION_REF"
 git_pull https://github.com/nv-legate/cunumeric.git cunumeric HEAD HEAD
 
 # Build and push image
