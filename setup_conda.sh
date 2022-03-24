@@ -35,12 +35,17 @@ fi
 
 # Read arguments
 export CONDA_ENV="${CONDA_ENV:-legate}"
-export USE_CUDA="${USE_CUDA:-1}"
-if ! command -v nvcc &> /dev/null; then
-    export USE_CUDA=0
+if [[ -z "${USE_CUDA+x}" ]]; then
+    if command -v nvcc &> /dev/null; then
+        export USE_CUDA=1
+    else
+        export USE_CUDA=0
+    fi
 fi
 if [[ "$USE_CUDA" == 1 && -z "${CUDA_VER+x}" ]]; then
-    export CUDA_VER="$(nvcc --version | grep release | awk '{ print $5 }' | sed 's/.$//')"
+    if command -v nvcc &> /dev/null; then
+        export CUDA_VER="$(nvcc --version | grep release | awk '{ print $5 }' | sed 's/.$//')"
+    fi
 fi
 export PYTHON_VER="${PYTHON_VER:-3.8}"
 
