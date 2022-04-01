@@ -58,7 +58,7 @@ function git_pull {
     fi
     cd "$2"
     git checkout "$4"
-    if [[ "$(git rev-parse --abbrev-ref HEAD)" != "" ]]; then
+    if [[ "$(git rev-parse --abbrev-ref HEAD)" != "HEAD" ]]; then
         git pull --ff-only
     fi
     cd -
