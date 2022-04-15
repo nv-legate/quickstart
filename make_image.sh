@@ -77,11 +77,6 @@ DOCKER_BUILDKIT=1 docker build -t "$IMAGE:$TAG" \
     --build-arg PLATFORM="$PLATFORM" \
     --build-arg PYTHON_VER="$PYTHON_VER" \
     "$@" .
-for REPO in ghcr.io/nv-legate; do
-    docker tag "$IMAGE:$TAG" "$REPO/$IMAGE:$TAG"
-    docker push "$REPO/$IMAGE:$TAG"
-    if [[ "$TAG_LATEST" == 1 ]]; then
-        docker tag "$IMAGE:$TAG" "$REPO/$IMAGE:latest"
-        docker push "$REPO/$IMAGE:latest"
-    fi
-done
+if [[ "$TAG_LATEST" == 1 ]]; then
+    docker tag "$IMAGE:$TAG" "$IMAGE:latest"
+fi

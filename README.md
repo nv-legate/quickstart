@@ -18,27 +18,31 @@ limitations under the License.
 Legate Quickstart
 =================
 
-Legate Quickstart provides two ways to simplify the use of Legate: Docker images
-containing all Legate libraries, and a collection of scripts for building Legate
-libraries from source and running Legate programs with appropriate defaults for
-a number of supported clusters.
+Legate Quickstart provides two ways to simplify the use of Legate: Scripts for
+building Docker images containing all Legate libraries, and a collection of
+scripts for building Legate libraries from source and running Legate programs
+with appropriate defaults for a number of supported clusters.
 
-Using a Docker image
-====================
+Building and using Docker images
+================================
 
-The `make_image.sh` script in this repository can be used to build Docker images
-containing all Legate libraries. At this time we provide two pre-built versions
-of this image, for single-node machines containing Volta or Ampere GPUs. The
-images are available on GitHub and can be used as follows:
+The `make_image.sh` script can be used to build Docker images containing all
+Legate libraries.
+
+Certain build options, such as the target CUDA architecture, must be specified
+appropriately at docker build time, to match the environment where the image
+will be used. These options are specified for each supported target `PLATFORM`
+in `common.sh`. The default `PLATFORM` is a generic non-networked machine
+containing Volta GPUs. You can add custom configurations as new `PLATFORM`s in
+`common.sh`.
+
+After building the image, you can use it to start a container :
 
 ```
-docker pull ghcr.io/nv-legate/legate-generic-volta:latest
-docker run -it --rm --gpus all ghcr.io/nv-legate/legate-generic-volta:latest /bin/bash
+docker run -it --rm --gpus all <image> /bin/bash
 ```
 
-and correspondingly for the `legate-generic-ampere` image.
-
-After entering the container, you can try running some examples:
+Inside the container you can try running some examples:
 
 ```
 # CuNumeric 2d stencil example
@@ -96,9 +100,6 @@ resources.
   each allocated node. The `run.sh` script can handle such worflows when run
   directly on the login node, but will need to be specialized for each
   particular cluster.
-* Pre-built images for any supported container-based clusters will be available
-  on GitHub as `ghcr.io/nv-legate/legate-<platform>`, and `run.sh` will
-  automatically use the latest version.
 * Even though you are meant to invoke the `run.sh` script from the login node,
   any paths on the command line will refer to files within the image, not the
   filesystem on the host cluster. If you wish to use files from a directory on
