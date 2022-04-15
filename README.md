@@ -83,10 +83,6 @@ resources.
   using all Legate libraries on GPUs. You can skip the script entirely if you
   prefer to install the required packages manually; see the `conda/???.yml`
   files on the individual Legate libraries.
-* `install_ib_ucx.sh`: This script will remove the UCX conda package and build
-  UCX from source, adding Infiniband Verbs support. This script will be useful
-  if you intend to run multi-node Rapids algorithms in conjunction with Legate
-  on Infiniband-based systems.
 * `~/.bashrc`: The commands we add to this file activate the environment we set
   up for Legate runs, and must be executed on every node in a multi-node run
   before invoking the Legate executable. Note that the order of commands
