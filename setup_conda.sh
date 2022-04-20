@@ -72,7 +72,7 @@ if conda info --envs | grep -q "^$CONDA_ENV "; then
     echo "Error: Conda environment $CONDA_ENV already exists" 1>&2
     exit 1
 fi
-set -- cffi numpy opt_einsum pyarrow python="$PYTHON_VER" scipy 'setuptools>=60' "$@"
+set -- cffi numpy opt_einsum pyarrow python="$PYTHON_VER" scipy 'setuptools>=60' typing_extensions "$@"
 if [[ "$USE_CUDA" == 1 ]]; then
     set -- cudatoolkit="$CUDA_VER" 'cutensor>=1.3.3' nccl "$@"
 fi
