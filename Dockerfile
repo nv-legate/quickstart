@@ -18,7 +18,7 @@
 # Parent image
 ARG CUDA_VER
 ARG LINUX_VER
-FROM gpuci/miniconda-cuda:${CUDA_VER}-devel-${LINUX_VER}
+FROM gpuci/miniforge-cuda:${CUDA_VER}-devel-${LINUX_VER}
 
 # Build arguments
 ARG CUDA_VER
