@@ -16,11 +16,12 @@
 #
 
 set -u
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+source "$SCRIPT_DIR/common.sh"
 
 echo "Job ID: $SLURM_JOBID"
 echo "Submitted from: $(pwd)"
 echo "Started on: $(date)"
-echo "Command: $@"
 echo "Running on: $SLURM_JOB_NODELIST"
-"$@"
-echo "Job finished"
+run_command "$@"
+echo "Job finished: $(date)"

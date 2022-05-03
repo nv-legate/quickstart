@@ -33,6 +33,7 @@ if [[ $# -lt 2 || ! "$1" =~ ^(1/)?[0-9]+(:[0-9]+)?$ ]]; then
     echo "  IMAGE : which image to use (for container-based clusters)"
     echo "          (default : ghcr.io/nv-legate/legate-\$PLATFORM:latest)"
     echo "  INTERACTIVE : submit an interactive rather than a batch job (defaut: 0)"
+    echo "  ITERATIONS : how many times to run the program (defaut: 1)"
     echo "  LEGATE_DIR : path to Legate installation directory"
     echo "  MOUNTS : comma-separated list of volume mounts (for container-based clusters)"
     echo "           (syntax depends on cluster) (default: none)"
@@ -81,6 +82,7 @@ else
 fi
 export IMAGE="${IMAGE:-ghcr.io/nv-legate/legate-$PLATFORM:latest}"
 export INTERACTIVE="${INTERACTIVE:-0}"
+export ITERATIONS="${ITERATIONS:-1}"
 if [[ "$CONTAINER_BASED" == 1 ]]; then
     export LEGATE_DIR=/opt/legate/install
 else
@@ -254,7 +256,7 @@ fi
 # Add legate driver to command
 if [[ "$NODRIVER" != 1 ]]; then
     set -- --nodes "$NUM_NODES" --ranks-per-node "$RANKS_PER_NODE" "$@"
-    set -- --verbose --logdir "$CMD_OUT_DIR" --log-to-file "$@"
+    set -- --verbose --log-to-file "$@"
     if [[ "$USE_CUDA" == 1 ]]; then
         set -- --gpus "$NUM_GPUS" --fbmem "$FB_PER_GPU" "$@"
     fi
@@ -348,8 +350,7 @@ elif [[ "$PLATFORM" == lassen ]]; then
     "$@"
 else
     # Local run
-    echo "Command: $@" | tee -a "$CMD_OUT_DIR/out.txt"
-    "$@" 2>&1 | tee -a "$CMD_OUT_DIR/out.txt"
+    run_command "$@" 2>&1 | tee -a "$CMD_OUT_DIR/out.txt"
 fi
 
 # Wait for batch job to start

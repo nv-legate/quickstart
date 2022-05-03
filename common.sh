@@ -155,3 +155,24 @@ function run_build {
         "$@"
     fi
 }
+
+function _run_command {
+    echo "Command: $@"
+    "$@"
+}
+
+function run_command {
+    for I in `seq 0 "$((ITERATIONS - 1))"`; do
+        if (( ITERATIONS == 1 )); then
+            OUT_DIR="$CMD_OUT_DIR"
+        else
+            OUT_DIR="$CMD_OUT_DIR/$I"
+            mkdir "$OUT_DIR"
+        fi
+        if [[ "$NODRIVER" != 1 ]]; then
+            _run_command "$@" --logdir "$OUT_DIR"
+        else
+            _run_command "$@"
+        fi
+    done
+}
