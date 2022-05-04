@@ -13,8 +13,6 @@
 # limitations under the License.
 #
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-
 function detect_platform {
     if [[ -n "${PLATFORM+x}" ]]; then
         return
