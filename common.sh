@@ -165,7 +165,6 @@ function run_command {
             OUT_DIR="$CMD_OUT_DIR"
         else
             OUT_DIR="$CMD_OUT_DIR/$I"
-            mkdir "$OUT_DIR"
         fi
         if [[ "$NODRIVER" != 1 ]]; then
             _run_command "$@" --logdir "$OUT_DIR"
