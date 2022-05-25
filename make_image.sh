@@ -24,15 +24,14 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "  CUDA_VER : CUDA version to use (default: 11.5)"
     echo "  DEBUG : compile with debug symbols and w/o optimizations (default: 0)"
     echo "  DEBUG_RELEASE : compile with optimizations and some debug symbols (default: 0)"
-    echo "  LEGION_REF : Legion branch/commit/tag to use (default: use current branch of"
-    echo "               ./legate.core/legion if that dir exists, otherwise pull"
-    echo "               control_replication branch)"
+    echo "  LEGION_REF : Legion branch/commit/tag to use (default: control_replication)"
     echo "  LINUX_VER : what distro to base the image on (default: ubuntu20.04)"
+    echo "  NOPULL : do not pull latest versions of Legion & Legate libraries (default: 0)"
     echo "  PLATFORM : what machine to build for (default: generic single-node"
     echo "             machine with volta GPUs)"
     echo "  PYTHON_VER : Python version to use (default: 3.8)"
-    echo "  TAG : Tag to use for the produced image (default: \`date +%Y-%m-%d-%H%M%S\`)"
-    echo "  TAG_LATEST : Whether to also tag the image as latest (default: 0)"
+    echo "  TAG : tag to use for the produced image (default: \`date +%Y-%m-%d-%H%M%S\`)"
+    echo "  TAG_LATEST : whether to also tag the image as latest (default: 0)"
     exit
 fi
 
@@ -40,8 +39,9 @@ fi
 export CUDA_VER="${CUDA_VER:-11.5}"
 export DEBUG="${DEBUG:-0}"
 export DEBUG_RELEASE="${DEBUG_RELEASE:-0}"
-export LEGION_REF="${LEGION_REF:-HEAD}"
+export LEGION_REF="${LEGION_REF:-control_replication}"
 export LINUX_VER="${LINUX_VER:-ubuntu20.04}"
+export NOPULL="${NOPULL:-0}"
 export PLATFORM="${PLATFORM:-generic-volta}"
 export PYTHON_VER="${PYTHON_VER:-3.8}"
 export TAG="${TAG:-$(date +%Y-%m-%d-%H%M%S)}"
@@ -56,16 +56,27 @@ function git_pull {
             git clone "$1" "$2" -b "$3"
         fi
     fi
+    if [[ "$NOPULL" == 1 ]]; then
+        return
+    fi
     cd "$2"
-    git checkout "$4"
+    git fetch --all
+    if [[ "$3" == HEAD ]]; then
+        # checkout remote HEAD branch
+        REF="$(git remote show origin | grep HEAD | awk '{ print $3 }')"
+    else
+        REF="$3"
+    fi
+    git checkout "$REF"
+    # update from the remote, if we are on a branch
     if [[ "$(git rev-parse --abbrev-ref HEAD)" != "HEAD" ]]; then
         git pull --ff-only
     fi
     cd -
 }
-git_pull https://github.com/nv-legate/legate.core.git legate.core HEAD HEAD
-git_pull https://gitlab.com/StanfordLegion/legion.git legate.core/legion control_replication "$LEGION_REF"
-git_pull https://github.com/nv-legate/cunumeric.git cunumeric HEAD HEAD
+git_pull https://github.com/nv-legate/legate.core.git legate.core HEAD
+git_pull https://gitlab.com/StanfordLegion/legion.git legate.core/legion "$LEGION_REF"
+git_pull https://github.com/nv-legate/cunumeric.git cunumeric HEAD
 
 # Build and push image
 IMAGE=legate-"$PLATFORM"
