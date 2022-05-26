@@ -57,8 +57,12 @@ if command -v conda &> /dev/null; then
     set -u
 else
     echo "Installing conda under $CONDA_ROOT"
-    INSTALLER="$(mktemp --suffix .sh)"
-    wget -O "$INSTALLER" -nv https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-"$(uname -m)".sh
+    INSTALLER="$(mktemp -d)/installer.sh"
+    OSNAME="$(uname -s)"
+    if [[ "$OSNAME" == Darwin ]]; then
+        OSNAME=MacOSX
+    fi
+    curl -fsSL -o "$INSTALLER" https://repo.anaconda.com/miniconda/Miniconda3-latest-"$OSNAME"-"$(uname -m)".sh
     chmod +x "$INSTALLER"
     "$INSTALLER" -b -p "$CONDA_ROOT"
     rm "$INSTALLER"
