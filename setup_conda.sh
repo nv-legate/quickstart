@@ -76,11 +76,25 @@ if conda info --envs | grep -q "^$CONDA_ENV "; then
     echo "Error: Conda environment $CONDA_ENV already exists" 1>&2
     exit 1
 fi
-set -- cffi numpy opt_einsum pyarrow python="$PYTHON_VER" scipy 'setuptools>=60' typing_extensions "$@"
-if [[ "$USE_CUDA" == 1 ]]; then
-    set -- cudatoolkit="$CUDA_VER" 'cutensor>=1.3.3' nccl "$@"
+if [[ "$(uname -s)" == Darwin ]]; then
+    SED="sed -i ''"
+else
+    SED="sed -i"
 fi
-conda create --yes --name "$CONDA_ENV" -c conda-forge -c defaults "$@"
+YML_FILE="$(mktemp -d)/env.yml"
+curl -fsSL -o "$YML_FILE" https://raw.githubusercontent.com/nv-legate/legate.core/"$(git rev-parse --abbrev-ref HEAD)"/conda/environment-test-"$PYTHON_VER".yml
+if [[ "$USE_CUDA" == 1 ]]; then
+    echo "  - cudatoolkit=$CUDA_VER" >> "$YML_FILE"
+else
+    $SED '/^  - cutensor/d' "$YML_FILE"
+    $SED '/^  - nccl/d' "$YML_FILE"
+    $SED '/^  - pynvml/d' "$YML_FILE"
+fi
+for PACKAGE in "$@"; do
+    echo "  - $PACKAGE" >> "$YML_FILE"
+done
+conda env create -n "$CONDA_ENV" -f "$YML_FILE"
+rm "$YML_FILE"
 
 # Copy conda activation scripts (these set various paths)
 set +u
