@@ -57,7 +57,7 @@ if [[ "$1" == *":"* ]]; then
 else
     RANKS_PER_NODE=1
 fi
-if [[ "$NODE_STR" =~ [0-9]+/[0-9]+ ]]; then
+if [[ "$NODE_STR" =~ ^1/[0-9]+$ ]]; then
     NUM_NODES=1
     NODE_RATIO="$NODE_STR"
 else
@@ -329,7 +329,10 @@ elif [[ "$PLATFORM" == pizdaint ]]; then
 elif [[ "$PLATFORM" == sapling ]]; then
     set -- "$SCRIPT_DIR/legate.slurm" "$SCRIPT_DIR/sapling_run.sh" "$@"
     QUEUE="${QUEUE:-gpu}"
-    set -- -J legate -p "$QUEUE" -t "$TIMELIMIT" -N "$NUM_NODES" --exclusive "$@"
+    set -- -J legate -p "$QUEUE" -t "$TIMELIMIT" -N "$NUM_NODES" "$@"
+    if [[ "$NODE_STR" =~ ^[0-9]+$ ]]; then
+        set -- --exclusive "$@"
+    fi
     if [[ "$INTERACTIVE" == 1 ]]; then
         set -- salloc "$@"
     else
