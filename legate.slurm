@@ -19,7 +19,7 @@ set -u
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$SCRIPT_DIR/common.sh"
 
-echo "Job ID: $SLURM_JOBID"
+echo "Job ID: $SLURM_JOB_ID"
 echo "Submitted from: $(pwd)"
 echo "Started on: $(date)"
 echo "Running on: $SLURM_JOB_NODELIST"
