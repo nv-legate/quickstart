@@ -29,6 +29,7 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "  PLATFORM : what machine to build for (default: auto-detected)"
     echo "  USE_CUDA : include CUDA support (default: auto-detected)"
     echo "  USE_OPENMP : include OpenMP support (default: auto-detected)"
+    echo "  NETWORK : Realm network to use for multi-node execution (default: none)"
     exit
 fi
 
@@ -39,13 +40,12 @@ detect_platform && set_build_vars
 
 # Run appropriate build command for the target library
 if [[ -d "legate/core" ]]; then
-    if [[ "$CONDUIT" == ibv ]]; then
-        export GASNET_EXTRA_CONFIGURE_ARGS="--enable-ibv-multirail --with-ibv-max-hcas=$NUM_NICS"
-    fi
-    if [[ "$CONDUIT" != none ]]; then
-        set -- --gasnet \
-               --conduit "$CONDUIT" \
+    if [[ "$NETWORK" != none ]]; then
+        set -- --network "$NETWORK" \
                "$@"
+    fi
+    if [[ "${CONDUIT:-}" == ibv ]]; then
+        export GASNET_EXTRA_CONFIGURE_ARGS="--enable-ibv-multirail --with-ibv-max-hcas=$NUM_NICS"
     fi
     if [[ "$USE_CUDA" == 1 ]]; then
         set -- --arch "$GPU_ARCH" \

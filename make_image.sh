@@ -29,6 +29,7 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "  NOPULL : do not pull latest versions of Legion & Legate libraries (default: 0)"
     echo "  PLATFORM : what machine to build for (default: generic single-node"
     echo "             machine with volta GPUs)"
+    echo "  NETWORK : Realm network to use for multi-node execution (default: none)"
     echo "  PYTHON_VER : Python version to use (default: 3.8)"
     echo "  TAG : tag to use for the produced image (default: \`date +%Y-%m-%d-%H%M%S\`)"
     echo "  TAG_LATEST : whether to also tag the image as latest (default: 0)"
@@ -43,6 +44,7 @@ export LEGION_REF="${LEGION_REF:-control_replication}"
 export LINUX_VER="${LINUX_VER:-ubuntu20.04}"
 export NOPULL="${NOPULL:-0}"
 export PLATFORM="${PLATFORM:-generic-volta}"
+export NETWORK="${NETWORK:-none}"
 export PYTHON_VER="${PYTHON_VER:-3.8}"
 export TAG="${TAG:-$(date +%Y-%m-%d-%H%M%S)}"
 export TAG_LATEST="${TAG_LATEST:-0}"
@@ -86,6 +88,7 @@ DOCKER_BUILDKIT=1 docker build -t "$IMAGE:$TAG" \
     --build-arg DEBUG_RELEASE="$DEBUG_RELEASE" \
     --build-arg LINUX_VER="$LINUX_VER" \
     --build-arg PLATFORM="$PLATFORM" \
+    --build-arg NETWORK="$NETWORK" \
     --build-arg PYTHON_VER="$PYTHON_VER" \
     "$@" .
 if [[ "$TAG_LATEST" == 1 ]]; then

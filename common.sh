@@ -37,6 +37,7 @@ function set_build_vars {
     export FC="${FC:-gfortran}"
     export USE_CUDA="${USE_CUDA:-1}"
     export USE_OPENMP="${USE_OPENMP:-1}"
+    export NETWORK="${NETWORK:-none}"
     # Set base build variables according to target platform
     if [[ "$PLATFORM" == summit ]]; then
         export CONDUIT=ibv
