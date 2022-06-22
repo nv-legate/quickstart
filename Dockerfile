@@ -103,14 +103,14 @@ COPY ibdev2netdev /usr/bin/
 
 # Install UCX
 RUN if [[ "$CONDUIT" == ibv || "$CONDUIT" == ucx ]]; then \
- && export UCX_VER=1.12.1 \
+    export UCX_VER=1.12.1 \
  && cd /tmp \
  && curl -fsSL https://github.com/openucx/ucx/releases/download/v${UCX_VER}/ucx-${UCX_VER}.tar.gz | tar -xz \
  && cd ucx-${UCX_VER} \
- && ./contrib/configure-release --enable-mt --with-cuda=$CUDA_HOME --with-java=no \
+ && ./contrib/configure-release --enable-mt --with-cuda=${CUDA_HOME} --with-java=no \
  && make -j install \
  && cd /tmp \
- && rm -rf ucx-${UCX_VER}
+ && rm -rf ucx-${UCX_VER} \
   ; fi
 
 # Create conda environment
