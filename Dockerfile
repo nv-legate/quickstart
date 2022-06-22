@@ -76,7 +76,7 @@ RUN source /opt/legate/quickstart/common.sh \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
-# Install Verbs, RDMA-CM, OpenMPI and UCX from MOFED
+# Install Verbs, RDMA-CM, OpenMPI from MOFED
 RUN source /opt/legate/quickstart/common.sh \
  && set_build_vars \
  && if [[ "$CONDUIT" == ibv || "$CONDUIT" == ucx ]]; then \
@@ -89,8 +89,7 @@ RUN source /opt/legate/quickstart/common.sh \
     -or -name 'ibverbs-providers*.deb' \
     -or -name 'libibverbs*.deb' \
     -or -name 'librdmacm*.deb' \
-    -or -name 'openmpi_*.deb' \
-    -or -name 'ucx_*.deb')) \
+    -or -name 'openmpi_*.deb')) \
  && cd /tmp \
  && rm -rf ${MOFED_ID} \
  && echo ${MOFED_VER} > /opt/mofed-ver \
@@ -101,6 +100,18 @@ RUN for APP in mpicc mpicxx mpif90 mpirun; do \
     ln -s /usr/mpi/gcc/openmpi-*/bin/"$APP" /usr/bin/"$APP" \
   ; done
 COPY ibdev2netdev /usr/bin/
+
+# Install UCX
+RUN if [[ "$CONDUIT" == ibv || "$CONDUIT" == ucx ]]; then \
+ && export UCX_VER=1.12.1 \
+ && cd /tmp \
+ && curl -fsSL https://github.com/openucx/ucx/releases/download/v${UCX_VER}/ucx-${UCX_VER}.tar.gz | tar -xz \
+ && cd ucx-${UCX_VER} \
+ && ./contrib/configure-release --enable-mt --with-cuda=$CUDA_HOME --with-java=no \
+ && make -j install \
+ && cd /tmp \
+ && rm -rf ucx-${UCX_VER}
+  ; fi
 
 # Create conda environment
 RUN bash -x /opt/legate/quickstart/setup_conda.sh
