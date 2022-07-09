@@ -24,6 +24,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "Usage: $(basename "${BASH_SOURCE[0]}") [extra conda packages]"
     echo "Arguments read from the environment:"
+    echo "  CONDA_USE_PREFIX : interpret CONDA_ENV as a prefix instead of name"
     echo "  CONDA_ENV : name of conda environment to create (default: legate)"
     echo "  CONDA_ROOT : where to install conda (if not already installed)"
     echo "  CUDA_VER : CUDA runtime version to request from conda (if applicable)"
@@ -80,6 +81,7 @@ if conda info --envs | grep -q "^$CONDA_ENV "; then
     echo "Error: Conda environment $CONDA_ENV already exists" 1>&2
     exit 1
 fi
+
 if [[ "$(uname -s)" == Darwin ]]; then
     SED="sed -i ''"
 else
@@ -97,7 +99,11 @@ fi
 for PACKAGE in "$@"; do
     echo "  - $PACKAGE" >> "$YML_FILE"
 done
-conda env create -n "$CONDA_ENV" -f "$YML_FILE"
+if [[ -n "${CONDA_USE_PREFIX+x}" ]]; then
+    conda env create -p "$CONDA_ENV" -f "$YML_FILE"
+else
+    conda env create -n "$CONDA_ENV" -f "$YML_FILE"
+fi
 rm "$YML_FILE"
 
 # Copy conda activation scripts (these set various paths)
