@@ -20,8 +20,8 @@ function detect_platform {
         return
     elif command -v dnsdomainname &> /dev/null && [[ "$(dnsdomainname)" == *"summit"* ]]; then
         export PLATFORM=summit
-    elif [[ "$(uname -n)" == "cori"* ]]; then
-        export PLATFORM=cori
+    elif [[ -n "${NERSC_HOST+x}" ]]; then
+        export PLATFORM="$NERSC_HOST"
     elif [[ "$(uname -n)" == *"daint"* ]]; then
         export PLATFORM=pizdaint
     elif [[ "$(uname -n)" == *"sapling"* ]]; then
@@ -45,6 +45,11 @@ function set_build_vars {
         export NUM_NICS=4
         export CUDA_HOME="$CUDA_DIR"
         export GPU_ARCH=volta
+    elif [[ "$PLATFORM" == perlmutter ]]; then
+        export CONDUIT=ofi-slingshot11
+        export NUM_NICS=4
+        # CUDA_HOME is already set (by module)
+        export GPU_ARCH=ampere
     elif [[ "$PLATFORM" == cori ]]; then
         export CONDUIT=ibv
         export NUM_NICS=4

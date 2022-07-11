@@ -69,6 +69,8 @@ shift
 detect_platform
 if [[ "$PLATFORM" == summit ]]; then
     CONTAINER_BASED=0
+elif [[ "$PLATFORM" == perlmutter ]]; then
+    CONTAINER_BASED=0
 elif [[ "$PLATFORM" == cori ]]; then
     CONTAINER_BASED=0
 elif [[ "$PLATFORM" == pizdaint ]]; then
@@ -152,6 +154,19 @@ if [[ "$PLATFORM" == summit ]]; then
     GPUS_PER_NODE=6
     CORES_PER_NUMA=21
     FB_PER_GPU=14500
+elif [[ "$PLATFORM" == perlmutter ]]; then
+    # 4 NUMA domains per node
+    # 1 NIC per NUMA domain (4 NICs per node)
+    # 16 cores per NUMA domain (64 cores per node)
+    # 2-way SMT per core
+    # 64GM RAM per NUMA domain (256GB RAM per node)
+    # 1 Ampere A100 GPU per NUMA domain (4 GPUs per node)
+    # 40GB FB per GPU
+    NUMAS_PER_NODE=4
+    RAM_PER_NUMA=48000
+    GPUS_PER_NODE=4
+    CORES_PER_NUMA=16
+    FB_PER_GPU=36250
 elif [[ "$PLATFORM" == cori ]]; then
     # 2 NUMA domains per node
     # 2 NICs per NUMA domain (4 NICs per node)
@@ -270,6 +285,8 @@ if [[ "$NODRIVER" != 1 ]]; then
     fi
     if [[ "$PLATFORM" == summit ]]; then
         set -- --launcher jsrun "$@"
+    elif [[ "$PLATFORM" == perlmutter ]]; then
+        set -- --launcher srun "$@"
     elif [[ "$PLATFORM" == cori ]]; then
         set -- --launcher srun "$@"
     elif [[ "$PLATFORM" == pizdaint ]]; then
@@ -299,6 +316,19 @@ if [[ "$PLATFORM" == summit ]]; then
         set -- -o "$HOST_OUT_DIR/out.txt" "$@"
     fi
     set -- bsub -J legate -P "$ACCOUNT" -q "$QUEUE" -W "$TIMELIMIT" -nnodes "$NUM_NODES" -alloc_flags smt1 "$@"
+    echo "Submitted: $@"
+    "$@"
+elif [[ "$PLATFORM" == perlmutter ]]; then
+    export SCRIPT_DIR
+    set -- "$SCRIPT_DIR/legate.slurm" "$@"
+    # We double the number of cores because SLURM counts virtual cores
+    set -- -J legate -A "$ACCOUNT" -t "$TIMELIMIT" -N "$NUM_NODES" -C gpu "$@"
+    set -- --ntasks-per-node "$RANKS_PER_NODE" -c $(( 2 * NUM_CORES )) --gpus-per-task "$NUM_GPUS" "$@"
+    if [[ "$INTERACTIVE" == 1 ]]; then
+        set -- salloc -q interactive_ss11 "$@"
+    else
+        set -- sbatch -q regular_ss11 -o "$HOST_OUT_DIR/out.txt" "$@"
+    fi
     echo "Submitted: $@"
     "$@"
 elif [[ "$PLATFORM" == cori ]]; then

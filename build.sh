@@ -39,6 +39,10 @@ detect_platform && set_build_vars
 
 # Run appropriate build command for the target library
 if [[ -d "legate/core" ]]; then
+    if [[ "$PLATFORM" == perlmutter ]]; then
+        export CROSS_CONFIGURE=""
+        export GASNET_EXTRA_CONFIGURE_ARGS="--with-mpi-cc=cc"
+    fi
     if [[ "$CONDUIT" == ibv ]]; then
         export GASNET_EXTRA_CONFIGURE_ARGS="--enable-ibv-multirail --with-ibv-max-hcas=$NUM_NICS"
     fi

@@ -16,7 +16,8 @@
 #
 
 set -u
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+# on perlmutter, this does not have the desired effect
+# SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$SCRIPT_DIR/common.sh"
 
 echo "Job ID: $SLURM_JOB_ID"
