@@ -280,7 +280,7 @@ if [[ "$NODRIVER" != 1 ]]; then
         set -- --launcher jsrun "$@"
     else
         # Local run
-        if grep -q '#define GASNET_CONDUIT_MPI' "$LEGATE_DIR"/include/realm_defines.h; then
+        if grep -q '#define REALM_USE_MPI\|#define GASNET_CONDUIT_MPI' "$LEGATE_DIR"/include/realm_defines.h; then
             set -- --launcher mpirun "$@"
         else
             set -- --launcher none "$@"

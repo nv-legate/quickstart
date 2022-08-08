@@ -24,8 +24,10 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "Usage: $(basename "${BASH_SOURCE[0]}") [extra build args]"
     echo "Arguments read from the environment:"
     echo "  ACCOUNT : account/group/project to submit build job under (if applicable)"
+    echo "  CONDUIT : GASNet conduit to use (if applicable) (default: auto-detected)"
     echo "  DEBUG : compile with debug symbols and w/o optimizations (default: 0)"
     echo "  LEGATE_DIR : path to Legate installation directory"
+    echo "  NETWORK : Realm networking backend to use (default: auto-detected)"
     echo "  PLATFORM : what machine to build for (default: auto-detected)"
     echo "  USE_CUDA : include CUDA support (default: auto-detected)"
     echo "  USE_OPENMP : include OpenMP support (default: auto-detected)"
@@ -39,13 +41,14 @@ detect_platform && set_build_vars
 
 # Run appropriate build command for the target library
 if [[ -d "legate/core" ]]; then
-    if [[ "$CONDUIT" == ibv ]]; then
-        export GASNET_EXTRA_CONFIGURE_ARGS="--enable-ibv-multirail --with-ibv-max-hcas=$NUM_NICS"
+    if [[ "$NETWORK" != none ]]; then
+        set -- --network "$NETWORK" "$@"
     fi
-    if [[ "$CONDUIT" != none ]]; then
-        set -- --gasnet \
-               --conduit "$CONDUIT" \
-               "$@"
+    if [[ "$NETWORK" == gasnet1 || "$NETWORK" == gasnetex ]]; then
+        set -- --conduit "$CONDUIT" "$@"
+        if [[ "$CONDUIT" == ibv ]]; then
+            export GASNET_EXTRA_CONFIGURE_ARGS="--enable-ibv-multirail --with-ibv-max-hcas=$NUM_NICS"
+        fi
     fi
     if [[ "$USE_CUDA" == 1 ]]; then
         set -- --arch "$GPU_ARCH" \

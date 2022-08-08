@@ -41,32 +41,37 @@ function set_build_vars {
     export USE_OPENMP="${USE_OPENMP:-1}"
     # Set base build variables according to target platform
     if [[ "$PLATFORM" == summit ]]; then
+        export NETWORK=gasnet1
         export CONDUIT=ibv
         export NUM_NICS=4
         export CUDA_HOME="$CUDA_DIR"
         export GPU_ARCH=volta
     elif [[ "$PLATFORM" == cori ]]; then
+        export NETWORK=gasnet1
         export CONDUIT=ibv
         export NUM_NICS=4
         # CUDA_HOME is already set (by module)
         export GPU_ARCH=volta
     elif [[ "$PLATFORM" == pizdaint ]]; then
+        export NETWORK=gasnet1
         export CONDUIT=aries
         export NUM_NICS=1
         # CUDA_HOME is already set (by module)
         export GPU_ARCH=pascal
     elif [[ "$PLATFORM" == sapling ]]; then
+        export NETWORK=gasnet1
         export CONDUIT=ibv
         export NUM_NICS=1
         export CUDA_HOME=/usr/local/cuda-11.1
         export GPU_ARCH=pascal
     elif [[ "$PLATFORM" == lassen ]]; then
+        export NETWORK=gasnet1
         export CONDUIT=ibv
         export NUM_NICS=4
         # CUDA_HOME is already set (by module)
         export GPU_ARCH=volta
     elif [[ "$PLATFORM" == generic-* ]]; then
-        export CONDUIT=none
+        export NETWORK=none
         export GPU_ARCH="${PLATFORM#generic-}"
     else
         if [[ -f /proc/self/cgroup ]] && grep -q docker /proc/self/cgroup; then
@@ -75,9 +80,10 @@ function set_build_vars {
         fi
         echo "Did not detect a supported cluster, assuming local-node build"
         if command -v mpirun &> /dev/null; then
+            export NETWORK=gasnet1
             export CONDUIT=mpi
         else
-            export CONDUIT=none
+            export NETWORK=none
         fi
         if [[ -z "${GPU_ARCH+x}" ]]; then
             if command -v nvcc &> /dev/null; then
