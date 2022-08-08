@@ -25,10 +25,13 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "Arguments read from the environment:"
     echo "  ACCOUNT : account/group/project to submit build job under (if applicable)"
     echo "  CONDUIT : GASNet conduit to use (if applicable) (default: auto-detected)"
+    echo "  CUDA_HOME : CUDA installation to build against (default: auto-detected)"
     echo "  DEBUG : compile with debug symbols and w/o optimizations (default: 0)"
+    echo "  GPU_ARCH : CUDA architecture to build for (default: auto-detected)"
     echo "  LEGATE_DIR : path to Legate installation directory"
     echo "  NETWORK : Realm networking backend to use (default: auto-detected)"
-    echo "  PLATFORM : what machine to build for (default: auto-detected)"
+    echo "  PLATFORM : what machine to build for -- provides defaults for other options"
+    echo "             (default: auto-detected)"
     echo "  USE_CUDA : include CUDA support (default: auto-detected)"
     echo "  USE_OPENMP : include OpenMP support (default: auto-detected)"
     exit
@@ -70,6 +73,7 @@ elif [[ -d "cunumeric" ]]; then
     fi
     run_build ./install.py \
               --with-core "$LEGATE_DIR" \
+              --with-openblas "$CONDA_PREFIX" \
               "$@"
 else
     echo "Error: Unsupported library" 1>&2
