@@ -79,11 +79,13 @@ function set_build_vars {
             exit 1
         fi
         echo "Did not detect a supported cluster, assuming local-node build"
-        if command -v mpirun &> /dev/null; then
-            export NETWORK=gasnet1
-            export CONDUIT=mpi
-        else
-            export NETWORK=none
+        if [[ -z "${NETWORK+x}" ]]; then
+            if command -v mpirun &> /dev/null; then
+                export NETWORK=gasnet1
+                export CONDUIT=mpi
+            else
+                export NETWORK=none
+            fi
         fi
         if [[ -z "${GPU_ARCH+x}" ]]; then
             if command -v nvcc &> /dev/null; then
