@@ -306,8 +306,11 @@ elif [[ "$PLATFORM" == cori ]]; then
     export GASNET_IBV_PORTS=mlx5_0+mlx5_2+mlx5_4+mlx5_6
     set -- "$SCRIPT_DIR/legate.slurm" "$@"
     # We double the number of cores because SLURM counts virtual cores
-    set -- -J legate -A "$ACCOUNT" -t "$TIMELIMIT" -N "$NUM_NODES" -C gpu "$@"
-    set -- --ntasks-per-node "$RANKS_PER_NODE" -c $(( 2 * NUM_CORES )) --gpus-per-task "$NUM_GPUS" "$@"
+    set -- -J legate -A "$ACCOUNT" -t "$TIMELIMIT" -N "$NUM_NODES" "$@"
+    set -- --ntasks-per-node "$RANKS_PER_NODE" -c $(( 2 * NUM_CORES )) "$@"
+    if [[ "$USE_CUDA" == 1 ]]; then
+        set -- -C gpu --gpus-per-task "$NUM_GPUS" "$@"
+    fi
     if [[ "$INTERACTIVE" == 1 ]]; then
         set -- salloc -q interactive "$@"
     else
@@ -318,7 +321,10 @@ elif [[ "$PLATFORM" == cori ]]; then
 elif [[ "$PLATFORM" == pizdaint ]]; then
     set -- "$SCRIPT_DIR/legate.slurm" "$@"
     QUEUE="${QUEUE:-normal}"
-    set -- -J legate -A "$ACCOUNT" -p "$QUEUE" -t "$TIMELIMIT" -N "$NUM_NODES" -C gpu "$@"
+    set -- -J legate -A "$ACCOUNT" -p "$QUEUE" -t "$TIMELIMIT" -N "$NUM_NODES" "$@"
+    if [[ "$USE_CUDA" == 1 ]]; then
+        set -- -C gpu "$@"
+    fi
     if [[ "$INTERACTIVE" == 1 ]]; then
         set -- salloc "$@"
     else
