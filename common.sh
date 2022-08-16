@@ -13,8 +13,6 @@
 # limitations under the License.
 #
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-
 function detect_platform {
     if [[ -n "${PLATFORM+x}" ]]; then
         return
@@ -167,7 +165,6 @@ function run_command {
             OUT_DIR="$CMD_OUT_DIR"
         else
             OUT_DIR="$CMD_OUT_DIR/$I"
-            mkdir "$OUT_DIR"
         fi
         if [[ "$NODRIVER" != 1 ]]; then
             _run_command "$@" --logdir "$OUT_DIR"
