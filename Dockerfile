@@ -105,7 +105,7 @@ COPY ibdev2netdev /usr/bin/
 RUN source /opt/legate/quickstart/common.sh \
  && set_build_vars \
  && if [[ "$CONDUIT" == ibv || "$CONDUIT" == ucx ]]; then \
-    export UCX_VER=1.12.1 \
+    export UCX_VER=1.13.0 \
  && cd /tmp \
  && curl -fsSL https://github.com/openucx/ucx/releases/download/v${UCX_VER}/ucx-${UCX_VER}.tar.gz | tar -xz \
  && cd ucx-${UCX_VER} \

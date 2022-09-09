@@ -16,7 +16,7 @@
 #
 
 set -euo pipefail
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+export SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$SCRIPT_DIR/common.sh"
 
 # Print usage if requested
@@ -41,7 +41,7 @@ if [[ $# -lt 2 || ! "$1" =~ ^(1/)?[0-9]+(:[0-9]+)?$ ]]; then
     echo "  NOWAIT : don't wait for batch jobs to start (default: 0)"
     echo "  PLATFORM : what machine we are executing on (default: auto-detected)"
     echo "  QUEUE : what queue/partition to submit the job to (default: depends on cluster)"
-    echo "  RESERVED_CORES : how many cores to reserve for the Legion runtime (default: 4)"
+    echo "  RESERVED_CORES : cores to reserve for kernel launches, Legion & Realm meta-work (default: 2)"
     echo "  SCRATCH : where to create an output directory (default: .)"
     echo "  TIMELIMIT : how much time to request for the job, in minutes (defaut: 60)"
     echo "  USE_CUDA : run with CUDA enabled (defaut: auto-detected)"
@@ -91,7 +91,7 @@ fi
 export MOUNTS="${MOUNTS:-}"
 export NODRIVER="${NODRIVER:-0}"
 export NOWAIT="${NOWAIT:-0}"
-export RESERVED_CORES="${RESERVED_CORES:-4}"
+export RESERVED_CORES="${RESERVED_CORES:-2}"
 export SCRATCH="${SCRATCH:-.}"
 export TIMELIMIT="${TIMELIMIT:-60}"
 export USE_CUDA="${USE_CUDA:-1}"
@@ -228,11 +228,7 @@ else
     fi
 fi
 
-# Split available resources between ranks
-# Typically we assign all cores to OpenMP processors, except for:
-# - 1 core for the CPU processor
-# - 1 core for the python processor
-# - 2 cores for utility processors, Realm worker threads and GPU processors
+# Calculate available resources per OpenMP group
 NUM_OMPS=$(( NUMAS_PER_NODE * $NODE_RATIO ))
 if [[ $NUM_OMPS -lt 1 ]]; then
     NUM_OMPS=1
@@ -242,13 +238,8 @@ else
     CORES_PER_OMP="$CORES_PER_NUMA"
     RAM_PER_OMP="$RAM_PER_NUMA"
 fi
-RESERVED_PER_OMP=$(( ( RESERVED_CORES + NUM_OMPS - 1 ) / NUM_OMPS ))
-if (( RESERVED_PER_OMP >= CORES_PER_OMP )); then
-    echo "Error: Not enough cores, try reducing RESERVED_CORES" 1>&2
-    exit 1
-fi
-THREADS_PER_OMP=$(( CORES_PER_OMP - RESERVED_PER_OMP ))
 NUM_CORES=$(( NUM_OMPS * CORES_PER_OMP ))
+WORK_RAM=$(( NUM_OMPS * RAM_PER_OMP ))
 if [[ "$USE_CUDA" == 1 ]]; then
     NUM_GPUS=$(( GPUS_PER_NODE * $NODE_RATIO ))
 fi
@@ -257,17 +248,41 @@ fi
 if [[ "$NODRIVER" != 1 ]]; then
     set -- --nodes "$NUM_NODES" --ranks-per-node "$RANKS_PER_NODE" "$@"
     set -- --verbose --log-to-file "$@"
+
+    # Split available resources between ranks
     if [[ "$USE_CUDA" == 1 ]]; then
+        # Need at least 2 more cores, for 1 CPU processor and 1 Python processor
+        RESERVED_CORES=$(( RESERVED_CORES + 2 ))
+        if (( RESERVED_CORES > NUM_CORES )); then
+            echo "Error: Not enough cores, try reducing RESERVED_CORES" 1>&2
+            exit 1
+        fi
         set -- --gpus "$NUM_GPUS" --fbmem "$FB_PER_GPU" "$@"
-    fi
-    if [[ "$USE_OPENMP" == 1 ]]; then
+        set -- --cpus 1 --sysmem "$WORK_RAM" "$@"
+    elif [[ "$USE_OPENMP" == 1 ]]; then
+        # Need at least 2 more cores, for 1 CPU processor and 1 Python processor
+        RESERVED_CORES=$(( RESERVED_CORES + 2 ))
+        # These reserved cores must be subtracted equally from each OpenMP group
+        RESERVED_PER_OMP=$(( ( RESERVED_CORES + NUM_OMPS - 1 ) / NUM_OMPS ))
+        if (( RESERVED_PER_OMP >= CORES_PER_OMP )); then
+            echo "Error: Not enough cores, try reducing RESERVED_CORES" 1>&2
+            exit 1
+        fi
+        THREADS_PER_OMP=$(( CORES_PER_OMP - RESERVED_PER_OMP ))
         set -- --cpus 1 --sysmem 256 "$@"
         set -- --omps "$NUM_OMPS" --ompthreads "$THREADS_PER_OMP" "$@"
         set -- --numamem "$RAM_PER_OMP" "$@"
     else
-        set -- --cpus $(( NUM_OMPS * THREADS_PER_OMP )) "$@"
-        set -- --sysmem $(( NUM_OMPS * RAM_PER_OMP )) "$@"
+        # Need at least 1 more core, for the Python processor
+        RESERVED_CORES=$(( RESERVED_CORES + 1 ))
+        if (( RESERVED_CORES >= NUM_CORES )); then
+            echo "Error: Not enough cores, try reducing RESERVED_CORES" 1>&2
+            exit 1
+        fi
+        set -- --cpus $(( NUM_CORES - RESERVED_CORES )) --sysmem "$WORK_RAM" "$@"
     fi
+
+    # Add launcher options
     if [[ "$PLATFORM" == summit ]]; then
         set -- --launcher jsrun "$@"
     elif [[ "$PLATFORM" == cori ]]; then
@@ -286,6 +301,7 @@ if [[ "$NODRIVER" != 1 ]]; then
             set -- --launcher none "$@"
         fi
     fi
+
     set -- "$LEGATE_DIR/bin/legate" "$@"
 fi
 
@@ -306,8 +322,11 @@ elif [[ "$PLATFORM" == cori ]]; then
     export GASNET_IBV_PORTS=mlx5_0+mlx5_2+mlx5_4+mlx5_6
     set -- "$SCRIPT_DIR/legate.slurm" "$@"
     # We double the number of cores because SLURM counts virtual cores
-    set -- -J legate -A "$ACCOUNT" -t "$TIMELIMIT" -N "$NUM_NODES" -C gpu "$@"
-    set -- --ntasks-per-node "$RANKS_PER_NODE" -c $(( 2 * NUM_CORES )) --gpus-per-task "$NUM_GPUS" "$@"
+    set -- -J legate -A "$ACCOUNT" -t "$TIMELIMIT" -N "$NUM_NODES" "$@"
+    set -- --ntasks-per-node "$RANKS_PER_NODE" -c $(( 2 * NUM_CORES )) "$@"
+    if [[ "$USE_CUDA" == 1 ]]; then
+        set -- -C gpu --gpus-per-task "$NUM_GPUS" "$@"
+    fi
     if [[ "$INTERACTIVE" == 1 ]]; then
         set -- salloc -q interactive "$@"
     else
@@ -318,7 +337,10 @@ elif [[ "$PLATFORM" == cori ]]; then
 elif [[ "$PLATFORM" == pizdaint ]]; then
     set -- "$SCRIPT_DIR/legate.slurm" "$@"
     QUEUE="${QUEUE:-normal}"
-    set -- -J legate -A "$ACCOUNT" -p "$QUEUE" -t "$TIMELIMIT" -N "$NUM_NODES" -C gpu "$@"
+    set -- -J legate -A "$ACCOUNT" -p "$QUEUE" -t "$TIMELIMIT" -N "$NUM_NODES" "$@"
+    if [[ "$USE_CUDA" == 1 ]]; then
+        set -- -C gpu "$@"
+    fi
     if [[ "$INTERACTIVE" == 1 ]]; then
         set -- salloc "$@"
     else

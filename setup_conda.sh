@@ -86,7 +86,7 @@ else
     SED="sed -i"
 fi
 YML_FILE="$(mktemp -d)/env.yml"
-curl -fsSL -o "$YML_FILE" https://raw.githubusercontent.com/nv-legate/legate.core/"$(git rev-parse --abbrev-ref HEAD)"/conda/environment-test-"$PYTHON_VER".yml
+curl -fsSL -o "$YML_FILE" https://raw.githubusercontent.com/nv-legate/legate.core/HEAD/conda/environment-test-"$PYTHON_VER".yml
 if [[ "$USE_CUDA" == 1 ]]; then
     echo "  - cudatoolkit=$CUDA_VER" >> "$YML_FILE"
 else
