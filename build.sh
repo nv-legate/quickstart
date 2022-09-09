@@ -73,7 +73,6 @@ elif [[ -d "cunumeric" ]]; then
     fi
     run_build ./install.py \
               --with-core "$LEGATE_DIR" \
-              --with-openblas "$CONDA_PREFIX" \
               "$@"
 else
     echo "Error: Unsupported library" 1>&2
