@@ -39,37 +39,33 @@ function set_build_vars {
     export USE_OPENMP="${USE_OPENMP:-1}"
     # Set base build variables according to target platform
     if [[ "$PLATFORM" == summit ]]; then
-        export NETWORK=gasnet1
-        export CONDUIT=ibv
+        export CONDUIT="${CONDUIT:-ibv}"
         export NUM_NICS=4
         export CUDA_HOME="$CUDA_DIR"
         export GPU_ARCH=volta
     elif [[ "$PLATFORM" == cori ]]; then
-        export NETWORK=gasnet1
-        export CONDUIT=ibv
+        export CONDUIT="${CONDUIT:-ibv}"
         export NUM_NICS=4
         # CUDA_HOME is already set (by module)
         export GPU_ARCH=volta
     elif [[ "$PLATFORM" == pizdaint ]]; then
-        export NETWORK=gasnet1
-        export CONDUIT=aries
+        export CONDUIT="${CONDUIT:-aries}"
         export NUM_NICS=1
         # CUDA_HOME is already set (by module)
         export GPU_ARCH=pascal
     elif [[ "$PLATFORM" == sapling ]]; then
-        export NETWORK=gasnet1
-        export CONDUIT=ibv
+        export CONDUIT="${CONDUIT:-ibv}"
         export NUM_NICS=1
         export CUDA_HOME=/usr/local/cuda-11.1
         export GPU_ARCH=pascal
     elif [[ "$PLATFORM" == lassen ]]; then
-        export NETWORK=gasnet1
-        export CONDUIT=ibv
+        export CONDUIT="${CONDUIT:-ibv}"
         export NUM_NICS=4
         # CUDA_HOME is already set (by module)
         export GPU_ARCH=volta
     elif [[ "$PLATFORM" == generic-* ]]; then
-        export NETWORK=none
+        export NETWORK="${NETWORK:-none}"
+        export CONDUIT="${CONDUIT:-none}"
         export GPU_ARCH="${PLATFORM#generic-}"
     else
         if [[ -f /proc/self/cgroup ]] && grep -q docker /proc/self/cgroup; then
@@ -80,7 +76,7 @@ function set_build_vars {
         if [[ -z "${NETWORK+x}" ]]; then
             if command -v mpirun &> /dev/null; then
                 export NETWORK=gasnet1
-                export CONDUIT=mpi
+                export CONDUIT="${CONDUIT:-mpi}"
             else
                 export NETWORK=none
             fi
@@ -129,6 +125,7 @@ function set_build_vars {
             export CUDA_HOME="${NVCC_PATH%/bin/nvcc}"
         fi
     fi
+    export NETWORK="${NETWORK:-gasnet1}"
 }
 
 function set_mofed_vars {
