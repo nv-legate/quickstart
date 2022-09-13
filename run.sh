@@ -59,12 +59,12 @@ else
 fi
 if [[ "$NODE_STR" =~ ^1/[0-9]+$ ]]; then
     NUM_NODES=1
-    NODE_RATIO="$NODE_STR"
+    RATIO_OF_NODE_USED="$NODE_STR"
 else
     NUM_NODES="$NODE_STR"
-    NODE_RATIO=1
+    RATIO_OF_NODE_USED=1
 fi
-NODE_RATIO="$NODE_RATIO / $RANKS_PER_NODE"
+NODE_RATIO="$RATIO_OF_NODE_USED / $RANKS_PER_NODE"
 shift
 detect_platform
 if [[ "$PLATFORM" == summit ]]; then
@@ -352,7 +352,7 @@ elif [[ "$PLATFORM" == sapling ]]; then
     set -- "$SCRIPT_DIR/legate.slurm" "$SCRIPT_DIR/sapling_run.sh" "$@"
     QUEUE="${QUEUE:-gpu}"
     set -- -J legate -p "$QUEUE" -t "$TIMELIMIT" -N "$NUM_NODES" "$@"
-    if [[ "$NODE_STR" =~ ^[0-9]+$ ]]; then
+    if [[ "$RATIO_OF_NODE_USED" == 1 ]]; then
         set -- --exclusive "$@"
     fi
     if [[ "$INTERACTIVE" == 1 ]]; then
