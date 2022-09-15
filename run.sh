@@ -384,5 +384,5 @@ if [[ "$INTERACTIVE" != 1 && "$NOWAIT" != 1 ]]; then
     echo "Press Ctrl-C anytime to exit (job will still run)"
     while [[ ! -f "$HOST_OUT_DIR/out.txt" ]]; do sleep 1; done
     echo "Job started"
-    tail -n +0 -f "$HOST_OUT_DIR/out.txt" | sed '/^Job finished/ q'
+    sed '/^Job finished/q' <( exec tail -n +0 -f "$HOST_OUT_DIR/out.txt" ) && kill $!
 fi
