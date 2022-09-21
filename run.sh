@@ -26,7 +26,7 @@ if [[ $# -lt 2 || ! "$1" =~ ^(1/)?[0-9]+(:[0-9]+)?$ ]]; then
     echo "  <num-nodes> : positive integer or ratio < 1 (e.g. 1/4, for partial-node runs)"
     echo "  <ranks-per-node> : positive integer (default: 1)"
     echo "  <argI> : arguments to the program itself, Legate or Legion"
-    echo "           see \$LEGATE_DIR/bin/legate -h for options accepted by Legate"
+    echo "           see legate -h for options accepted by Legate"
     echo "           see the Legion README for options accepted by Legion"
     echo "Arguments read from the environment:"
     echo "  ACCOUNT : account/group/project to submit the job under (if applicable)"
@@ -34,7 +34,6 @@ if [[ $# -lt 2 || ! "$1" =~ ^(1/)?[0-9]+(:[0-9]+)?$ ]]; then
     echo "          (default : ghcr.io/nv-legate/legate-\$PLATFORM:latest)"
     echo "  INTERACTIVE : submit an interactive rather than a batch job (defaut: 0)"
     echo "  ITERATIONS : how many times to run the program (defaut: 1)"
-    echo "  LEGATE_DIR : path to Legate installation directory"
     echo "  MOUNTS : comma-separated list of volume mounts (for container-based clusters)"
     echo "           (syntax depends on cluster) (default: none)"
     echo "  NODRIVER : don't invoke the Legate driver script (defaut: 0)"
@@ -83,27 +82,33 @@ fi
 export IMAGE="${IMAGE:-ghcr.io/nv-legate/legate-$PLATFORM:latest}"
 export INTERACTIVE="${INTERACTIVE:-0}"
 export ITERATIONS="${ITERATIONS:-1}"
-if [[ "$CONTAINER_BASED" == 1 ]]; then
-    export LEGATE_DIR=/opt/legate/install
-else
-    true "$LEGATE_DIR"
-fi
 export MOUNTS="${MOUNTS:-}"
 export NODRIVER="${NODRIVER:-0}"
 export NOWAIT="${NOWAIT:-0}"
 export RESERVED_CORES="${RESERVED_CORES:-2}"
 export SCRATCH="${SCRATCH:-.}"
 export TIMELIMIT="${TIMELIMIT:-60}"
-export USE_CUDA="${USE_CUDA:-1}"
-export USE_OPENMP="${USE_OPENMP:-1}"
-
-# Verify that all requested hardware is available
-if [[ "$CONTAINER_BASED" == 0 ]]; then
-    if ! grep -q '#define REALM_USE_CUDA' "$LEGATE_DIR"/include/realm_defines.h; then
-        export USE_CUDA=0
+if [[ "$CONTAINER_BASED" == 1 ]]; then
+    # Can't auto-detect this outside the container, assume best-case scenario
+    export USE_CUDA="${USE_CUDA:-1}"
+    export USE_OPENMP="${USE_OPENMP:-1}"
+else
+    # Assuming editable conda install
+    LEGATE_SRC_DIR="$(head -n 1 "$CONDA_PREFIX"/lib/python*/site-packages/legate.core.egg-link)"
+    BUILD_CONFIG="$LEGATE_SRC_DIR"/build/legate_core-config.cmake
+    if [[ -z "${USE_CUDA+x}" ]]; then
+        if grep -q 'set(Legion_USE_CUDA ON)' "$BUILD_CONFIG"; then
+            export USE_CUDA=1
+        else
+            export USE_CUDA=0
+        fi
     fi
-    if ! grep -q '#define REALM_USE_OPENMP' "$LEGATE_DIR"/include/realm_defines.h; then
-        export USE_OPENMP=0
+    if [[ -z "${USE_OPENMP+x}" ]]; then
+        if grep -q 'set(Legion_USE_OpenMP ON)' "$BUILD_CONFIG"; then
+            export USE_OPENMP=1
+        else
+            export USE_OPENMP=0
+        fi
     fi
 fi
 
@@ -295,14 +300,14 @@ if [[ "$NODRIVER" != 1 ]]; then
         set -- --launcher jsrun "$@"
     else
         # Local run
-        if grep -q '#define GASNET_CONDUIT_MPI' "$LEGATE_DIR"/include/realm_defines.h; then
+        if grep -q 'set(Legion_USE_GASNet ON)' "$BUILD_CONFIG"; then
             set -- --launcher mpirun "$@"
         else
             set -- --launcher none "$@"
         fi
     fi
 
-    set -- "$LEGATE_DIR/bin/legate" "$@"
+    set -- legate "$@"
 fi
 
 # Submit job to appropriate scheduler

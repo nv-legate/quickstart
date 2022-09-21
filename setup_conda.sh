@@ -19,6 +19,7 @@
 # load the conda commands in login shells.
 set -euo pipefail
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+source "$SCRIPT_DIR/common.sh"
 
 # Print usage if requested
 if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
@@ -34,6 +35,7 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
 fi
 
 # Read arguments
+detect_platform
 export CONDA_ENV="${CONDA_ENV:-legate}"
 if [[ -z "${USE_CUDA+x}" ]]; then
     if command -v nvcc &> /dev/null; then
@@ -86,7 +88,7 @@ else
     SED="sed -i"
 fi
 YML_FILE="$(mktemp -d)/env.yml"
-curl -fsSL -o "$YML_FILE" https://raw.githubusercontent.com/nv-legate/legate.core/HEAD/conda/environment-test-"$PYTHON_VER".yml
+curl -fsSL -o "$YML_FILE" https://raw.githubusercontent.com/nv-legate/cunumeric/HEAD/conda/environment-test-"$PYTHON_VER".yml
 if [[ "$USE_CUDA" == 1 ]]; then
     echo "  - cudatoolkit=$CUDA_VER" >> "$YML_FILE"
 else
@@ -94,15 +96,21 @@ else
     $SED '/^  - nccl/d' "$YML_FILE"
     $SED '/^  - pynvml/d' "$YML_FILE"
 fi
+if [[ "$(uname -s)" != Linux ]]; then
+    $SED '/_linux/d' "$YML_FILE"
+fi
 for PACKAGE in "$@"; do
     echo "  - $PACKAGE" >> "$YML_FILE"
 done
 conda env create -n "$CONDA_ENV" -f "$YML_FILE"
 rm "$YML_FILE"
 
-# Copy conda activation scripts (these set various paths)
+# Replace the repeated use of sed with bash sub-string replacement.
+# See https://github.com/conda-forge/clang-compiler-activation-feedstock/pull/86
 set +u
 conda activate "$CONDA_ENV"
 set -u
-mkdir -p "$CONDA_PREFIX/etc"
-cp -r "$SCRIPT_DIR/conda" "$CONDA_PREFIX/etc"
+for SCRIPT in "$CONDA_PREFIX"/etc/conda/*.d/*.sh; do
+    $SED 's/thing=$(echo "${thing}" | sed.*/thing="${thing%%,*}"/g' "$SCRIPT"
+    $SED 's/newval=$(echo "${thing}" | sed.*/newval="${thing#*,}"/g' "$SCRIPT"
+done

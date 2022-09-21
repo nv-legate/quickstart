@@ -74,8 +74,8 @@ function git_pull {
     fi
     cd -
 }
+git_pull https://gitlab.com/StanfordLegion/legion.git legion "$LEGION_REF"
 git_pull https://github.com/nv-legate/legate.core.git legate.core HEAD
-git_pull https://gitlab.com/StanfordLegion/legion.git legate.core/legion "$LEGION_REF"
 git_pull https://github.com/nv-legate/cunumeric.git cunumeric HEAD
 
 # Build and push image

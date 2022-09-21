@@ -24,8 +24,7 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "Usage: $(basename "${BASH_SOURCE[0]}") [extra build args]"
     echo "Arguments read from the environment:"
     echo "  ACCOUNT : account/group/project to submit build job under (if applicable)"
-    echo "  DEBUG : compile with debug symbols and w/o optimizations (default: 0)"
-    echo "  LEGATE_DIR : path to Legate installation directory"
+    echo "  LEGION_DIR : source directory to use for Legion"
     echo "  PLATFORM : what machine to build for (default: auto-detected)"
     echo "  USE_CUDA : include CUDA support (default: auto-detected)"
     echo "  USE_OPENMP : include OpenMP support (default: auto-detected)"
@@ -33,8 +32,6 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
 fi
 
 # Read arguments
-export DEBUG="${DEBUG:-0}"
-export LEGATE_DIR="$LEGATE_DIR"
 detect_platform && set_build_vars
 
 # Run appropriate build command for the target library
@@ -49,24 +46,17 @@ if [[ -d "legate/core" ]]; then
     fi
     if [[ "$USE_CUDA" == 1 ]]; then
         set -- --arch "$GPU_ARCH" \
-               --with-cuda "$CUDA_HOME" \
-               --with-nccl "$CONDA_PREFIX" \
                "$@"
     fi
     run_build ./install.py \
-              --install-dir "$LEGATE_DIR" \
-              "$@"
-elif [[ -d "legate/hello" ]]; then
-    run_build ./install.py \
-              --with-core "$LEGATE_DIR" \
+              --verbose \
+              --editable \
+              --legion-src-dir "$LEGION_DIR" \
               "$@"
 elif [[ -d "cunumeric" ]]; then
-    if [[ "$USE_CUDA" == 1 ]]; then
-        set -- --with-cutensor "$CONDA_PREFIX" \
-               "$@"
-    fi
     run_build ./install.py \
-              --with-core "$LEGATE_DIR" \
+              --verbose \
+              --editable \
               "$@"
 else
     echo "Error: Unsupported library" 1>&2

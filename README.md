@@ -18,10 +18,14 @@ limitations under the License.
 Legate Quickstart
 =================
 
-Legate Quickstart provides two ways to simplify the use of Legate: Scripts for
-building Docker images containing all Legate libraries, and a collection of
-scripts for building Legate libraries from source and running Legate programs
-with appropriate defaults for a number of supported clusters.
+Legate Quickstart provides two ways to simplify the use of Legate:
+
+* Scripts for building Docker images containing source-builds of all Legate
+  libraries
+
+* Scripts for setting up a development environment, building Legate libraries
+  from source and running Legate programs with appropriate defaults for a
+  number of supported clusters (and auto-detected settings for local installs)
 
 Building and using Docker images
 ================================
@@ -68,8 +72,8 @@ image, and a GPU-aware container execution engine like
 networking hardware from inside a container the host and the image must use
 the same version of MOFED.
 
-Building from source on supported clusters
-==========================================
+Building from source
+====================
 
 The scripts in this repository will detect if you are running on a supported
 cluster, and automatically use the appropriate flags to build and run Legate.
@@ -87,9 +91,9 @@ resources.
   using all Legate libraries on GPUs. You can skip the script entirely if you
   prefer to install the required packages manually; see the `conda/???.yml`
   files on the individual Legate libraries.
-* `~/.bashrc`: The commands we add to this file activate the environment we set
-  up for Legate runs, and must be executed on every node in a multi-node run
-  before invoking the Legate executable. Note that the order of commands
+* `~/.bash_profile`: The commands we add to this file activate the environment
+  we set up for Legate runs, and must be executed on every node in a multi-node
+  run before invoking the Legate executable. Note that the order of commands
   matters; we want the paths set by `conda` to supersede those set by `module`.
 * Invoke any script with `-h` to see more available options.
 
@@ -110,7 +114,7 @@ resources.
 Local machine
 =============
 
-Add to `~/.bashrc`:
+Add to `~/.bash_profile`:
 
 ```
 source "<conda-install-dir>/etc/profile.d/conda.sh"
@@ -128,49 +132,63 @@ conda activate legate
 Build Legate libraries:
 
 ```
-cd /path/to/legate.core
-LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
-cd /path/to/cunumeric
-LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
+git clone https://gitlab.com/StanfordLegion/legion.git -b control_replication <legion-dir>
+git clone https://github.com/nv-legate/legate.core <legate.core-dir>
+git clone https://github.com/nv-legate/cunumeric <cunumeric-dir>
+cd <legate.core-dir>
+LEGION_DIR=<legion-dir> <quickstart-dir>/build.sh
+cd <cunumeric-dir>
+<quickstart-dir>/build.sh
 ```
 
 Run Legate programs:
 
 ```
-LEGATE_DIR=<legate-install-dir> <quickstart-dir>/run.sh <num-nodes> <py-program>
+<quickstart-dir>/run.sh <num-nodes> <py-program> <args>
 ```
 
 Summit @ ORNL
 =============
 
-Add to `~/.bashrc`:
+Add to `~/.bash_profile`:
 
 ```
-module load cuda/11.0.3 gcc/9.3.0 openblas/0.3.9-omp
-module load ums
-module load ums-gen119
-module load nvidia-rapids/21.08
+module load cuda/11.0.3 gcc/9.3.0 openblas/0.3.20-omp
+source "<conda-install-dir>/etc/profile.d/conda.sh"
+conda activate legate
+```
+
+Log out and back in, then run:
+
+```
+CONDA_ROOT=<conda-install-dir> <quickstart-dir>/setup_conda.sh
+source "<conda-install-dir>/etc/profile.d/conda.sh"
+conda activate legate
 ```
 
 Build Legate libraries:
 
 ```
-cd /path/to/legate.core
-LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
-cd /path/to/cunumeric
-LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
+git clone https://gitlab.com/StanfordLegion/legion.git -b control_replication <legion-dir>
+git clone https://github.com/nv-legate/legate.core <legate.core-dir>
+git clone https://github.com/nv-legate/cunumeric <cunumeric-dir>
+cd <legate.core-dir>
+LEGION_DIR=<legion-dir> <quickstart-dir>/build.sh
+cd <cunumeric-dir>
+# Extra build flags required by TBLIS
+CXXFLAGS=-DNO_WARN_X86_INTRINSICS CC_FLAGS=-DNO_WARN_X86_INTRINSICS <quickstart-dir>/build.sh
 ```
 
 Run Legate programs:
 
 ```
-LEGATE_DIR=<legate-install-dir> <quickstart-dir>/run.sh <num-nodes> <py-program>
+<quickstart-dir>/run.sh <num-nodes> <py-program> <args>
 ```
 
 CoriGPU @ LBL
 =============
 
-Add to `~/.bashrc`:
+Add to `~/.bash_profile`:
 
 ```
 # Cori runs even sub-shells in login mode, so guard these from running more than once
@@ -192,22 +210,25 @@ conda activate legate
 Build Legate libraries:
 
 ```
-cd /path/to/legate.core
-LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
-cd /path/to/cunumeric
-LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
+git clone https://gitlab.com/StanfordLegion/legion.git -b control_replication <legion-dir>
+git clone https://github.com/nv-legate/legate.core <legate.core-dir>
+git clone https://github.com/nv-legate/cunumeric <cunumeric-dir>
+cd <legate.core-dir>
+LEGION_DIR=<legion-dir> <quickstart-dir>/build.sh
+cd <cunumeric-dir>
+<quickstart-dir>/build.sh
 ```
 
 Run Legate programs:
 
 ```
-LEGATE_DIR=<legate-install-dir> <quickstart-dir>/run.sh <num-nodes> <py-program>
+<quickstart-dir>/run.sh <num-nodes> <py-program> <args>
 ```
 
 PizDaint @ ETH
 ==============
 
-Add to `~/.bashrc`:
+Add to `~/.bash_profile`:
 
 ```
 module swap PrgEnv-cray PrgEnv-gnu/6.0.9
@@ -228,22 +249,25 @@ conda activate legate
 Build Legate libraries:
 
 ```
-cd /path/to/legate.core
-LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
-cd /path/to/cunumeric
-LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
+git clone https://gitlab.com/StanfordLegion/legion.git -b control_replication <legion-dir>
+git clone https://github.com/nv-legate/legate.core <legate.core-dir>
+git clone https://github.com/nv-legate/cunumeric <cunumeric-dir>
+cd <legate.core-dir>
+LEGION_DIR=<legion-dir> <quickstart-dir>/build.sh
+cd <cunumeric-dir>
+<quickstart-dir>/build.sh
 ```
 
 Run Legate programs:
 
 ```
-LEGATE_DIR=<legate-install-dir> <quickstart-dir>/run.sh <num-nodes> <py-program>
+<quickstart-dir>/run.sh <num-nodes> <py-program> <args>
 ```
 
 Sapling @ Stanford
 ==================
 
-Add to `~/.bashrc`:
+Add to `~/.bash_profile`:
 
 ```
 module load slurm/20.11.4
@@ -262,22 +286,25 @@ conda activate legate
 Build Legate libraries:
 
 ```
-cd /path/to/legate.core
-LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
-cd /path/to/cunumeric
-LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
+git clone https://gitlab.com/StanfordLegion/legion.git -b control_replication <legion-dir>
+git clone https://github.com/nv-legate/legate.core <legate.core-dir>
+git clone https://github.com/nv-legate/cunumeric <cunumeric-dir>
+cd <legate.core-dir>
+LEGION_DIR=<legion-dir> <quickstart-dir>/build.sh
+cd <cunumeric-dir>
+<quickstart-dir>/build.sh
 ```
 
 Run Legate programs:
 
 ```
-LEGATE_DIR=<legate-install-dir> <quickstart-dir>/run.sh <num-nodes> <py-program>
+<quickstart-dir>/run.sh <num-nodes> <py-program> <args>
 ```
 
 Lassen @ LLNL
 =============
 
-Add to `~/.bashrc`:
+Add to `~/.bash_profile`:
 
 ```
 module load gcc/8.3.1 cuda/11.1.0
@@ -296,16 +323,19 @@ conda activate legate
 Build Legate libraries:
 
 ```
-cd /path/to/legate.core
-LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
-cd /path/to/cunumeric
-LEGATE_DIR=<legate-install-dir> <quickstart-dir>/build.sh
+git clone https://gitlab.com/StanfordLegion/legion.git -b control_replication <legion-dir>
+git clone https://github.com/nv-legate/legate.core <legate.core-dir>
+git clone https://github.com/nv-legate/cunumeric <cunumeric-dir>
+cd <legate.core-dir>
+LEGION_DIR=<legion-dir> <quickstart-dir>/build.sh
+cd <cunumeric-dir>
+<quickstart-dir>/build.sh
 ```
 
 Run Legate programs:
 
 ```
-LEGATE_DIR=<legate-install-dir> <quickstart-dir>/run.sh <num-nodes> <py-program>
+<quickstart-dir>/run.sh <num-nodes> <py-program> <args>
 ```
 
 Questions

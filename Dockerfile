@@ -34,18 +34,8 @@ ENV PLATFORM=${PLATFORM}
 ARG PYTHON_VER
 ENV PYTHON_VER=${PYTHON_VER}
 
-# Set compile-time & runtime paths
-ENV LEGATE_DIR=/opt/legate/install
-ENV CUDA_HOME=/usr/local/cuda
-# Our activation scripts will append conda dirs to PATH, CPATH and LIBRARY_PATH
-# automaticaly on `conda activate`.
-
 # Execute RUN commands in strict mode
 SHELL [ "/bin/bash", "-eo", "pipefail", "-c" ]
-
-# Create an alias for the stub libcuda, required when static-linking with UCX libraries
-RUN cd ${CUDA_HOME}/lib64/stubs \
- && ln -s libcuda.so libcuda.so.1
 
 # Add third-party apt repos
 RUN export LINUX_VER_URL="$(echo "$LINUX_VER" | tr -d '.')" \
@@ -55,7 +45,6 @@ RUN export LINUX_VER_URL="$(echo "$LINUX_VER" | tr -d '.')" \
 # Copy quickstart scripts to image (don't copy the entire directory; that would
 # include the library repo checkouts, that we want to place elsewhere)
 COPY build.sh common.sh entrypoint.sh setup_conda.sh /opt/legate/quickstart/
-COPY conda /opt/legate/quickstart/conda
 
 # Install apt packages
 RUN source /opt/legate/quickstart/common.sh \
@@ -67,10 +56,6 @@ RUN source /opt/legate/quickstart/common.sh \
     libnl-3-200 libnl-route-3-200 libnl-3-dev libnl-route-3-dev \
   ; fi \
  && apt-get install -y --no-install-recommends \
-    `# requirements for OpenBLAS build` \
-    gfortran \
-    `# requirements for Legion` \
-    zlib1g-dev \
     `# useful utilities` \
     nsight-systems-cli numactl gdb \
  && apt-get clean \
@@ -88,18 +73,11 @@ RUN source /opt/legate/quickstart/common.sh \
  && dpkg -i $(echo $(find . -false \
     -or -name 'ibverbs-providers*.deb' \
     -or -name 'libibverbs*.deb' \
-    -or -name 'librdmacm*.deb' \
-    -or -name 'openmpi_*.deb')) \
+    -or -name 'librdmacm*.deb')) \
  && cd /tmp \
  && rm -rf ${MOFED_ID} \
  && echo ${MOFED_VER} > /opt/mofed-ver \
   ; fi
-
-# Copy MOFED executables to /usr/bin
-RUN for APP in mpicc mpicxx mpif90 mpirun; do \
-    ln -s /usr/mpi/gcc/openmpi-*/bin/"$APP" /usr/bin/"$APP" \
-  ; done
-COPY ibdev2netdev /usr/bin/
 
 # Install UCX
 RUN source /opt/legate/quickstart/common.sh \
@@ -109,7 +87,7 @@ RUN source /opt/legate/quickstart/common.sh \
  && cd /tmp \
  && curl -fsSL https://github.com/openucx/ucx/releases/download/v${UCX_VER}/ucx-${UCX_VER}.tar.gz | tar -xz \
  && cd ucx-${UCX_VER} \
- && ./contrib/configure-release --enable-mt --with-cuda=${CUDA_HOME} --with-java=no \
+ && ./contrib/configure-release --enable-mt --with-cuda=/usr/local/cuda --with-java=no \
  && make -j install \
  && cd /tmp \
  && rm -rf ucx-${UCX_VER} \
@@ -118,25 +96,27 @@ RUN source /opt/legate/quickstart/common.sh \
 # Create conda environment
 RUN bash -x /opt/legate/quickstart/setup_conda.sh
 
-# Build GASNet, Legion and legate.core (in no-clean mode, so we don't override
-# the Legion checkout)
+# Copy some executables to /usr/bin
+# (BCP wants mpirun to be in a well-known location at container boot)
+RUN source activate legate \
+ && ln -s "$CONDA_PREFIX"/bin/mpirun /usr/bin/mpirun
+COPY ibdev2netdev /usr/bin/
+
+# Build GASNet, Legion and legate.core
+COPY legion /opt/legate/legion
 COPY legate.core /opt/legate/legate.core
 RUN source activate legate \
+ && export CUDA_PATH=/usr/local/cuda/lib64/stubs `# some conda packages, notably cupy, override CUDA_PATH` \
+ && export LEGION_DIR=/opt/legate/legion \
  && cd /opt/legate/legate.core \
- && export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${CUDA_HOME}/lib64/stubs \
- && bash -x /opt/legate/quickstart/build.sh --no-clean
+ && bash -x /opt/legate/quickstart/build.sh --extra='-DLegion_EMBED_GASNet_CONFIGURE_ARGS="--with-ibv-cflags=\"-idirafter /usr/include\" --with-ibv-ldflags=-L/usr/lib/x86_64-linux-gnu"'
 
 # Build cunumeric
 COPY cunumeric /opt/legate/cunumeric
 RUN source activate legate \
+ && export CUDA_PATH=/usr/local/cuda/lib64/stubs `# some conda packages, notably cupy, override CUDA_PATH` \
  && cd /opt/legate/cunumeric \
  && bash -x /opt/legate/quickstart/build.sh
-
-# Create a new user
-RUN useradd -rm -d /home/legate-user -s /bin/bash -g root -G sudo -u 1001 legate-user
-USER legate-user
-WORKDIR /home/legate-user
-ENV PATH=${PATH}:/opt/legate/install/bin
 
 # Custom entrypoint script
 ENTRYPOINT [ "/opt/legate/quickstart/entrypoint.sh" ]

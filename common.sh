@@ -32,36 +32,26 @@ function detect_platform {
 }
 
 function set_build_vars {
-    export CC="${CC:-gcc}"
-    export CXX="${CXX:-g++}"
-    export FC="${FC:-gfortran}"
-    export USE_CUDA="${USE_CUDA:-1}"
-    export USE_OPENMP="${USE_OPENMP:-1}"
     # Set base build variables according to target platform
     if [[ "$PLATFORM" == summit ]]; then
         export CONDUIT=ibv
         export NUM_NICS=4
-        export CUDA_HOME="$CUDA_DIR"
         export GPU_ARCH=volta
     elif [[ "$PLATFORM" == cori ]]; then
         export CONDUIT=ibv
         export NUM_NICS=4
-        # CUDA_HOME is already set (by module)
         export GPU_ARCH=volta
     elif [[ "$PLATFORM" == pizdaint ]]; then
         export CONDUIT=aries
         export NUM_NICS=1
-        # CUDA_HOME is already set (by module)
         export GPU_ARCH=pascal
     elif [[ "$PLATFORM" == sapling ]]; then
         export CONDUIT=ibv
         export NUM_NICS=1
-        export CUDA_HOME=/usr/local/cuda-11.1
         export GPU_ARCH=pascal
     elif [[ "$PLATFORM" == lassen ]]; then
         export CONDUIT=ibv
         export NUM_NICS=4
-        # CUDA_HOME is already set (by module)
         export GPU_ARCH=volta
     elif [[ "$PLATFORM" == generic-* ]]; then
         export CONDUIT=none
@@ -72,55 +62,38 @@ function set_build_vars {
             exit 1
         fi
         echo "Did not detect a supported cluster, assuming local-node build"
-        if command -v mpirun &> /dev/null; then
-            export CONDUIT=mpi
-        else
-            export CONDUIT=none
+        if [[ -z "${CONDUIT+x}" ]]; then
+            if command -v mpirun &> /dev/null; then
+                export CONDUIT=mpi
+            else
+                export CONDUIT=none
+            fi
         fi
-        if [[ -z "${GPU_ARCH+x}" ]]; then
+        if [[ -z "${USE_CUDA+x}" ]]; then
             if command -v nvcc &> /dev/null; then
-                TEST_SRC="$(mktemp --suffix .cc)"
-                echo "
-                  #include <iostream>
-                  #include <cuda_runtime.h>
-                  #include <stdlib.h>
-                  int main() {
-                    cudaDeviceProp prop;
-                    cudaError_t err = cudaGetDeviceProperties(&prop, 0);
-                    if (err != cudaSuccess) { exit(1); }
-                    std::cout << prop.major << prop.minor << std::endl;
-                  }
-                " > "$TEST_SRC"
-                TEST_EXE="$(mktemp)"
-                nvcc -o "$TEST_EXE" "$TEST_SRC"
-                GPU_ARCH_NUM="$( "$TEST_EXE" )"
-                rm "$TEST_EXE" "$TEST_SRC"
-                case "$GPU_ARCH_NUM" in
-                    20) export GPU_ARCH=fermi   ;;
-                    30) export GPU_ARCH=kepler  ;;
-                    35) export GPU_ARCH=k20     ;;
-                    37) export GPU_ARCH=k80     ;;
-                    52) export GPU_ARCH=maxwell ;;
-                    60) export GPU_ARCH=pascal  ;;
-                    70) export GPU_ARCH=volta   ;;
-                    75) export GPU_ARCH=turing  ;;
-                    80) export GPU_ARCH=ampere  ;;
-                    *) echo "Error: Unsupported GPU architecture $GPU_ARCH_NUM" 1>&2; exit 1 ;;
-                esac
+                export USE_CUDA=1
             else
                 export USE_CUDA=0
             fi
         fi
-        if ! echo "int main(){}" | "$CXX" -x c++ -fopenmp - &> /dev/null; then
-            export USE_OPENMP=0
+        if [[ -z "${USE_OPENMP+x}" ]]; then
+            TEST_DIR="$(mktemp -d)"
+            TEST_SRC="$TEST_DIR/test.cc"
+            echo "int main(){}" > "$TEST_SRC"
+            TEST_EXE="$TEST_DIR/test.exe"
+            if LIBRARY_PATH="${LIBRARY_PATH:-}:$CONDA_PREFIX/lib" "$CXX" -o "$TEST_EXE" "$TEST_SRC" -fopenmp &> /dev/null; then
+                export USE_OPENMP=1
+            else
+                export USE_OPENMP=0
+            fi
+            rm -rf "$TEST_DIR"
         fi
+        export GPU_ARCH="${GPU_ARCH:-NATIVE}"
     fi
-    if [[ -z "${CUDA_HOME+x}" ]]; then
-        if command -v nvcc &> /dev/null; then
-            NVCC_PATH="$(which nvcc | head -1)"
-            export CUDA_HOME="${NVCC_PATH%/bin/nvcc}"
-        fi
-    fi
+    # Assuming that nvcc is in PATH, or CUDA_PATH has been set
+    # so that FindCUDAToolkit.cmake can function
+    export USE_CUDA="${USE_CUDA:-1}"
+    export USE_OPENMP="${USE_OPENMP:-1}"
 }
 
 function set_mofed_vars {
@@ -132,31 +105,32 @@ function set_mofed_vars {
     fi
 }
 
+function _run_command {
+    echo "Command: $@"
+    "$@"
+}
+
 function run_build {
     # Invoke launcher if building on a bare-metal cluster outside of docker, and
     # only if not already inside an allocation
     if [[ -f /proc/self/cgroup ]] && grep -q docker /proc/self/cgroup; then
-        "$@"
+        true
     elif [[ -n "${SLURM_JOBID+x}" || -n "${LSB_JOBID+x}" ]]; then
-        "$@"
+        true
     elif [[ "$PLATFORM" == summit ]]; then
-        bsub -nnodes 1 -W 60 -P "$ACCOUNT" -I "$@"
+        set -- bsub -nnodes 1 -W 60 -P "$ACCOUNT" -I "$@"
     elif [[ "$PLATFORM" == cori ]]; then
-        srun -C gpu -N 1 -t 60 -G 1 -c 10 -A "$ACCOUNT" "$@"
+        set -- srun -C gpu -N 1 -t 60 -G 1 -c 10 -A "$ACCOUNT" "$@"
     elif [[ "$PLATFORM" == pizdaint ]]; then
-        srun -N 1 -p debug -C gpu -t 30 -A "$ACCOUNT" "$@"
+        set -- srun -N 1 -p debug -C gpu -t 30 -A "$ACCOUNT" "$@"
     elif [[ "$PLATFORM" == sapling ]]; then
-        srun --exclusive -N 1 -p gpu -t 60 "$SCRIPT_DIR/sapling_run.sh" "$@"
+        set -- srun --exclusive -N 1 -p gpu -t 60 "$SCRIPT_DIR/sapling_run.sh" "$@"
     elif [[ "$PLATFORM" == lassen ]]; then
-        lalloc 1 -q pdebug -W 60 -G "$GROUP" "$@"
+        set -- lalloc 1 -q pdebug -W 60 -G "$GROUP" "$@"
     else
-        "$@"
+        true
     fi
-}
-
-function _run_command {
-    echo "Command: $@"
-    "$@"
+    _run_command "$@"
 }
 
 function run_command {
