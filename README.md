@@ -36,8 +36,7 @@ Legate libraries.
 Certain build options, such as the target CUDA architecture, must be specified
 appropriately at docker build time, to match the environment where the image
 will be used. These options are specified for each supported target `PLATFORM`
-in `common.sh`. The default `PLATFORM` is a generic non-networked machine
-containing Volta GPUs. You can add custom configurations as new `PLATFORM`s in
+in `common.sh` You can add custom configurations as new `PLATFORM`s in
 `common.sh`.
 
 After building the image, you can use it to start a container :

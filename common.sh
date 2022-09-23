@@ -53,10 +53,6 @@ function set_build_vars {
         export CONDUIT="${CONDUIT:-ibv}"
         export NUM_NICS=4
         export GPU_ARCH=volta
-    elif [[ "$PLATFORM" == generic-* ]]; then
-        export NETWORK="${NETWORK:-none}"
-        export CONDUIT="${CONDUIT:-none}"
-        export GPU_ARCH="${PLATFORM#generic-}"
     else
         if [[ -f /proc/self/cgroup ]] && grep -q docker /proc/self/cgroup; then
             echo "Error: Detected a docker build for an unknown target platform" 1>&2
