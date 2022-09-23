@@ -26,6 +26,7 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "  DEBUG_RELEASE : compile with optimizations and some debug symbols (default: 0)"
     echo "  LEGION_REF : Legion branch/commit/tag to use (default: control_replication)"
     echo "  LINUX_VER : what distro to base the image on (default: ubuntu20.04)"
+    echo "  NETWORK : Realm networking backend to use (default: gasnet1)"
     echo "  NOPULL : do not pull latest versions of Legion & Legate libraries (default: 0)"
     echo "  PLATFORM : what machine to build for"
     echo "  PYTHON_VER : Python version to use (default: 3.8)"
@@ -40,6 +41,7 @@ export DEBUG="${DEBUG:-0}"
 export DEBUG_RELEASE="${DEBUG_RELEASE:-0}"
 export LEGION_REF="${LEGION_REF:-control_replication}"
 export LINUX_VER="${LINUX_VER:-ubuntu20.04}"
+export NETWORK="${NETWORK:-gasnet1}"
 export NOPULL="${NOPULL:-0}"
 export PYTHON_VER="${PYTHON_VER:-3.8}"
 export TAG="${TAG:-$(date +%Y-%m-%d-%H%M%S)}"
@@ -77,12 +79,13 @@ git_pull https://github.com/nv-legate/legate.core.git legate.core HEAD
 git_pull https://github.com/nv-legate/cunumeric.git cunumeric HEAD
 
 # Build and push image
-IMAGE=legate-"$PLATFORM"
+IMAGE=legate-"$PLATFORM"-"$NETWORK"
 DOCKER_BUILDKIT=1 docker build -t "$IMAGE:$TAG" \
     --build-arg CUDA_VER="$CUDA_VER" \
     --build-arg DEBUG="$DEBUG" \
     --build-arg DEBUG_RELEASE="$DEBUG_RELEASE" \
     --build-arg LINUX_VER="$LINUX_VER" \
+    --build-arg NETWORK="$NETWORK" \
     --build-arg PLATFORM="$PLATFORM" \
     --build-arg PYTHON_VER="$PYTHON_VER" \
     "$@" .
