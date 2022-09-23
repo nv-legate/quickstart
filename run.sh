@@ -31,7 +31,6 @@ if [[ $# -lt 2 || ! "$1" =~ ^(1/)?[0-9]+(:[0-9]+)?$ ]]; then
     echo "Arguments read from the environment:"
     echo "  ACCOUNT : account/group/project to submit the job under (if applicable)"
     echo "  IMAGE : which image to use (for container-based clusters)"
-    echo "          (default : ghcr.io/nv-legate/legate-\$PLATFORM:latest)"
     echo "  INTERACTIVE : submit an interactive rather than a batch job (defaut: 0)"
     echo "  ITERATIONS : how many times to run the program (defaut: 1)"
     echo "  MOUNTS : comma-separated list of volume mounts (for container-based clusters)"
@@ -79,7 +78,6 @@ elif [[ "$PLATFORM" == lassen ]]; then
 else
     CONTAINER_BASED=0
 fi
-export IMAGE="${IMAGE:-ghcr.io/nv-legate/legate-$PLATFORM:latest}"
 export INTERACTIVE="${INTERACTIVE:-0}"
 export ITERATIONS="${ITERATIONS:-1}"
 export MOUNTS="${MOUNTS:-}"
