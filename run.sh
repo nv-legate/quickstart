@@ -289,7 +289,7 @@ if [[ "$NODRIVER" != 1 ]]; then
         set -- --launcher jsrun "$@"
     else
         # Local run
-        if grep -q 'set(Legion_USE_GASNet ON)' "$BUILD_CONFIG"; then
+        if ! grep -q 'set(Legion_NETWORKS )' "$BUILD_CONFIG"; then
             set -- --launcher mpirun "$@"
         else
             set -- --launcher none "$@"

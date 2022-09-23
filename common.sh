@@ -34,27 +34,28 @@ function detect_platform {
 function set_build_vars {
     # Set base build variables according to target platform
     if [[ "$PLATFORM" == summit ]]; then
-        export CONDUIT=ibv
+        export CONDUIT="${CONDUIT:-ibv}"
         export NUM_NICS=4
         export GPU_ARCH=volta
     elif [[ "$PLATFORM" == cori ]]; then
-        export CONDUIT=ibv
+        export CONDUIT="${CONDUIT:-ibv}"
         export NUM_NICS=4
         export GPU_ARCH=volta
     elif [[ "$PLATFORM" == pizdaint ]]; then
-        export CONDUIT=aries
+        export CONDUIT="${CONDUIT:-aries}"
         export NUM_NICS=1
         export GPU_ARCH=pascal
     elif [[ "$PLATFORM" == sapling ]]; then
-        export CONDUIT=ibv
+        export CONDUIT="${CONDUIT:-ibv}"
         export NUM_NICS=1
         export GPU_ARCH=pascal
     elif [[ "$PLATFORM" == lassen ]]; then
-        export CONDUIT=ibv
+        export CONDUIT="${CONDUIT:-ibv}"
         export NUM_NICS=4
         export GPU_ARCH=volta
     elif [[ "$PLATFORM" == generic-* ]]; then
-        export CONDUIT=none
+        export NETWORK="${NETWORK:-none}"
+        export CONDUIT="${CONDUIT:-none}"
         export GPU_ARCH="${PLATFORM#generic-}"
     else
         if [[ -f /proc/self/cgroup ]] && grep -q docker /proc/self/cgroup; then
@@ -62,11 +63,12 @@ function set_build_vars {
             exit 1
         fi
         echo "Did not detect a supported cluster, assuming local-node build"
-        if [[ -z "${CONDUIT+x}" ]]; then
+        if [[ -z "${NETWORK+x}" ]]; then
             if command -v mpirun &> /dev/null; then
-                export CONDUIT=mpi
+                export NETWORK=gasnet1
+                export CONDUIT="${CONDUIT:-mpi}"
             else
-                export CONDUIT=none
+                export NETWORK=none
             fi
         fi
         if [[ -z "${USE_CUDA+x}" ]]; then
@@ -94,6 +96,7 @@ function set_build_vars {
     # so that FindCUDAToolkit.cmake can function
     export USE_CUDA="${USE_CUDA:-1}"
     export USE_OPENMP="${USE_OPENMP:-1}"
+    export NETWORK="${NETWORK:-gasnet1}"
 }
 
 function set_mofed_vars {
