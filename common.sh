@@ -37,6 +37,18 @@ function set_build_vars {
         export CONDUIT="${CONDUIT:-ibv}"
         export NUM_NICS=4
         export GPU_ARCH=volta
+        # Compiling TBLIS, a dependency of cuNumeric on PowerPC requires
+        # these defines to be set.
+        export CXXFLAGS="-DNO_WARN_X86_INTRINSICS"
+        export CCFLAGS="-DNO_WARN_X86_INTRINSICS"
+        # CC and CXX need to be set to the MPI compilers, as the builds
+        # can't figure this out to configure appropriately.
+        export CC=mpicc
+        export CXX=mpicxx
+        # Compilers on Summit don't support the `--march` parameter. If we
+        # we don't pass this to the installation script, it doesn't understand
+        # to not use `--march` in compiler invocations.
+        MARCH_ARG='--march ""'
     elif [[ "$PLATFORM" == cori ]]; then
         export CONDUIT="${CONDUIT:-ibv}"
         export NUM_NICS=4
