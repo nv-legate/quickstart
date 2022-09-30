@@ -53,6 +53,18 @@ function set_build_vars {
         export CONDUIT="${CONDUIT:-ibv}"
         export NUM_NICS=4
         export GPU_ARCH=volta
+        # Compiling TBLIS, a dependency of cuNumeric on PowerPC requires
+        # these defines to be set.
+        export CXXFLAGS="-DNO_WARN_X86_INTRINSICS"
+        export CCFLAGS="-DNO_WARN_X86_INTRINSICS"
+        # CC and CXX need to be set to the MPI compilers, as the builds
+        # can't figure this out to configure appropriately.
+        export CC=mpicc
+        export CXX=mpicxx
+        # Compilers on Lassen don't support the `--march` parameter. If we
+        # we don't pass this to the installation script, it doesn't understand
+        # to not use `--march` in compiler invocations.
+        MARCH_ARG='--march ""'
     else
         if [[ -f /proc/self/cgroup ]] && grep -q docker /proc/self/cgroup; then
             echo "Error: Detected a docker build for an unknown target platform" 1>&2
@@ -93,6 +105,7 @@ function set_build_vars {
     export USE_CUDA="${USE_CUDA:-1}"
     export USE_OPENMP="${USE_OPENMP:-1}"
     export NETWORK="${NETWORK:-gasnet1}"
+    export MARCH_ARG="${MARCH_ARG:-'--march native'}"
 }
 
 function set_mofed_vars {

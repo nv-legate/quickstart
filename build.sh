@@ -57,11 +57,13 @@ if [[ -d "legate/core" ]]; then
               --verbose \
               --editable \
               --legion-src-dir "$LEGION_DIR" \
+              $MARCH_ARG \
               "$@"
 elif [[ -d "cunumeric" ]]; then
     run_build ./install.py \
               --verbose \
               --editable \
+              $MARCH_ARG \
               "$@"
 else
     echo "Error: Unsupported library" 1>&2
