@@ -61,6 +61,10 @@ function set_build_vars {
         export CONDUIT="${CONDUIT:-ibv}"
         export NUM_NICS=1
         export GPU_ARCH=pascal
+        # CC and CXX need to be set to the MPI compilers, as the builds
+        # can't figure this out to configure appropriately.
+        export CC=mpicc
+        export CXX=mpicxx
     elif [[ "$PLATFORM" == lassen ]]; then
         export CONDUIT="${CONDUIT:-ibv}"
         export NUM_NICS=4
