@@ -307,8 +307,7 @@ if [[ "$PLATFORM" == summit ]]; then
         set -- -o "$HOST_OUT_DIR/out.txt" "$@"
     fi
     set -- bsub -J legate -P "$ACCOUNT" -q "$QUEUE" -W "$TIMELIMIT" -nnodes "$NUM_NODES" -alloc_flags smt1 "$@"
-    echo "Submitted: $@"
-    "$@"
+    submit "$@"
 elif [[ "$PLATFORM" == cori ]]; then
     # Use the first NIC from each pair
     export GASNET_IBV_PORTS=mlx5_0+mlx5_2+mlx5_4+mlx5_6
@@ -324,8 +323,7 @@ elif [[ "$PLATFORM" == cori ]]; then
     else
         set -- sbatch -q regular -o "$HOST_OUT_DIR/out.txt" "$@"
     fi
-    echo "Submitted: $@"
-    "$@"
+    submit "$@"
 elif [[ "$PLATFORM" == pizdaint ]]; then
     set -- "$SCRIPT_DIR/legate.slurm" "$@"
     QUEUE="${QUEUE:-normal}"
@@ -338,8 +336,7 @@ elif [[ "$PLATFORM" == pizdaint ]]; then
     else
         set -- sbatch -o "$HOST_OUT_DIR/out.txt" "$@"
     fi
-    echo "Submitted: $@"
-    "$@"
+    submit "$@"
 elif [[ "$PLATFORM" == sapling ]]; then
     set -- "$SCRIPT_DIR/legate.slurm" "$SCRIPT_DIR/sapling_run.sh" "$@"
     QUEUE="${QUEUE:-gpu}"
@@ -352,8 +349,7 @@ elif [[ "$PLATFORM" == sapling ]]; then
     else
         set -- sbatch -o "$HOST_OUT_DIR/out.txt" "$@"
     fi
-    echo "Submitted: $@"
-    "$@"
+    submit "$@"
 elif [[ "$PLATFORM" == lassen ]]; then
     set -- "$SCRIPT_DIR/legate.lsf" "$@"
     QUEUE="${QUEUE:-pbatch}"
@@ -363,8 +359,7 @@ elif [[ "$PLATFORM" == lassen ]]; then
         set -- -o "$HOST_OUT_DIR/out.txt" "$@"
     fi
     set -- bsub -J legate -P "$ACCOUNT" -q "$QUEUE" -W "$TIMELIMIT" -nnodes "$NUM_NODES" -alloc_flags smt1 "$@"
-    echo "Submitted: $@"
-    "$@"
+    submit "$@"
 else
     # Local run
     run_command "$@" 2>&1 | tee -a "$CMD_OUT_DIR/out.txt"

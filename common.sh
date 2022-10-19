@@ -104,8 +104,17 @@ function set_mofed_vars {
     fi
 }
 
+function submit {
+    echo -n "Submitted:"
+    for TOK in "$@"; do printf " %q" "$TOK"; done
+    echo
+    "$@"
+}
+
 function _run_command {
-    echo "Command: $@"
+    echo -n "Command:"
+    for TOK in "$@"; do printf " %q" "$TOK"; done
+    echo
     "$@"
 }
 
