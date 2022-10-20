@@ -38,8 +38,18 @@ fi
 # Read arguments
 detect_platform && set_build_vars
 
+function check_not_overriding {
+    if [ -e "$CONDA_PREFIX"/lib/python*/site-packages/"$1".egg-link ]; then
+        if [[ ! . -ef "$(head -n 1 "$CONDA_PREFIX"/lib/python*/site-packages/"$1".egg-link)" ]]; then
+            echo "Error: Library already installed in $CONDA_PREFIX from a different source" 1>&2
+            exit 1
+        fi
+    fi
+}
+
 # Run appropriate build command for the target library
 if [[ -d "legate/core" ]]; then
+    check_not_overriding legate.core
     if [[ "$NETWORK" != none ]]; then
         set -- --network "$NETWORK" "$@"
     fi
@@ -59,6 +69,7 @@ if [[ -d "legate/core" ]]; then
               --legion-src-dir "$LEGION_DIR" \
               "$@"
 elif [[ -d "cunumeric" ]]; then
+    check_not_overriding cunumeric
     run_build ./install.py \
               --verbose \
               --editable \
