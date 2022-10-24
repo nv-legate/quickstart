@@ -82,6 +82,7 @@ git_pull https://github.com/nv-legate/cunumeric.git cunumeric HEAD
 
 # Build and push image
 if [[ "$PLATFORM" == generic-* ]]; then
+    export NETWORK=none
     IMAGE=legate-"$PLATFORM"
 else
     IMAGE=legate-"$PLATFORM"-"$NETWORK"
