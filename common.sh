@@ -35,23 +35,18 @@ function set_build_vars {
     # Set base build variables according to target platform
     if [[ "$PLATFORM" == summit ]]; then
         export CONDUIT="${CONDUIT:-ibv}"
-        export NUM_NICS=4
         export GPU_ARCH=volta
     elif [[ "$PLATFORM" == cori ]]; then
         export CONDUIT="${CONDUIT:-ibv}"
-        export NUM_NICS=4
         export GPU_ARCH=volta
     elif [[ "$PLATFORM" == pizdaint ]]; then
         export CONDUIT="${CONDUIT:-aries}"
-        export NUM_NICS=1
         export GPU_ARCH=pascal
     elif [[ "$PLATFORM" == sapling ]]; then
         export CONDUIT="${CONDUIT:-ibv}"
-        export NUM_NICS=1
         export GPU_ARCH=pascal
     elif [[ "$PLATFORM" == lassen ]]; then
         export CONDUIT="${CONDUIT:-ibv}"
-        export NUM_NICS=4
         export GPU_ARCH=volta
     elif [[ "$PLATFORM" == generic-* ]]; then
         export NETWORK="${NETWORK:-none}"
