@@ -110,6 +110,17 @@ else
     fi
 fi
 
+# We explicitly add the Conda lib dir, to ensure the Conda libraries we load
+# will look there for their dependencies first, instead of trying to link with
+# the corresponding system-wide versions.
+if [[ "$CONTAINER_BASED" == 0 ]]; then
+    if [[ "$(uname)" == "Darwin" ]]; then
+        export DYLD_LIBRARY_PATH="$CONDA_PREFIX"/lib:"${DYLD_LIBRARY_PATH:-}"
+    else
+        export LD_LIBRARY_PATH="$CONDA_PREFIX"/lib:"${LD_LIBRARY_PATH:-}"
+    fi
+fi
+
 # Prepare output directory
 DATE="$(date +%Y/%m/%d)"
 TIME="$(date +%H%M%S)"
