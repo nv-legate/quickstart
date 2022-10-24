@@ -36,6 +36,10 @@ function set_build_vars {
     if [[ "$PLATFORM" == summit ]]; then
         export CONDUIT="${CONDUIT:-ibv}"
         export GPU_ARCH=volta
+        # Compiling TBLIS, a dependency of cuNumeric on PowerPC requires
+        # these defines to be set.
+        export CXXFLAGS="${CXXFLAGS:-} -DNO_WARN_X86_INTRINSICS"
+        export CCFLAGS="${CCFLAGS:-} -DNO_WARN_X86_INTRINSICS"
     elif [[ "$PLATFORM" == cori ]]; then
         export CONDUIT="${CONDUIT:-ibv}"
         export GPU_ARCH=volta
@@ -48,6 +52,10 @@ function set_build_vars {
     elif [[ "$PLATFORM" == lassen ]]; then
         export CONDUIT="${CONDUIT:-ibv}"
         export GPU_ARCH=volta
+        # Compiling TBLIS, a dependency of cuNumeric on PowerPC requires
+        # these defines to be set.
+        export CXXFLAGS="${CXXFLAGS:-} -DNO_WARN_X86_INTRINSICS"
+        export CCFLAGS="${CCFLAGS:-} -DNO_WARN_X86_INTRINSICS"
     elif [[ "$PLATFORM" == generic-* ]]; then
         export NETWORK="${NETWORK:-none}"
         export CONDUIT="${CONDUIT:-none}"
