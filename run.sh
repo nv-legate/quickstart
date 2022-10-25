@@ -113,10 +113,11 @@ fi
 # We explicitly add the Conda lib dir, to ensure the Conda libraries we load
 # will look there for their dependencies first, instead of trying to link with
 # the corresponding system-wide versions.
+# We skip this on Mac, because then the system-wide vecLib would attempt to
+# reuse the conda libcblas, which has SONAME version 0.0.0, whereas vecLib
+# requires 1.0.0.
 if [[ "$CONTAINER_BASED" == 0 ]]; then
-    if [[ "$(uname)" == "Darwin" ]]; then
-        export DYLD_LIBRARY_PATH="$CONDA_PREFIX"/lib:"${DYLD_LIBRARY_PATH:-}"
-    else
+    if [[ "$(uname)" != "Darwin" ]]; then
         export LD_LIBRARY_PATH="$CONDA_PREFIX"/lib:"${LD_LIBRARY_PATH:-}"
     fi
 fi
