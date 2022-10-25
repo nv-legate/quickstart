@@ -46,7 +46,7 @@ RUN export LINUX_VER_URL="$(echo "$LINUX_VER" | tr -d '.')" \
 
 # Copy quickstart scripts to image (don't copy the entire directory; that would
 # include the library repo checkouts, that we want to place elsewhere)
-COPY build.sh common.sh entrypoint.sh setup_conda.sh /opt/legate/quickstart/
+COPY build.sh common.sh entrypoint.sh /opt/legate/quickstart/
 
 # Install apt packages
 RUN source /opt/legate/quickstart/common.sh \
@@ -56,6 +56,8 @@ RUN source /opt/legate/quickstart/common.sh \
     apt-get install -y --no-install-recommends \
     `# requirements for MOFED packages` \
     libnl-3-200 libnl-route-3-200 libnl-3-dev libnl-route-3-dev \
+    `# requirements for mpicc` \
+    zlib1g-dev \
   ; fi \
  && apt-get install -y --no-install-recommends \
     `# useful utilities` \
@@ -75,11 +77,19 @@ RUN source /opt/legate/quickstart/common.sh \
  && dpkg -i $(echo $(find . -false \
     -or -name 'ibverbs-providers*.deb' \
     -or -name 'libibverbs*.deb' \
-    -or -name 'librdmacm*.deb')) \
+    -or -name 'librdmacm*.deb' \
+    -or -name 'openmpi_*.deb')) \
  && cd /tmp \
  && rm -rf ${MOFED_ID} \
  && echo ${MOFED_VER} > /opt/mofed-ver \
   ; fi
+
+# Copy MOFED executables to /usr/bin
+# (BCP wants mpirun to be in a well-known location at container boot)
+RUN for APP in mpicc mpicxx mpif90 mpirun; do \
+      ln -s /usr/mpi/gcc/openmpi-*/bin/"$APP" /usr/bin/"$APP" \
+  ; done
+COPY ibdev2netdev /usr/bin/
 
 # Install UCX
 RUN source /opt/legate/quickstart/common.sh \
@@ -96,22 +106,21 @@ RUN source /opt/legate/quickstart/common.sh \
   ; fi
 
 # Create conda environment
-RUN bash -x /opt/legate/quickstart/setup_conda.sh
-
-# Copy some executables to /usr/bin
-# (BCP wants mpirun to be in a well-known location at container boot)
-RUN source activate legate \
- && ln -s "$CONDA_PREFIX"/bin/mpirun /usr/bin/mpirun
-COPY ibdev2netdev /usr/bin/
+COPY legate.core /opt/legate/legate.core
+RUN export TMP_DIR="$(mktemp -d)" \
+ && export YML_FILE="$TMP_DIR"/environment-test-linux-py${PYTHON_VER}-cuda${CUDA_VER}.yaml \
+ && cd "$TMP_DIR" \
+ && /opt/legate/legate.core/scripts/generate-conda-envs.py --python ${PYTHON_VER} --ctk ${CUDA_VER} --os linux --no-compilers --no-openmpi \
+ && conda env create -n legate -f "$YML_FILE" \
+ && rm -rf "$TMP_DIR"
 
 # Build GASNet, Legion and legate.core
 COPY legion /opt/legate/legion
-COPY legate.core /opt/legate/legate.core
 RUN source activate legate \
  && export CUDA_PATH=/usr/local/cuda/lib64/stubs `# some conda packages, notably cupy, override CUDA_PATH` \
  && export LEGION_DIR=/opt/legate/legion \
  && cd /opt/legate/legate.core \
- && bash -x /opt/legate/quickstart/build.sh --extra='-DLegion_EMBED_GASNet_CONFIGURE_ARGS="--with-ibv-cflags=\"-idirafter /usr/include\" --with-ibv-ldflags=-L/usr/lib/x86_64-linux-gnu"'
+ && bash -x /opt/legate/quickstart/build.sh
 
 # Build cunumeric
 COPY cunumeric /opt/legate/cunumeric

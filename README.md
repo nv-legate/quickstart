@@ -23,9 +23,9 @@ Legate Quickstart provides two ways to simplify the use of Legate:
 * Scripts for building Docker images containing source-builds of all Legate
   libraries
 
-* Scripts for setting up a development environment, building Legate libraries
-  from source and running Legate programs with appropriate defaults for a
-  number of supported clusters (and auto-detected settings for local installs)
+* Scripts for building Legate libraries from source and running Legate programs
+  with appropriate defaults for a number of supported clusters (and
+  auto-detected settings for local installs)
 
 Building and using Docker images
 ================================
@@ -72,64 +72,37 @@ image, and a GPU-aware container execution engine like
 networking hardware from inside a container the host and the image must use
 the same version of MOFED.
 
-Building from source
-====================
+Building and running on supported clusters
+==========================================
 
 The scripts in this repository will detect if you are running on a supported
 cluster, and automatically use the appropriate flags to build and run Legate.
-The scripts will also automatically invoke the appropriate job scheduler
-commands, so you don't need to create jobscripts yourself. Please find your
-cluster below and follow the instructions to set up Legate.
 
-You can use the same scripts on your local machine (see next section), in which
-case the build/run flags will be set according to the detected hardware
-resources.
+The scripts will automatically invoke the appropriate job scheduler commands, so
+you don't need to create jobscripts yourself. Please run the commands directly
+from the login node.
 
-### Customizing installation
+You can use the same scripts on your local machine, in which case the build/run
+flags will be set according to the detected hardware resources.
 
-* `setup_conda.sh`: This script will create a new conda environment suitable for
-  using all Legate libraries on GPUs. You can skip the script entirely if you
-  prefer to install the required packages manually; see the `conda/???.yml`
-  files on the individual Legate libraries.
-* `~/.bash_profile`: The commands we add to this file activate the environment
-  we set up for Legate runs, and must be executed on every node in a multi-node
-  run before invoking the Legate executable. Note that the order of commands
-  matters; we want the paths set by `conda` to supersede those set by `module`.
-* Invoke any script with `-h` to see more available options.
+Invoke any script with `-h` to see more available options.
 
-### Working on container-based clusters
+Bare-metal clusters
+-------------------
 
-* On container-based clusters typically each user prepares an image
-  ahead of time and provides it at job submission time, to be instantiated on
-  each allocated node. The `run.sh` script can handle such worflows when run
-  directly on the login node, but will need to be specialized for each
-  particular cluster.
-* Even though you are meant to invoke the `run.sh` script from the login node,
-  any paths on the command line will refer to files within the image, not the
-  filesystem on the host cluster. If you wish to use files from a directory on
-  the host filesystem you need to explicitly mount that directory inside the
-  container (see the `MOUNTS` argument of `run.sh`).
-* See the general advice above on using the Legate Docker images.
+Legate's build system is generally flexible regarding where the dependencies are
+pulled from. However, the quickstart workflow in particular assumes a
+conda-based installation. Follow the instructions at
+https://github.com/nv-legate/legate.core/blob/HEAD/BUILD.md#getting-dependencies-through-conda
+to install Legate's dependencies from conda.
 
-Local machine
-=============
+Make sure you use an environment file with a `--ctk` version matching the
+system-wide CUDA version (i.e. the version provided by the CUDA `module` you
+load). Most commonly on clusters you will want to use the system-provided
+compilers and MPI implementation, therefore you will likely want to use an
+environment generated with `--no-compilers` and `--no-openmpi`.
 
-Add to `~/.bash_profile`:
-
-```
-source "<conda-install-dir>/etc/profile.d/conda.sh"
-conda activate legate
-```
-
-Run basic setup:
-
-```
-CONDA_ROOT=<conda-install-dir> <quickstart-dir>/setup_conda.sh
-source "<conda-install-dir>/etc/profile.d/conda.sh"
-conda activate legate
-```
-
-Build Legate libraries:
+After you install and activate a suitable conda environment, you can build Legate libraries:
 
 ```
 git clone https://gitlab.com/StanfordLegion/legion.git -b control_replication <legion-dir>
@@ -141,202 +114,77 @@ cd <cunumeric-dir>
 <quickstart-dir>/build.sh
 ```
 
-Run Legate programs:
+and run Legate programs:
 
 ```
 <quickstart-dir>/run.sh <num-nodes> <py-program> <args>
 ```
 
-Summit @ ORNL
-=============
+Suggested cluster configuration
+-------------------------------
 
-Add to `~/.bash_profile`:
+Here are some suggested module configurations for supported bare-metal clusters
+(add these lines to `~/.bash_profile`, or similar shell startup file):
+
+### Summit @ ORNL
 
 ```
 module load cuda/11.0.3 gcc/9.3.0 openblas/0.3.20-omp
-source "<conda-install-dir>/etc/profile.d/conda.sh"
-conda activate legate
 ```
 
-Log out and back in, then run:
-
-```
-CONDA_ROOT=<conda-install-dir> <quickstart-dir>/setup_conda.sh
-source "<conda-install-dir>/etc/profile.d/conda.sh"
-conda activate legate
-```
-
-Build Legate libraries:
-
-```
-git clone https://gitlab.com/StanfordLegion/legion.git -b control_replication <legion-dir>
-git clone https://github.com/nv-legate/legate.core <legate.core-dir>
-git clone https://github.com/nv-legate/cunumeric <cunumeric-dir>
-cd <legate.core-dir>
-LEGION_DIR=<legion-dir> <quickstart-dir>/build.sh
-cd <cunumeric-dir>
-# Extra build flags required by TBLIS
-CXXFLAGS=-DNO_WARN_X86_INTRINSICS CC_FLAGS=-DNO_WARN_X86_INTRINSICS <quickstart-dir>/build.sh
-```
-
-Run Legate programs:
-
-```
-<quickstart-dir>/run.sh <num-nodes> <py-program> <args>
-```
-
-CoriGPU @ LBL
-=============
-
-Add to `~/.bash_profile`:
+### CoriGPU @ LBL
 
 ```
 # Cori runs even sub-shells in login mode, so guard these from running more than once
 if [[ -z $CONDA_PREFIX ]]; then
     module purge
     module load cgpu esslurm cudatoolkit/10.2.89_3.28-7.0.1.1_2.1__g88d3d59 gcc/8.3.0 python/3.8-anaconda-2020.11 openmpi/4.0.2
-    eval "$(conda shell.bash hook)"
-    conda activate legate
 fi
 ```
 
-Log out and back in, then run:
-
-```
-<quickstart-dir>/setup_conda.sh
-conda activate legate
-```
-
-Build Legate libraries:
-
-```
-git clone https://gitlab.com/StanfordLegion/legion.git -b control_replication <legion-dir>
-git clone https://github.com/nv-legate/legate.core <legate.core-dir>
-git clone https://github.com/nv-legate/cunumeric <cunumeric-dir>
-cd <legate.core-dir>
-LEGION_DIR=<legion-dir> <quickstart-dir>/build.sh
-cd <cunumeric-dir>
-<quickstart-dir>/build.sh
-```
-
-Run Legate programs:
-
-```
-<quickstart-dir>/run.sh <num-nodes> <py-program> <args>
-```
-
-PizDaint @ ETH
-==============
-
-Add to `~/.bash_profile`:
+### PizDaint @ ETH
 
 ```
 module swap PrgEnv-cray PrgEnv-gnu/6.0.9
 module load daint-gpu
 module load cudatoolkit/11.2.0_3.39-2.1__gf93aa1c
-source "<conda-install-dir>/etc/profile.d/conda.sh"
-conda activate legate
 ```
 
-Log out and back in, then run:
-
-```
-CONDA_ROOT=<conda-install-dir> <quickstart-dir>/setup_conda.sh
-source "<conda-install-dir>/etc/profile.d/conda.sh"
-conda activate legate
-```
-
-Build Legate libraries:
-
-```
-git clone https://gitlab.com/StanfordLegion/legion.git -b control_replication <legion-dir>
-git clone https://github.com/nv-legate/legate.core <legate.core-dir>
-git clone https://github.com/nv-legate/cunumeric <cunumeric-dir>
-cd <legate.core-dir>
-LEGION_DIR=<legion-dir> <quickstart-dir>/build.sh
-cd <cunumeric-dir>
-<quickstart-dir>/build.sh
-```
-
-Run Legate programs:
-
-```
-<quickstart-dir>/run.sh <num-nodes> <py-program> <args>
-```
-
-Sapling @ Stanford
-==================
-
-Add to `~/.bash_profile`:
+### Sapling @ Stanford
 
 ```
 module load slurm/20.11.4
-source "<conda-install-dir>/etc/profile.d/conda.sh"
-conda activate legate
 ```
 
-Log out and back in, then run:
+Note that the module environment needs to be reset as we enter a compute node,
+since those nodes have a different lmod installation than the head node. The
+switch is done in the `sapling_run.sh` script, which uses a pre-selected set of
+modules, that you might wish to adjust.
 
-```
-USE_CUDA=1 CUDA_VER=11.1 CONDA_ROOT=<conda-install-dir> <quickstart-dir>/setup_conda.sh
-source "<conda-install-dir>/etc/profile.d/conda.sh"
-conda activate legate
-```
-
-Build Legate libraries:
-
-```
-git clone https://gitlab.com/StanfordLegion/legion.git -b control_replication <legion-dir>
-git clone https://github.com/nv-legate/legate.core <legate.core-dir>
-git clone https://github.com/nv-legate/cunumeric <cunumeric-dir>
-cd <legate.core-dir>
-LEGION_DIR=<legion-dir> <quickstart-dir>/build.sh
-cd <cunumeric-dir>
-<quickstart-dir>/build.sh
-```
-
-Run Legate programs:
-
-```
-<quickstart-dir>/run.sh <num-nodes> <py-program> <args>
-```
-
-Lassen @ LLNL
-=============
-
-Add to `~/.bash_profile`:
+### Lassen @ LLNL
 
 ```
 module load gcc/8.3.1 cuda/11.1.0
-source "<conda-install-dir>/etc/profile.d/conda.sh"
-conda activate legate
 ```
 
-Log out and back in, then run:
+Container-based clusters
+------------------------
 
-```
-CONDA_ROOT=<conda-install-dir> <quickstart-dir>/setup_conda.sh
-source "<conda-install-dir>/etc/profile.d/conda.sh"
-conda activate legate
-```
+On container-based clusters typically each user prepares an image ahead of time
+and provides it at job submission time, to be instantiated on each allocated
+node. The `run.sh` script can handle such worflows when run directly on the
+login node, but will need to be specialized for each particular cluster.
 
-Build Legate libraries:
+Even though you are meant to invoke the `run.sh` script from the login node, any
+paths on the command line will refer to files within the image, not the
+filesystem on the host cluster. For example, you cannot (by default) invoke a
+python program stored on your home directory on the login node, only python
+files already included within the image. If you wish to use files from a
+directory on the host filesystem, you need to explicitly mount that directory
+inside the container (see the `MOUNTS` argument of `run.sh`).
 
-```
-git clone https://gitlab.com/StanfordLegion/legion.git -b control_replication <legion-dir>
-git clone https://github.com/nv-legate/legate.core <legate.core-dir>
-git clone https://github.com/nv-legate/cunumeric <cunumeric-dir>
-cd <legate.core-dir>
-LEGION_DIR=<legion-dir> <quickstart-dir>/build.sh
-cd <cunumeric-dir>
-<quickstart-dir>/build.sh
-```
-
-Run Legate programs:
-
-```
-<quickstart-dir>/run.sh <num-nodes> <py-program> <args>
-```
+Also see the [general advice](#building-and-using-docker-images) on using the
+Legate Docker images.
 
 Questions
 =========
