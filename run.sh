@@ -262,7 +262,7 @@ if [[ "$NODRIVER" != 1 ]]; then
             exit 1
         fi
         set -- --gpus "$NUM_GPUS" --fbmem "$FB_PER_GPU" "$@"
-        set -- --cpus 1 --sysmem "$WORK_RAM" "$@"
+        set -- --cpus 1 --sysmem $(( WORK_RAM>4000 ? 4000 : WORK_RAM)) "$@"
     elif [[ "$USE_OPENMP" == 1 ]]; then
         # Need at least 2 more cores, for 1 CPU processor and 1 Python processor
         RESERVED_CORES=$(( RESERVED_CORES + 2 ))
