@@ -132,3 +132,4 @@ RUN source activate legate \
 # Custom entrypoint script
 ENTRYPOINT [ "/opt/legate/quickstart/entrypoint.sh" ]
 CMD [ "/bin/bash" ]
+RUN echo "conda activate legate" >> /root/.bashrc
