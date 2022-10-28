@@ -46,7 +46,7 @@ RUN export LINUX_VER_URL="$(echo "$LINUX_VER" | tr -d '.')" \
 
 # Copy quickstart scripts to image (don't copy the entire directory; that would
 # include the library repo checkouts, that we want to place elsewhere)
-COPY build.sh common.sh entrypoint.sh /opt/legate/quickstart/
+COPY bash-init.sh build.sh common.sh entrypoint.sh /opt/legate/quickstart/
 
 # Install apt packages
 RUN source /opt/legate/quickstart/common.sh \
@@ -132,3 +132,4 @@ RUN source activate legate \
 # Custom entrypoint script
 ENTRYPOINT [ "/opt/legate/quickstart/entrypoint.sh" ]
 CMD [ "/bin/bash" ]
+RUN echo "source /opt/legate/quickstart/bash-init.sh" >> /root/.bash_profile
