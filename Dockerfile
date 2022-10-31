@@ -129,7 +129,8 @@ RUN source activate legate \
  && cd /opt/legate/cunumeric \
  && bash -x /opt/legate/quickstart/build.sh
 
-# Custom entrypoint script
+# Set up run environment
 ENTRYPOINT [ "/opt/legate/quickstart/entrypoint.sh" ]
 CMD [ "/bin/bash" ]
 RUN echo "conda activate legate" >> /root/.bashrc
+ENV LD_LIBRARY_PATH="/opt/conda/envs/legate/lib:${LD_LIBRARY_PATH}"
