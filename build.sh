@@ -55,9 +55,6 @@ if [[ -d "legate/core" ]]; then
     fi
     if [[ "$NETWORK" == gasnet1 || "$NETWORK" == gasnetex ]]; then
         set -- --conduit "$CONDUIT" "$@"
-        if [[ "$CONDUIT" == ibv ]]; then
-            export GASNET_EXTRA_CONFIGURE_ARGS="${GASNET_EXTRA_CONFIGURE_ARGS:-} --enable-ibv-multirail --with-ibv-max-hcas=8"
-        fi
     fi
     if [[ "$USE_CUDA" == 1 ]]; then
         set -- --arch "$GPU_ARCH" \
