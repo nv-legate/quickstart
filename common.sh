@@ -153,6 +153,7 @@ function run_command {
         if (( ITERATIONS == 1 )); then
             OUT_DIR="$CMD_OUT_DIR"
         else
+            mkdir "$HOST_OUT_DIR/$I"
             OUT_DIR="$CMD_OUT_DIR/$I"
         fi
         if [[ "$NODRIVER" != 1 ]]; then
