@@ -35,6 +35,8 @@ ARG PLATFORM
 ENV PLATFORM=${PLATFORM}
 ARG PYTHON_VER
 ENV PYTHON_VER=${PYTHON_VER}
+ARG USE_SPY
+ENV USE_SPY=${USE_SPY}
 
 # Execute RUN commands in strict mode
 SHELL [ "/bin/bash", "-eo", "pipefail", "-c" ]

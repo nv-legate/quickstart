@@ -33,6 +33,7 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "  PYTHON_VER : Python version to use (default: 3.8)"
     echo "  TAG : tag to use for the produced image (default: \`date +%Y-%m-%d-%H%M%S\`)"
     echo "  TAG_LATEST : whether to also tag the image as latest (default: 0)"
+    echo "  USE_SPY : build Legion with detailed Spy logging enabled (default: 0)"
     exit
 fi
 
@@ -48,6 +49,7 @@ export PLATFORM="${PLATFORM:-generic-volta}"
 export PYTHON_VER="${PYTHON_VER:-3.8}"
 export TAG="${TAG:-$(date +%Y-%m-%d-%H%M%S)}"
 export TAG_LATEST="${TAG_LATEST:-0}"
+export USE_SPY="${USE_SPY:-0}"
 
 # Pull latest versions of legate libraries and Legion
 function git_pull {
@@ -95,6 +97,7 @@ DOCKER_BUILDKIT=1 docker build -t "$IMAGE:$TAG" \
     --build-arg NETWORK="$NETWORK" \
     --build-arg PLATFORM="$PLATFORM" \
     --build-arg PYTHON_VER="$PYTHON_VER" \
+    --build-arg USE_SPY="$USE_SPY" \
     "$@" .
 if [[ "$TAG_LATEST" == 1 ]]; then
     docker tag "$IMAGE:$TAG" "$IMAGE:latest"
