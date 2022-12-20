@@ -83,11 +83,19 @@ git_pull https://github.com/nv-legate/legate.core.git legate.core HEAD
 git_pull https://github.com/nv-legate/cunumeric.git cunumeric HEAD
 
 # Build and push image
+IMAGE=legate-"$PLATFORM"
 if [[ "$PLATFORM" == generic-* ]]; then
     export NETWORK=none
-    IMAGE=legate-"$PLATFORM"
 else
-    IMAGE=legate-"$PLATFORM"-"$NETWORK"
+    IMAGE="$IMAGE"-"$NETWORK"
+fi
+if [[ "$DEBUG" == 1 ]]; then
+    IMAGE="$IMAGE"-debug
+elif [[ "$DEBUG_RELEASE" == 1 ]]; then
+    IMAGE="$IMAGE"-debugrel
+fi
+if [[ "$USE_SPY" == 1 ]]; then
+    IMAGE="$IMAGE"-spy
 fi
 DOCKER_BUILDKIT=1 docker build -t "$IMAGE:$TAG" \
     --build-arg CUDA_VER="$CUDA_VER" \
