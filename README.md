@@ -54,7 +54,9 @@ to `~/.bash_profile`, `~/.bashrc` or similar shell startup file.
 ### Summit @ ORNL
 
 ```
-module load cuda/11.0.3 gcc/9.3.0 openblas/0.3.20-omp
+module load cuda/11.0.3 gcc/9.3.0
+# optionally: module load openblas/0.3.20-omp
+# can then skip openblas from conda env, and build cuNumeric using --with-openblas $OLCF_OPENBLAS_ROOT
 ```
 
 ### CoriGPU @ LBL
