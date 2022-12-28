@@ -291,6 +291,8 @@ if [[ "$NODRIVER" != 1 ]]; then
     if [[ "$PLATFORM" == summit ]]; then
         set -- --launcher jsrun "$@"
     elif [[ "$PLATFORM" == cori ]]; then
+        # Use the first NIC from each pair
+        set -- --nic-bind mlx5_0,mlx5_2,mlx5_4,mlx5_6 "$@"
         set -- --launcher srun "$@"
     elif [[ "$PLATFORM" == pizdaint ]]; then
         set -- --launcher srun "$@"
@@ -322,8 +324,6 @@ if [[ "$PLATFORM" == summit ]]; then
     set -- bsub -J legate -P "$ACCOUNT" -q "$QUEUE" -W "$TIMELIMIT" -nnodes "$NUM_NODES" -alloc_flags smt1 "$@"
     submit "$@"
 elif [[ "$PLATFORM" == cori ]]; then
-    # Use the first NIC from each pair
-    export GASNET_IBV_PORTS=mlx5_0+mlx5_2+mlx5_4+mlx5_6
     set -- "$SCRIPT_DIR/legate.slurm" "$@"
     # We double the number of cores because SLURM counts virtual cores
     set -- -J legate -A "$ACCOUNT" -t "$TIMELIMIT" -N "$NUM_NODES" "$@"
