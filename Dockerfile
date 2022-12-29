@@ -94,12 +94,15 @@ RUN for APP in mpicc mpicxx mpif90 mpirun; do \
 COPY ibdev2netdev /usr/bin/
 
 # Install UCX
+# Legate needs to initialize MPI when running on multiple nodes (regardless of
+# networking backend), and recent versions of OpenMPI require UCX.
 RUN source /opt/legate/quickstart/common.sh \
  && set_build_vars \
  && if [[ "$CONDUIT" == ibv || "$CONDUIT" == ucx ]]; then \
     export UCX_VER=1.13.0 \
+ && export UCX_RELEASE=1.13.0-rc2 \
  && cd /tmp \
- && curl -fsSL https://github.com/openucx/ucx/releases/download/v${UCX_VER}/ucx-${UCX_VER}.tar.gz | tar -xz \
+ && curl -fsSL https://github.com/openucx/ucx/releases/download/v${UCX_RELEASE}/ucx-${UCX_VER}.tar.gz | tar -xz \
  && cd ucx-${UCX_VER} \
  && ./contrib/configure-release --enable-mt --with-cuda=/usr/local/cuda --with-java=no \
  && make -j install \
