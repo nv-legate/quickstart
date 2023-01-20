@@ -76,6 +76,7 @@ elif [[ "$PLATFORM" == sapling ]]; then
 elif [[ "$PLATFORM" == lassen ]]; then
     CONTAINER_BASED=0
 else
+    # Local run
     CONTAINER_BASED=0
 fi
 export INTERACTIVE="${INTERACTIVE:-0}"
@@ -210,6 +211,7 @@ elif [[ "$PLATFORM" == lassen ]]; then
     CORES_PER_NUMA=20
     FB_PER_GPU=14500
 else
+    # Local run
     echo "Did not detect a supported cluster, assuming local-node run."
     export NOWAIT=1
     if [[ "$NUM_NODES" != 1 ]]; then
@@ -302,7 +304,7 @@ if [[ "$NODRIVER" != 1 ]]; then
         set -- --launcher jsrun "$@"
     else
         # Local run
-        if ! grep -q 'set(Legion_NETWORKS )' "$BUILD_CONFIG"; then
+        if (( RANKS_PER_NODE > 1 )); then
             set -- --launcher mpirun "$@"
         else
             set -- --launcher none "$@"
