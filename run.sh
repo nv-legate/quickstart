@@ -383,7 +383,7 @@ fi
 # Wait for batch job to start
 if [[ "$INTERACTIVE" != 1 && "$NOWAIT" != 1 ]]; then
     echo "Waiting for job to start & piping stdout/stderr"
-    echo "Press Ctrl-C anytime to exit (job will still run)"
+    echo "Press Ctrl-C anytime to exit (job will still run; use scancel/bkill to kill it)"
     while [[ ! -f "$HOST_OUT_DIR/out.txt" ]]; do sleep 1; done
     echo "Job started"
     sed '/^Job finished/q' <( exec tail -n +0 -f "$HOST_OUT_DIR/out.txt" ) && kill $!
