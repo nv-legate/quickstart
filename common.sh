@@ -111,6 +111,12 @@ function set_mofed_vars {
     fi
 }
 
+function verbose_export {
+    QUOTED_VAL="$(printf "%q" "$2")"
+    eval export "$1"="$QUOTED_VAL"
+    echo "+ export $1=$QUOTED_VAL"
+}
+
 function submit {
     echo -n "Submitted:"
     for TOK in "$@"; do printf " %q" "$TOK"; done
