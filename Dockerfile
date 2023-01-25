@@ -60,8 +60,6 @@ RUN source /opt/legate/quickstart/common.sh \
     libnl-3-200 libnl-route-3-200 libnl-3-dev libnl-route-3-dev \
     `# requirements for mpicc` \
     zlib1g-dev \
-    `# requirements for building UCX` \
-    autoconf automake m4 libtool \
   ; fi \
  && apt-get install -y --no-install-recommends \
     `# useful utilities` \
@@ -96,22 +94,21 @@ RUN for APP in mpicc mpicxx mpif90 mpirun; do \
 COPY ibdev2netdev /usr/bin/
 
 # Install UCX
-# Legate needs to initialize MPI when running on multiple nodes (regardless of
-# networking backend), and recent versions of OpenMPI require UCX.
-# The Realm UCX backend requires v1.14, which is not released yet, so pull a
-# specific commit.
+# We do this even when we're not using UCX directly, because Legate needs to
+# initialize MPI when running on multiple nodes (regardless of networking
+# backend), and recent versions of OpenMPI require UCX.
 RUN source /opt/legate/quickstart/common.sh \
  && set_build_vars \
  && if [[ "$NETWORK" != none ]]; then \
-    cd /tmp \
- && git clone https://github.com/openucx/ucx \
- && cd ucx \
- && git checkout 96d9f722b \
- && ./autogen.sh \
+    export UCX_VER=1.14.0 \
+ && export UCX_RELEASE=1.14.0-rc1 \
+ && cd /tmp \
+ && curl -fsSL https://github.com/openucx/ucx/releases/download/v${UCX_RELEASE}/ucx-${UCX_VER}.tar.gz | tar -xz \
+ && cd ucx-${UCX_VER} \
  && ./contrib/configure-release --enable-mt --with-cuda=/usr/local/cuda --with-java=no \
  && make -j install \
  && cd /tmp \
- && rm -rf ucx \
+ && rm -rf ucx-${UCX_VER} \
   ; fi
 
 # Create conda environment
