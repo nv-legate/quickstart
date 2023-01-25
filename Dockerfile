@@ -54,23 +54,25 @@ COPY build.sh common.sh entrypoint.sh /opt/legate/quickstart/
 RUN source /opt/legate/quickstart/common.sh \
  && set_build_vars \
  && apt-get update \
- && if [[ "$CONDUIT" == ibv || "$CONDUIT" == ucx ]]; then \
+ && if [[ "$NETWORK" != none ]]; then \
     apt-get install -y --no-install-recommends \
     `# requirements for MOFED packages` \
     libnl-3-200 libnl-route-3-200 libnl-3-dev libnl-route-3-dev \
     `# requirements for mpicc` \
     zlib1g-dev \
+    `# requirements for building UCX` \
+    autoconf automake m4 libtool \
   ; fi \
  && apt-get install -y --no-install-recommends \
     `# useful utilities` \
-    nsight-systems-cli numactl gdb \
+    nsight-systems-cli numactl gdb vim \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
 # Install Verbs, RDMA-CM, OpenMPI from MOFED
 RUN source /opt/legate/quickstart/common.sh \
  && set_build_vars \
- && if [[ "$CONDUIT" == ibv || "$CONDUIT" == ucx ]]; then \
+ && if [[ "$NETWORK" != none ]]; then \
     set_mofed_vars \
  && export MOFED_ID=MLNX_OFED_LINUX-${MOFED_VER}-${LINUX_VER}-x86_64 \
  && cd /tmp \
@@ -96,18 +98,20 @@ COPY ibdev2netdev /usr/bin/
 # Install UCX
 # Legate needs to initialize MPI when running on multiple nodes (regardless of
 # networking backend), and recent versions of OpenMPI require UCX.
+# The Realm UCX backend requires v1.14, which is not released yet, so pull a
+# specific commit.
 RUN source /opt/legate/quickstart/common.sh \
  && set_build_vars \
- && if [[ "$CONDUIT" == ibv || "$CONDUIT" == ucx ]]; then \
-    export UCX_VER=1.13.0 \
- && export UCX_RELEASE=1.13.0-rc2 \
- && cd /tmp \
- && curl -fsSL https://github.com/openucx/ucx/releases/download/v${UCX_RELEASE}/ucx-${UCX_VER}.tar.gz | tar -xz \
- && cd ucx-${UCX_VER} \
+ && if [[ "$NETWORK" != none ]]; then \
+    cd /tmp \
+ && git clone https://github.com/openucx/ucx \
+ && cd ucx \
+ && git checkout 96d9f722b \
+ && ./autogen.sh \
  && ./contrib/configure-release --enable-mt --with-cuda=/usr/local/cuda --with-java=no \
  && make -j install \
  && cd /tmp \
- && rm -rf ucx-${UCX_VER} \
+ && rm -rf ucx \
   ; fi
 
 # Create conda environment
