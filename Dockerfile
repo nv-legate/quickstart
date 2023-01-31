@@ -93,6 +93,11 @@ RUN for APP in mpicc mpicxx mpif90 mpirun; do \
   ; done
 COPY ibdev2netdev /usr/bin/
 
+# Make sure libraries can find the MOFED libmpi at runtime
+RUN mkdir /usr/mpi/gcc/openmpi \
+ && ln -s /usr/mpi/gcc/openmpi-*/lib /usr/mpi/gcc/openmpi/lib
+ENV LD_LIBRARY_PATH=/usr/mpi/gcc/openmpi/lib:${LD_LIBRARY_PATH}
+
 # Install UCX
 # We do this even when we're not using UCX directly, because Legate needs to
 # initialize MPI when running on multiple nodes (regardless of networking
