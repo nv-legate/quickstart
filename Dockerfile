@@ -94,7 +94,7 @@ RUN for APP in mpicc mpicxx mpif90 mpirun; do \
 COPY ibdev2netdev /usr/bin/
 
 # Make sure libraries can find the MOFED libmpi at runtime
-RUN mkdir /usr/mpi/gcc/openmpi \
+RUN mkdir -p /usr/mpi/gcc/openmpi \
  && ln -s /usr/mpi/gcc/openmpi-*/lib /usr/mpi/gcc/openmpi/lib
 ENV LD_LIBRARY_PATH=/usr/mpi/gcc/openmpi/lib:${LD_LIBRARY_PATH}
 
