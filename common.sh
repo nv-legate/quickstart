@@ -155,6 +155,10 @@ function run_build {
 }
 
 function run_command {
+    if [[ "$NODRIVER" != 1 ]]; then
+        # Remove "legate" temporarily, so we can add more flags
+        shift 1
+    fi
     for I in `seq 0 "$((ITERATIONS - 1))"`; do
         if (( ITERATIONS == 1 )); then
             OUT_DIR="$CMD_OUT_DIR"
@@ -163,9 +167,11 @@ function run_command {
             OUT_DIR="$CMD_OUT_DIR/$I"
         fi
         if [[ "$NODRIVER" != 1 ]]; then
-            _run_command "$@" --logdir "$OUT_DIR"
-        else
-            _run_command "$@"
+            set -- legate --logdir "$OUT_DIR" "$@"
+        fi
+        _run_command "$@"
+        if [[ "$NODRIVER" != 1 ]]; then
+            shift 3
         fi
     done
 }
