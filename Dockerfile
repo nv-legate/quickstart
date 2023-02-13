@@ -121,9 +121,16 @@ COPY legate.core /opt/legate/legate.core
 RUN export TMP_DIR="$(mktemp -d)" \
  && export YML_FILE="$TMP_DIR"/environment-test-linux-py${PYTHON_VER}-cuda${CUDA_VER}.yaml \
  && cd "$TMP_DIR" \
- && /opt/legate/legate.core/scripts/generate-conda-envs.py --python ${PYTHON_VER} --ctk ${CUDA_VER} --os linux --no-compilers --no-openmpi \
+ && /opt/legate/legate.core/scripts/generate-conda-envs.py --python ${PYTHON_VER} --ctk ${CUDA_VER} --os linux --no-compilers --no-openmpi --no-ucx \
  && conda env create -n legate -f "$YML_FILE" \
  && rm -rf "$TMP_DIR"
+
+# Some conda libraries have recently started pulling ucx (namely libarrow).
+# Remove that if present, to guarantee that our custom UCX buid is used instead.
+RUN source activate legate \
+ && if (( $(conda list ^ucx$ | wc -l) >= 4 )); then
+      conda remove --offline --force ucx
+  ; fi
 
 # Build GASNet, Legion and legate.core
 COPY legion /opt/legate/legion
