@@ -55,15 +55,15 @@ RUN source /opt/legate/quickstart/common.sh \
  && set_build_vars \
  && apt-get update \
  && if [[ "$NETWORK" != none ]]; then \
-    apt-get install -y --no-install-recommends \
-    `# requirements for MOFED packages` \
-    libnl-3-200 libnl-route-3-200 libnl-3-dev libnl-route-3-dev \
-    `# requirements for mpicc` \
-    zlib1g-dev \
+      apt-get install -y --no-install-recommends \
+        `# requirements for MOFED packages` \
+        libnl-3-200 libnl-route-3-200 libnl-3-dev libnl-route-3-dev \
+        `# requirements for mpicc` \
+        zlib1g-dev \
   ; fi \
  && apt-get install -y --no-install-recommends \
-    `# useful utilities` \
-    nsight-systems-cli numactl gdb vim \
+      `# useful utilities` \
+      nsight-systems-cli numactl gdb vim \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
@@ -71,19 +71,19 @@ RUN source /opt/legate/quickstart/common.sh \
 RUN source /opt/legate/quickstart/common.sh \
  && set_build_vars \
  && if [[ "$NETWORK" != none ]]; then \
-    set_mofed_vars \
- && export MOFED_ID=MLNX_OFED_LINUX-${MOFED_VER}-${LINUX_VER}-x86_64 \
- && cd /tmp \
- && curl -fsSL http://content.mellanox.com/ofed/MLNX_OFED-${MOFED_VER}/${MOFED_ID}.tgz | tar -xz \
- && cd ${MOFED_ID} \
- && dpkg -i $(echo $(find . -false \
-    -or -name 'ibverbs-providers*.deb' \
-    -or -name 'libibverbs*.deb' \
-    -or -name 'librdmacm*.deb' \
-    -or -name 'openmpi_*.deb')) \
- && cd /tmp \
- && rm -rf ${MOFED_ID} \
- && echo ${MOFED_VER} > /opt/mofed-ver \
+      set_mofed_vars \
+ &&   export MOFED_ID=MLNX_OFED_LINUX-${MOFED_VER}-${LINUX_VER}-x86_64 \
+ &&   cd /tmp \
+ &&   curl -fsSL http://content.mellanox.com/ofed/MLNX_OFED-${MOFED_VER}/${MOFED_ID}.tgz | tar -xz \
+ &&   cd ${MOFED_ID} \
+ &&   dpkg -i $(echo $(find . -false \
+        -or -name 'ibverbs-providers*.deb' \
+        -or -name 'libibverbs*.deb' \
+        -or -name 'librdmacm*.deb' \
+        -or -name 'openmpi_*.deb')) \
+ &&   cd /tmp \
+ &&   rm -rf ${MOFED_ID} \
+ &&   echo ${MOFED_VER} > /opt/mofed-ver \
   ; fi
 
 # Copy MOFED executables to /usr/bin
@@ -105,15 +105,15 @@ ENV LD_LIBRARY_PATH=/usr/mpi/gcc/openmpi/lib:${LD_LIBRARY_PATH}
 RUN source /opt/legate/quickstart/common.sh \
  && set_build_vars \
  && if [[ "$NETWORK" != none ]]; then \
-    export UCX_VER=1.14.0 \
- && export UCX_RELEASE=1.14.0-rc1 \
- && cd /tmp \
- && curl -fsSL https://github.com/openucx/ucx/releases/download/v${UCX_RELEASE}/ucx-${UCX_VER}.tar.gz | tar -xz \
- && cd ucx-${UCX_VER} \
- && ./contrib/configure-release --enable-mt --with-cuda=/usr/local/cuda --with-java=no \
- && make -j install \
- && cd /tmp \
- && rm -rf ucx-${UCX_VER} \
+      export UCX_VER=1.14.0 \
+ &&   export UCX_RELEASE=1.14.0-rc1 \
+ &&   cd /tmp \
+ &&   curl -fsSL https://github.com/openucx/ucx/releases/download/v${UCX_RELEASE}/ucx-${UCX_VER}.tar.gz | tar -xz \
+ &&   cd ucx-${UCX_VER} \
+ &&   ./contrib/configure-release --enable-mt --with-cuda=/usr/local/cuda --with-java=no \
+ &&   make -j install \
+ &&   cd /tmp \
+ &&   rm -rf ucx-${UCX_VER} \
   ; fi
 
 # Create conda environment
