@@ -117,7 +117,7 @@ Build Legate libraries
 ----------------------
 
 ```
-git clone https://gitlab.com/StanfordLegion/legion.git -b collective <legion-dir>
+git clone https://gitlab.com/StanfordLegion/legion.git -b control_replication <legion-dir>
 git clone https://github.com/nv-legate/legate.core <legate.core-dir>
 git clone https://github.com/nv-legate/cunumeric <cunumeric-dir>
 cd <legate.core-dir>
