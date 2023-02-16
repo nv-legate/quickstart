@@ -156,8 +156,15 @@ function run_build {
 
 function run_command {
     if [[ "$NODRIVER" != 1 ]]; then
-        # Remove "legate" temporarily, so we can add more flags
-        shift 1
+        # Find "legate", so we can inject args right after it
+        BEFORE=()
+        AFTER=("$@")
+        while true; do
+            TOKEN="${AFTER[0]}"
+            AFTER=("${AFTER[@]:1}")
+            BEFORE+=("$TOKEN")
+            if [[ "$TOKEN" == legate ]]; then break; fi
+        done
     fi
     for I in `seq 0 "$((ITERATIONS - 1))"`; do
         if (( ITERATIONS == 1 )); then
@@ -167,11 +174,9 @@ function run_command {
             OUT_DIR="$CMD_OUT_DIR/$I"
         fi
         if [[ "$NODRIVER" != 1 ]]; then
-            set -- legate --logdir "$OUT_DIR" "$@"
-        fi
-        _run_command "$@"
-        if [[ "$NODRIVER" != 1 ]]; then
-            shift 3
+            _run_command "${BEFORE[@]}" --logdir "$OUT_DIR" "${AFTER[@]}"
+        else
+            _run_command "$@"
         fi
     done
 }
