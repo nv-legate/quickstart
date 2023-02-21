@@ -57,7 +57,12 @@ if [[ -d "legate/core" ]]; then
         set -- --conduit "$CONDUIT" "$@"
     fi
     if [[ "$USE_CUDA" == 1 ]]; then
-        set -- --arch "$GPU_ARCH" \
+        set -- --cuda \
+               --arch "$GPU_ARCH" \
+               "$@"
+    fi
+    if [[ "$USE_OPENMP" == 1 ]]; then
+        set -- --openmp \
                "$@"
     fi
     run_build ./install.py \
