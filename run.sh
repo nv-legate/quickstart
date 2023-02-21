@@ -214,10 +214,6 @@ else
     # Local run
     echo "Did not detect a supported cluster, assuming local-node run."
     export NOWAIT=1
-    if [[ "$NUM_NODES" != 1 ]]; then
-        echo "Error: Only 1 node is available, but $NUM_NODES were requested" 1>&2
-        exit 1
-    fi
     # Auto-detect available resources
     if [[ "$(uname)" == "Darwin" ]]; then
         NUMAS_PER_NODE=1
@@ -304,7 +300,7 @@ if [[ "$NODRIVER" != 1 ]]; then
         set -- --launcher jsrun "$@"
     else
         # Local run
-        if (( RANKS_PER_NODE > 1 )); then
+        if (( NUM_NODES > 1 || RANKS_PER_NODE > 1 )); then
             set -- --launcher mpirun "$@"
         else
             set -- --launcher none "$@"
