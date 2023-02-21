@@ -86,7 +86,7 @@ function set_build_vars {
             TEST_SRC="$TEST_DIR/test.cc"
             echo "int main(){}" > "$TEST_SRC"
             TEST_EXE="$TEST_DIR/test.exe"
-            if LIBRARY_PATH="${LIBRARY_PATH:-}:$CONDA_PREFIX/lib" "$CXX" -o "$TEST_EXE" "$TEST_SRC" -fopenmp &> /dev/null; then
+            if LIBRARY_PATH="${LIBRARY_PATH:-}:$CONDA_PREFIX/lib" "${CXX:-c++}" -o "$TEST_EXE" "$TEST_SRC" -fopenmp &> /dev/null; then
                 export USE_OPENMP=1
             else
                 export USE_OPENMP=0
