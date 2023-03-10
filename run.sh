@@ -227,7 +227,11 @@ else
     RAM_PER_NUMA=$(( RAM_PER_NODE / 2 / NUMAS_PER_NODE )) # use half the available system memory
     if [[ "$USE_CUDA" == 1 ]]; then
         GPUS_PER_NODE="$(nvidia-smi -q | grep 'Attached GPUs' | awk '{print $4}')"
-        FB_PER_GPU=$(( $(nvidia-smi --format=csv,noheader,nounits --query-gpu=memory.total -i 0) - 2000 ))
+        # Leave 5% of the available framebuffer for other uses, but not less than 2GB
+        FB_PER_GPU="$(nvidia-smi --format=csv,noheader,nounits --query-gpu=memory.total -i 0)"
+        RESERVED_FB=$(( FB_PER_GPU / 20 ))
+        RESERVED_FB=$(( RESERVED_FB > 2000 ? RESERVED_FB : 2000 ))
+        FB_PER_GPU=$(( FB_PER_GPU - RESERVED_FB ))
     fi
 fi
 
