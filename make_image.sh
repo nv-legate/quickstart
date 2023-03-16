@@ -30,7 +30,7 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "  NOPULL : do not pull latest versions of Legion & Legate libraries (default: 0)"
     echo "  PLATFORM : what machine to build for (default: generic single-node"
     echo "             machine with volta GPUs)"
-    echo "  PYTHON_VER : Python version to use (default: 3.8)"
+    echo "  PYTHON_VER : Python version to use (default: 3.9)"
     echo "  TAG : tag to use for the produced image (default: \`date +%Y-%m-%d-%H%M%S\`)"
     echo "  TAG_LATEST : whether to also tag the image as latest (default: 0)"
     echo "  USE_SPY : build Legion with detailed Spy logging enabled (default: 0)"
