@@ -128,8 +128,8 @@ RUN export TMP_DIR="$(mktemp -d)" \
 # Some conda libraries have recently started pulling ucx (namely libarrow).
 # Remove that if present, to guarantee that our custom UCX buid is used instead.
 RUN source activate legate \
- && if (( $(conda list ^ucx$ | wc -l) >= 4 )); then
-      conda remove --offline --force ucx
+ && if (( $(conda list ^ucx$ | wc -l) >= 4 )); then \
+      conda remove --offline --force ucx \
   ; fi
 
 # Build GASNet, Legion and legate.core
