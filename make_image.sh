@@ -31,6 +31,7 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "  PLATFORM : what machine to build for (default: generic single-node"
     echo "             machine with volta GPUs)"
     echo "  PYTHON_VER : Python version to use (default: 3.9)"
+    echo "  RELEASE_BRANCH : Legate.core and cuNumeric branch to use, example: branch-23.05 (default: HEAD)"
     echo "  TAG : tag to use for the produced image (default: \`date +%Y-%m-%d-%H%M%S\`)"
     echo "  TAG_LATEST : whether to also tag the image as latest (default: 0)"
     echo "  USE_SPY : build Legion with detailed Spy logging enabled (default: 0)"
@@ -47,6 +48,7 @@ export NETWORK="${NETWORK:-gasnet1}"
 export NOPULL="${NOPULL:-0}"
 export PLATFORM="${PLATFORM:-generic-volta}"
 export PYTHON_VER="${PYTHON_VER:-3.9}"
+export RELEASE_BRANCH="${RELEASE_BRANCH:-HEAD}"
 export TAG="${TAG:-$(date +%Y-%m-%d-%H%M%S)}"
 export TAG_LATEST="${TAG_LATEST:-0}"
 export USE_SPY="${USE_SPY:-0}"
@@ -79,8 +81,8 @@ function git_pull {
     cd -
 }
 git_pull https://gitlab.com/StanfordLegion/legion.git legion "$LEGION_REF"
-git_pull https://github.com/nv-legate/legate.core.git legate.core HEAD
-git_pull https://github.com/nv-legate/cunumeric.git cunumeric HEAD
+git_pull https://github.com/nv-legate/legate.core.git legate.core "$RELEASE_BRANCH"
+git_pull https://github.com/nv-legate/cunumeric.git cunumeric "$RELEASE_BRANCH"
 
 # Build and push image
 IMAGE=legate-"$PLATFORM"
