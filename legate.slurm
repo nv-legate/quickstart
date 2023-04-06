@@ -22,5 +22,8 @@ echo "Job ID: $SLURM_JOB_ID"
 echo "Submitted from: $(pwd)"
 echo "Started on: $(date)"
 echo "Running on: $SLURM_JOB_NODELIST"
+if [[ -e "$SCRIPT_DIR/intros/$PLATFORM.sh" ]]; then
+    source "$SCRIPT_DIR/intros/$PLATFORM.sh"
+fi
 run_command "$@"
 echo "Job finished: $(date)"

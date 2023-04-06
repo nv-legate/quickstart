@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Copyright 2022 NVIDIA Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,12 +13,9 @@
 # limitations under the License.
 #
 
-set -euo pipefail
-
 # We have to manually reload modules when moving to a compute node, because the
 # SLURM version installed on the head node is incompatible with that on the
 # compute nodes.
-
 unset module
 unset MODULESHOME
 unset LOADEDMODULES
@@ -28,4 +23,3 @@ unset MODULEPATH
 unset _LMFILES_
 . /usr/share/modules/init/bash
 module load cuda/11.7 mpi/openmpi/4.1.0 slurm/20.11.4
-"$@"

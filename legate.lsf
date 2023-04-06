@@ -23,5 +23,8 @@ echo "Submitted from: $(pwd)"
 echo "Started on: $(date)"
 echo -n "Running on: "
 echo "$LSB_HOSTS" | tr ' ' '\n' | sort | uniq | xargs
+if [[ -e "$SCRIPT_DIR/intros/$PLATFORM.sh" ]]; then
+    source "$SCRIPT_DIR/intros/$PLATFORM.sh"
+fi
 run_command "$@"
 echo "Job finished: $(date)"
