@@ -22,8 +22,8 @@ function detect_platform {
         export PLATFORM=cori
     elif [[ "$(uname -n)" == *"daint"* ]]; then
         export PLATFORM=pizdaint
-    elif [[ "$(uname -n)" == *"sapling"* ]]; then
-        export PLATFORM=sapling
+    elif [[ "$(uname -n)" == *"sapling2"* ]]; then
+        export PLATFORM=sapling2
     elif [[ "$(uname -n)" == *"lassen"* ]]; then
         export PLATFORM=lassen
     else
@@ -46,7 +46,7 @@ function set_build_vars {
     elif [[ "$PLATFORM" == pizdaint ]]; then
         export CONDUIT="${CONDUIT:-aries}"
         export GPU_ARCH=pascal
-    elif [[ "$PLATFORM" == sapling ]]; then
+    elif [[ "$PLATFORM" == sapling2 ]]; then
         export CONDUIT="${CONDUIT:-ibv}"
         export GPU_ARCH=pascal
     elif [[ "$PLATFORM" == lassen ]]; then
@@ -144,8 +144,8 @@ function run_build {
         set -- srun -C gpu -N 1 -t 60 -G 1 -c 10 -A "$ACCOUNT" "$@"
     elif [[ "$PLATFORM" == pizdaint ]]; then
         set -- srun -N 1 -p debug -C gpu -t 30 -A "$ACCOUNT" "$@"
-    elif [[ "$PLATFORM" == sapling ]]; then
-        set -- srun --exclusive -N 1 -p gpu -t 60 "$SCRIPT_DIR/sapling_run.sh" "$@"
+    elif [[ "$PLATFORM" == sapling2 ]]; then
+        set -- srun --exclusive -N 1 -p gpu -t 60 "$@"
     elif [[ "$PLATFORM" == lassen ]]; then
         set -- lalloc 1 -q pdebug -W 60 -G "$GROUP" "$@"
     else

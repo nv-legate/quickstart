@@ -77,16 +77,11 @@ module load daint-gpu
 module load cudatoolkit/11.2.0_3.39-2.1__gf93aa1c
 ```
 
-### Sapling @ Stanford
+### Sapling2 @ Stanford
 
 ```
-module load slurm/20.11.4
+module load cuda/11.7 mpi/openmpi/4.1.5 slurm/23.02.1
 ```
-
-Note that the module environment needs to be reset as we enter a compute node,
-since those nodes have a different lmod installation than the head node. The
-switch is done in the `sapling_run.sh` script, which uses a pre-selected set of
-modules, that you might wish to adjust.
 
 ### Lassen @ LLNL
 

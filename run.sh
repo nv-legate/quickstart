@@ -71,7 +71,7 @@ elif [[ "$PLATFORM" == cori ]]; then
     CONTAINER_BASED=0
 elif [[ "$PLATFORM" == pizdaint ]]; then
     CONTAINER_BASED=0
-elif [[ "$PLATFORM" == sapling ]]; then
+elif [[ "$PLATFORM" == sapling2 ]]; then
     CONTAINER_BASED=0
 elif [[ "$PLATFORM" == lassen ]]; then
     CONTAINER_BASED=0
@@ -184,7 +184,7 @@ elif [[ "$PLATFORM" == pizdaint ]]; then
     GPUS_PER_NODE=1
     CORES_PER_NUMA=12
     FB_PER_GPU=14500
-elif [[ "$PLATFORM" == sapling ]]; then
+elif [[ "$PLATFORM" == sapling2 ]]; then
     # 2 NUMA domains per node
     # 1 NIC per node
     # 10 cores per NUMA domain
@@ -298,7 +298,7 @@ if [[ "$NODRIVER" != 1 ]]; then
         set -- --launcher srun "$@"
     elif [[ "$PLATFORM" == pizdaint ]]; then
         set -- --launcher srun "$@"
-    elif [[ "$PLATFORM" == sapling ]]; then
+    elif [[ "$PLATFORM" == sapling2 ]]; then
         set -- --launcher mpirun "$@"
     elif [[ "$PLATFORM" == lassen ]]; then
         set -- --launcher jsrun "$@"
@@ -352,12 +352,16 @@ elif [[ "$PLATFORM" == pizdaint ]]; then
         set -- sbatch -o "$HOST_OUT_DIR/out.txt" "$@"
     fi
     submit "$@"
-elif [[ "$PLATFORM" == sapling ]]; then
-    set -- "$SCRIPT_DIR/legate.slurm" "$SCRIPT_DIR/sapling_run.sh" "$@"
+elif [[ "$PLATFORM" == sapling2 ]]; then
+    set -- "$SCRIPT_DIR/legate.slurm" "$@"
     QUEUE="${QUEUE:-gpu}"
     set -- -J legate -p "$QUEUE" -t "$TIMELIMIT" -N "$NUM_NODES" "$@"
     if [[ "$RATIO_OF_NODE_USED" == 1 ]]; then
         set -- --exclusive "$@"
+    fi
+    set -- --ntasks-per-node "$RANKS_PER_NODE" -c $(( 2 * NUM_CORES )) "$@"
+    if [[ "$USE_CUDA" == 1 ]]; then
+        set -- -G $(( GPUS_PER_NODE * $RATIO_OF_NODE_USED )) "$@"
     fi
     if [[ "$INTERACTIVE" == 1 ]]; then
         set -- salloc "$@"
