@@ -59,16 +59,6 @@ module load cuda/11.0.3 gcc/9.3.0
 # can then skip openblas from conda env, and build cuNumeric using --with-openblas $OLCF_OPENBLAS_ROOT
 ```
 
-### CoriGPU @ LBL
-
-```
-# Cori runs even sub-shells in login mode, so guard these from running more than once
-if [[ -z $CONDA_PREFIX ]]; then
-    module purge
-    module load cgpu esslurm cudatoolkit/10.2.89_3.28-7.0.1.1_2.1__g88d3d59 gcc/8.3.0 python/3.8-anaconda-2020.11 openmpi/4.0.2
-fi
-```
-
 ### PizDaint @ ETH
 
 ```

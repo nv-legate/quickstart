@@ -67,8 +67,6 @@ shift
 detect_platform
 if [[ "$PLATFORM" == summit ]]; then
     CONTAINER_BASED=0
-elif [[ "$PLATFORM" == cori ]]; then
-    CONTAINER_BASED=0
 elif [[ "$PLATFORM" == pizdaint ]]; then
     CONTAINER_BASED=0
 elif [[ "$PLATFORM" == sapling2 ]]; then
@@ -157,19 +155,6 @@ if [[ "$PLATFORM" == summit ]]; then
     RAM_PER_NUMA=200000
     GPUS_PER_NODE=6
     CORES_PER_NUMA=21
-    FB_PER_GPU=14500
-elif [[ "$PLATFORM" == cori ]]; then
-    # 2 NUMA domains per node
-    # 2 NICs per NUMA domain (4 NICs per node)
-    # 20 cores per NUMA domain (40 cores per node)
-    # 2-way SMT per core
-    # 192GB per NUMA domain (384GB RAM per node)
-    # 4 Tesla V100 GPUs per NUMA domain (8 GPUs per node)
-    # 16GB FB per GPU
-    NUMAS_PER_NODE=2
-    RAM_PER_NUMA=150000
-    GPUS_PER_NODE=8
-    CORES_PER_NUMA=20
     FB_PER_GPU=14500
 elif [[ "$PLATFORM" == pizdaint ]]; then
     # 1 NUMA domain per node
@@ -292,10 +277,6 @@ if [[ "$NODRIVER" != 1 ]]; then
     # Add launcher options
     if [[ "$PLATFORM" == summit ]]; then
         set -- --launcher jsrun "$@"
-    elif [[ "$PLATFORM" == cori ]]; then
-        # Use the first NIC from each pair
-        set -- --nic-bind mlx5_0,mlx5_2,mlx5_4,mlx5_6 "$@"
-        set -- --launcher srun "$@"
     elif [[ "$PLATFORM" == pizdaint ]]; then
         set -- --launcher srun "$@"
     elif [[ "$PLATFORM" == sapling2 ]]; then
@@ -324,20 +305,6 @@ if [[ "$PLATFORM" == summit ]]; then
         set -- -o "$HOST_OUT_DIR/out.txt" "$@"
     fi
     set -- bsub -J legate -P "$ACCOUNT" -q "$QUEUE" -W "$TIMELIMIT" -nnodes "$NUM_NODES" -alloc_flags smt1 "$@"
-    submit "$@"
-elif [[ "$PLATFORM" == cori ]]; then
-    set -- "$SCRIPT_DIR/legate.slurm" "$@"
-    # We double the number of cores because SLURM counts virtual cores
-    set -- -J legate -A "$ACCOUNT" -t "$TIMELIMIT" -N "$NUM_NODES" "$@"
-    set -- --ntasks-per-node "$RANKS_PER_NODE" -c $(( 2 * NUM_CORES )) "$@"
-    if [[ "$USE_CUDA" == 1 ]]; then
-        set -- -C gpu --gpus-per-task "$NUM_GPUS" "$@"
-    fi
-    if [[ "$INTERACTIVE" == 1 ]]; then
-        set -- salloc -q interactive "$@"
-    else
-        set -- sbatch -q regular -o "$HOST_OUT_DIR/out.txt" "$@"
-    fi
     submit "$@"
 elif [[ "$PLATFORM" == pizdaint ]]; then
     set -- "$SCRIPT_DIR/legate.slurm" "$@"

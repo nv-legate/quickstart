@@ -18,8 +18,6 @@ function detect_platform {
         return
     elif command -v dnsdomainname &> /dev/null && [[ "$(dnsdomainname)" == *"summit"* ]]; then
         export PLATFORM=summit
-    elif [[ "$(uname -n)" == "cori"* ]]; then
-        export PLATFORM=cori
     elif [[ "$(uname -n)" == *"daint"* ]]; then
         export PLATFORM=pizdaint
     elif [[ "$(uname -n)" == *"sapling2"* ]]; then
@@ -40,9 +38,6 @@ function set_build_vars {
         # these defines to be set.
         export CXXFLAGS="${CXXFLAGS:-} -DNO_WARN_X86_INTRINSICS"
         export CFLAGS="${CFLAGS:-} -DNO_WARN_X86_INTRINSICS"
-    elif [[ "$PLATFORM" == cori ]]; then
-        export CONDUIT="${CONDUIT:-ibv}"
-        export GPU_ARCH=volta
     elif [[ "$PLATFORM" == pizdaint ]]; then
         export CONDUIT="${CONDUIT:-aries}"
         export GPU_ARCH=pascal
@@ -140,8 +135,6 @@ function run_build {
         true
     elif [[ "$PLATFORM" == summit ]]; then
         set -- bsub -nnodes 1 -W 60 -P "$ACCOUNT" -I "$@"
-    elif [[ "$PLATFORM" == cori ]]; then
-        set -- srun -C gpu -N 1 -t 60 -G 1 -c 10 -A "$ACCOUNT" "$@"
     elif [[ "$PLATFORM" == pizdaint ]]; then
         set -- srun -N 1 -p debug -C gpu -t 30 -A "$ACCOUNT" "$@"
     elif [[ "$PLATFORM" == sapling2 ]]; then
