@@ -39,7 +39,7 @@ fi
 detect_platform && set_build_vars
 
 function check_not_overriding {
-    if [ -e "$CONDA_PREFIX"/lib/python*/site-packages/"$1".egg-link ]; then
+    if [[ -e "$CONDA_PREFIX"/lib/python*/site-packages/"$1".egg-link ]]; then
         if [[ ! . -ef "$(head -n 1 "$CONDA_PREFIX"/lib/python*/site-packages/"$1".egg-link)" ]]; then
             echo "Error: Library already installed in $CONDA_PREFIX from a different source" 1>&2
             exit 1
@@ -80,3 +80,4 @@ else
     echo "Error: Unsupported library" 1>&2
     exit 1
 fi
+#	      --extra "CMAKE_CXX_FLAGS=-isystem=$CONDA_PREFIX/include" \
