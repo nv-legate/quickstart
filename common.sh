@@ -45,7 +45,6 @@ function set_build_vars {
         export GPU_ARCH=pascal
     elif [[ "$PLATFORM" == perlmutter ]]; then
          export CONDUIT=ofi-slingshot11
-         export NUM_NICS=4
          # CUDA_HOME is already set (by module)
          export GPU_ARCH=ampere
     elif [[ "$PLATFORM" == sapling2 ]]; then
