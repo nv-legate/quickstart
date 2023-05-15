@@ -16,7 +16,7 @@ index 25bf4e7..38f9cec 100755
          # the legate launcher.
          # See https://github.com/nv-legate/legate.core/issues/294.
 -        choices=["ibv", "ucx", "aries", "mpi"],
-+        choices=["ibv", "ucx", "aries", "mpi", "udp", "ofi-slingshot11"],
++        choices=["ibv", "ucx", "aries", "mpi", "ofi-slingshot11"],
          default=os.environ.get("CONDUIT"),
          help="Build Legate with specified GASNet conduit.",
      )
@@ -26,10 +26,10 @@ index 9222e2b..869cc33 100755
 +++ b/scripts/generate-conda-envs.py
 @@ -29,7 +29,7 @@ def V(version: str) -> tuple[int, ...]:
      return tuple(int(x) for x in padded_version)
- 
- 
+
+
 -class SectionConfig(Protocol):
 +class SectionConfig:
      header: str
- 
+
      @property
