@@ -105,8 +105,8 @@ ENV LD_LIBRARY_PATH=/usr/mpi/gcc/openmpi/lib:${LD_LIBRARY_PATH}
 RUN source /opt/legate/quickstart/common.sh \
  && set_build_vars \
  && if [[ "$NETWORK" != none ]]; then \
-      export UCX_VER=1.14.0 \
- &&   export UCX_RELEASE=1.14.0 \
+      export UCX_VER=1.14.1 \
+ &&   export UCX_RELEASE=1.14.1 \
  &&   cd /tmp \
  &&   curl -fsSL https://github.com/openucx/ucx/releases/download/v${UCX_RELEASE}/ucx-${UCX_VER}.tar.gz | tar -xz \
  &&   cd ucx-${UCX_VER} \
