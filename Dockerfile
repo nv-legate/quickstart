@@ -98,21 +98,39 @@ RUN mkdir -p /usr/mpi/gcc/openmpi \
  && ln -s /usr/mpi/gcc/openmpi-*/lib /usr/mpi/gcc/openmpi/lib
 ENV LD_LIBRARY_PATH=/usr/mpi/gcc/openmpi/lib:${LD_LIBRARY_PATH}
 
-# Create conda environment
-# We install UCX even when we're not using it directly, because Legate needs to
+# Install UCX
+# We do this even when we're not using UCX directly, because Legate needs to
 # initialize MPI when running on multiple nodes (regardless of networking
 # backend), and recent versions of OpenMPI require UCX.
+RUN source /opt/legate/quickstart/common.sh \
+ && set_build_vars \
+ && if [[ "$NETWORK" != none ]]; then \
+      export UCX_VER=1.14.1 \
+ &&   export UCX_RELEASE=1.14.1 \
+ &&   cd /tmp \
+ &&   curl -fsSL https://github.com/openucx/ucx/releases/download/v${UCX_RELEASE}/ucx-${UCX_VER}.tar.gz | tar -xz \
+ &&   cd ucx-${UCX_VER} \
+ &&   ./contrib/configure-release --enable-mt --with-cuda=/usr/local/cuda --with-java=no \
+ &&   make -j install \
+ &&   cd /tmp \
+ &&   rm -rf ucx-${UCX_VER} \
+  ; fi
+
+# Create conda environment
 COPY legate.core /opt/legate/legate.core
 RUN export TMP_DIR="$(mktemp -d)" \
+ && export YML_FILE="$TMP_DIR"/environment-test-linux-py${PYTHON_VER}-cuda${CUDA_VER}.yaml \
  && cd "$TMP_DIR" \
- && /opt/legate/legate.core/scripts/generate-conda-envs.py --python ${PYTHON_VER} --ctk ${CUDA_VER} --os linux --no-compilers --no-openmpi \
- && if [[ "$NETWORK" != none ]]; then \
-      export YML_FILE="$TMP_DIR"/environment-test-linux-py${PYTHON_VER}-cuda${CUDA_VER}-ucx.yaml \
-  ; else \
-      export YML_FILE="$TMP_DIR"/environment-test-linux-py${PYTHON_VER}-cuda${CUDA_VER}.yaml \
-  ; fi \
+ && /opt/legate/legate.core/scripts/generate-conda-envs.py --python ${PYTHON_VER} --ctk ${CUDA_VER} --os linux --no-compilers --no-openmpi --no-ucx \
  && conda env create -n legate -f "$YML_FILE" \
  && rm -rf "$TMP_DIR"
+
+# Some conda libraries have recently started pulling ucx (namely libarrow).
+# Remove that if present, to guarantee that our custom UCX buid is used instead.
+RUN source activate legate \
+ && if (( $(conda list ^ucx$ | wc -l) >= 4 )); then \
+      conda remove --offline --force ucx \
+  ; fi
 
 # Build GASNet, Legion and legate.core
 COPY legion /opt/legate/legion
