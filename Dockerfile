@@ -48,7 +48,7 @@ RUN export LINUX_VER_URL="$(echo "$LINUX_VER" | tr -d '.')" \
 
 # Copy quickstart scripts to image (don't copy the entire directory; that would
 # include the library repo checkouts, that we want to place elsewhere)
-COPY build.sh common.sh entrypoint.sh /opt/legate/quickstart/
+COPY build.sh common.sh /opt/legate/quickstart/
 
 # Install apt packages
 RUN source /opt/legate/quickstart/common.sh \
@@ -86,12 +86,13 @@ RUN source /opt/legate/quickstart/common.sh \
  &&   echo ${MOFED_VER} > /opt/mofed-ver \
   ; fi
 
-# Copy MOFED executables to /usr/bin
-# (BCP wants mpirun to be in a well-known location at container boot)
+# Copy executables to /usr/bin
+# BCP wants mpirun to be in a well-known location at container boot
 RUN for APP in mpicc mpicxx mpif90 mpirun; do \
       ln -s /usr/mpi/gcc/openmpi-*/bin/"$APP" /usr/bin/"$APP" \
   ; done
-COPY ibdev2netdev /usr/bin/
+# useful scripts
+COPY entrypoint.sh ibdev2netdev legion/tools/print_backtraces.sh /usr/bin/
 
 # Make sure libraries can find the MOFED libmpi at runtime
 RUN mkdir -p /usr/mpi/gcc/openmpi \
@@ -149,7 +150,7 @@ RUN source activate legate \
  && bash -x /opt/legate/quickstart/build.sh
 
 # Set up run environment
-ENTRYPOINT [ "/opt/legate/quickstart/entrypoint.sh" ]
+ENTRYPOINT [ "entrypoint.sh" ]
 CMD [ "/bin/bash" ]
 RUN echo "conda activate legate" >> /root/.bashrc
 ENV LD_LIBRARY_PATH="/opt/conda/envs/legate/lib:${LD_LIBRARY_PATH}"
