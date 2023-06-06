@@ -131,7 +131,10 @@ RUN export TMP_DIR="$(mktemp -d)" \
 # Also remove rdma-core, so we build against the system Inifinband libs.
 RUN source activate legate \
  && if (( $(conda list ^ucx$ | wc -l) >= 4 )); then \
-      conda remove --offline --force ucx rdma-core \
+      conda remove --offline --force ucx \
+  ; fi \
+ && if (( $(conda list ^rdma-core$ | wc -l) >= 4 )); then \
+      conda remove --offline --force rdma-core \
   ; fi
 
 # Build GASNet, Legion and legate.core
