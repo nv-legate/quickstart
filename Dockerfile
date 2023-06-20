@@ -62,6 +62,8 @@ RUN source /opt/legate/quickstart/common.sh \
         zlib1g-dev \
   ; fi \
  && apt-get install -y --no-install-recommends \
+      `# requirements for Legion rust profiler` \
+      pkg-config libssl-dev \
       `# useful utilities` \
       nsight-systems-cli numactl gdb vim \
  && apt-get clean \
