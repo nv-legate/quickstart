@@ -24,6 +24,7 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "  CUDA_VER : CUDA version to use (default: 11.5)"
     echo "  DEBUG : compile with debug symbols and w/o optimizations (default: 0)"
     echo "  DEBUG_RELEASE : compile with optimizations and some debug symbols (default: 0)"
+    echo "  DOCKERFILE : dockerfile path (default: Dockerfile)"
     echo "  LEGION_REF : Legion branch/commit/tag to use (default: control_replication)"
     echo "  LINUX_VER : what distro to base the image on (default: ubuntu20.04)"
     echo "  NETWORK : Realm networking backend to use (default: ucx)"
@@ -42,6 +43,7 @@ fi
 export CUDA_VER="${CUDA_VER:-11.5}"
 export DEBUG="${DEBUG:-0}"
 export DEBUG_RELEASE="${DEBUG_RELEASE:-0}"
+export DOCKERFILE="${DOCKERFILE:-Dockerfile}"
 export LEGION_REF="${LEGION_REF:-control_replication}"
 export LINUX_VER="${LINUX_VER:-ubuntu20.04}"
 export NETWORK="${NETWORK:-ucx}"
@@ -99,7 +101,7 @@ fi
 if [[ "$USE_SPY" == 1 ]]; then
     IMAGE="$IMAGE"-spy
 fi
-DOCKER_BUILDKIT=1 docker build -t "$IMAGE:$TAG" \
+DOCKER_BUILDKIT=1 docker build -t "$IMAGE:$TAG" -f "$DOCKERFILE" \
     --build-arg CUDA_VER="$CUDA_VER" \
     --build-arg DEBUG="$DEBUG" \
     --build-arg DEBUG_RELEASE="$DEBUG_RELEASE" \
