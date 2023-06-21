@@ -64,22 +64,23 @@ function git_pull {
             git clone "$1" "$2" -b "$3"
         fi
     fi
-    if [[ "$NOPULL" == 1 ]]; then
-        return
-    fi
     cd "$2"
-    git fetch --all
-    if [[ "$3" == HEAD ]]; then
-        # checkout remote HEAD branch
-        REF="$(git remote show origin | grep HEAD | awk '{ print $3 }')"
-    else
-        REF="$3"
+    if [[ "$NOPULL" == 0 ]]; then
+        git fetch --all
+        if [[ "$3" == HEAD ]]; then
+            # checkout remote HEAD branch
+            REF="$(git remote show origin | grep HEAD | awk '{ print $3 }')"
+        else
+            REF="$3"
+        fi
+        git checkout "$REF"
+        # update from the remote, if we are on a branch
+        if [[ "$(git rev-parse --abbrev-ref HEAD)" != "HEAD" ]]; then
+            git pull --ff-only
+        fi
     fi
-    git checkout "$REF"
-    # update from the remote, if we are on a branch
-    if [[ "$(git rev-parse --abbrev-ref HEAD)" != "HEAD" ]]; then
-        git pull --ff-only
-    fi
+    echo -n "$2 git hash: "
+    git rev-parse HEAD
     cd -
 }
 git_pull https://gitlab.com/StanfordLegion/legion.git legion "$LEGION_REF"
