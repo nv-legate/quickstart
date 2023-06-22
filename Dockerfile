@@ -94,7 +94,7 @@ RUN for APP in mpicc mpicxx mpif90 mpirun; do \
       ln -s /usr/mpi/gcc/openmpi-*/bin/"$APP" /usr/bin/"$APP" \
   ; done
 # useful scripts
-COPY entrypoint.sh ibdev2netdev legion/tools/print_backtraces.sh /usr/bin/
+COPY entrypoint.sh ibdev2netdev print_backtraces.sh /usr/bin/
 
 # Make sure libraries can find the MOFED libmpi at runtime
 RUN mkdir -p /usr/mpi/gcc/openmpi \
@@ -139,11 +139,17 @@ RUN source activate legate \
       conda remove --offline --force rdma-core \
   ; fi
 
+# Copy the legion directory, if it exists. We have to do it in this weird way
+# because COPY <src-dir> doesn't copy <src-dir> itself, only its contents, and
+# a COPY with a glob that results in 0 source files will fail.
+COPY build.sh legio[n] /opt/legate/legion/
+RUN rm /opt/legate/legion/build.sh \
+ && if [[ "$(ls -A /opt/legate/legion/)" == "" ]]; then rmdir /opt/legate/legion; fi
+
 # Build GASNet, Legion and legate.core
-COPY legion /opt/legate/legion
 RUN source activate legate \
  && export CUDA_PATH=/usr/local/cuda/lib64/stubs `# some conda packages, notably cupy, override CUDA_PATH` \
- && export LEGION_DIR=/opt/legate/legion \
+ && if [[ -e /opt/legate/legion/ ]]; then export LEGION_DIR=/opt/legate/legion; fi \
  && cd /opt/legate/legate.core \
  && bash -x /opt/legate/quickstart/build.sh
 

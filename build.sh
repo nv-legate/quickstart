@@ -26,7 +26,8 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "  ACCOUNT : account/group/project to submit build job under (if applicable)"
     echo "  CONDUIT : GASNet conduit to use (if applicable) (default: auto-detected)"
     echo "  GPU_ARCH : CUDA architecture to build for (default: auto-detected)"
-    echo "  LEGION_DIR : source directory to use for Legion"
+    echo "  LEGION_DIR : source directory to use for Legion (default: unset; the build"
+    echo "               will pull a local copy of Legion)"
     echo "  NETWORK : Realm networking backend to use (default: auto-detected)"
     echo "  PLATFORM : what machine to build for -- provides defaults for other options"
     echo "             (default: auto-detected)"
@@ -57,18 +58,17 @@ if [[ -d "legate/core" ]]; then
         set -- --conduit "$CONDUIT" "$@"
     fi
     if [[ "$USE_CUDA" == 1 ]]; then
-        set -- --cuda \
-               --arch "$GPU_ARCH" \
-               "$@"
+        set -- --cuda --arch "$GPU_ARCH" "$@"
     fi
     if [[ "$USE_OPENMP" == 1 ]]; then
-        set -- --openmp \
-               "$@"
+        set -- --openmp "$@"
+    fi
+    if [[ -n "${LEGION_DIR+x}" ]]; then
+        set -- --legion-src-dir "$LEGION_DIR" "$@"
     fi
     run_build ./install.py \
               --verbose \
               --editable \
-              --legion-src-dir "$LEGION_DIR" \
               "$@"
 elif [[ -d "cunumeric" ]]; then
     check_not_overriding cunumeric
