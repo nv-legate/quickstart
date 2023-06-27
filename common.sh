@@ -44,7 +44,7 @@ function set_build_vars {
         export CONDUIT="${CONDUIT:-aries}"
         export GPU_ARCH=pascal
     elif [[ "$PLATFORM" == perlmutter ]]; then
-         export CONDUIT=ofi-slingshot11
+         export CONDUIT=ofi
          # CUDA_HOME is already set (by module)
          export GPU_ARCH=ampere
     elif [[ "$PLATFORM" == sapling2 ]]; then
