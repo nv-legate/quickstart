@@ -51,6 +51,17 @@ Cluster configuration
 Find your cluster below, and add the corresponding suggested setup instructions
 to `~/.bash_profile`, `~/.bashrc` or similar shell startup file.
 
+
+### Perlmutter @ NERSC
+
+```
+module load python
+module load cudatoolkit
+module load craype-accel-nvidia80
+module load cray-pmi
+module del cray-libsci
+```
+
 ### Summit @ ORNL
 
 ```
