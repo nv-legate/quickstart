@@ -151,14 +151,14 @@ RUN source activate legate \
  && export CUDA_PATH=/usr/local/cuda/lib64/stubs `# some conda packages, notably cupy, override CUDA_PATH` \
  && if [[ -e /opt/legate/legion/ ]]; then export LEGION_DIR=/opt/legate/legion; fi \
  && cd /opt/legate/legate.core \
- && bash -x /opt/legate/quickstart/build.sh
+ && bash -x /opt/legate/quickstart/build.sh --editable
 
 # Build cunumeric
 COPY cunumeric /opt/legate/cunumeric
 RUN source activate legate \
  && export CUDA_PATH=/usr/local/cuda/lib64/stubs `# some conda packages, notably cupy, override CUDA_PATH` \
  && cd /opt/legate/cunumeric \
- && bash -x /opt/legate/quickstart/build.sh
+ && bash -x /opt/legate/quickstart/build.sh --editable
 
 # Set up run environment
 ENTRYPOINT [ "entrypoint.sh" ]

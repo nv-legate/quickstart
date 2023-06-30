@@ -40,9 +40,35 @@ fi
 detect_platform && set_build_vars
 
 function check_not_overriding {
-    if [ -e "$CONDA_PREFIX"/lib/python*/site-packages/"$1".egg-link ]; then
-        if [[ ! . -ef "$(head -n 1 "$CONDA_PREFIX"/lib/python*/site-packages/"$1".egg-link)" ]]; then
-            echo "Error: Library already installed in $CONDA_PREFIX from a different source" 1>&2
+    PACKAGE="$1"
+    INSTALL_DIR="$2"
+    shift
+    shift
+    # NOTE: Assumes at most one file will match the glob pattern. Using a single
+    # square bracket is necessary for this to work properly as an "exists" check.
+    if [ -e "$CONDA_PREFIX"/lib/python*/site-packages/"$INSTALL_DIR" ]; then
+        # Existing non-editable installation
+        for ARG in "$@"; do
+            if [[ "$ARG" == --editable ]]; then
+                echo "Error: $PACKAGE already installed in non-editable mode, but editable was requested" 1>&2
+                exit 1
+            fi
+        done
+    elif [ -e "$CONDA_PREFIX"/lib/python*/site-packages/"$PACKAGE".egg-link ]; then
+        # Existing editable installation
+        EDITABLE_REQUESTED=0
+        for ARG in "$@"; do
+            if [[ "$ARG" == --editable ]]; then
+                EDITABLE_REQUESTED=1
+                break
+            fi
+        done
+        if [[ "$EDITABLE_REQUESTED" == 0 ]]; then
+            echo "Error: $PACKAGE already installed in editable mode, but non-editable was requested" 1>&2
+            exit 1
+        fi
+        if [[ ! . -ef "$(head -n 1 "$CONDA_PREFIX"/lib/python*/site-packages/"$PACKAGE".egg-link)" ]]; then
+            echo "Error: $PACKAGE already installed from a different source" 1>&2
             exit 1
         fi
     fi
@@ -50,7 +76,7 @@ function check_not_overriding {
 
 # Run appropriate build command for the target library
 if [[ -d "legate/core" ]]; then
-    check_not_overriding legate.core
+    check_not_overriding legate.core legate/core "$@"
     if [[ "$NETWORK" != none ]]; then
         set -- --network "$NETWORK" "$@"
     fi
@@ -68,13 +94,11 @@ if [[ -d "legate/core" ]]; then
     fi
     run_build ./install.py \
               --verbose \
-              --editable \
               "$@"
 elif [[ -d "cunumeric" ]]; then
-    check_not_overriding cunumeric
+    check_not_overriding cunumeric cunumeric "$@"
     run_build ./install.py \
               --verbose \
-              --editable \
               "$@"
 else
     echo "Error: Unsupported library" 1>&2
