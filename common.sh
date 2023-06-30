@@ -44,7 +44,9 @@ function set_build_vars {
         export CONDUIT="${CONDUIT:-aries}"
         export GPU_ARCH=pascal
     elif [[ "$PLATFORM" == perlmutter ]]; then
+         export NETWORK=gasnetex
          export CONDUIT=ofi
+         export GASNET_SYSTEM=slingshot11
          # CUDA_HOME is already set (by module)
          export GPU_ARCH=ampere
     elif [[ "$PLATFORM" == sapling2 ]]; then

@@ -89,6 +89,9 @@ if [[ -d "legate/core" ]]; then
     if [[ "$USE_OPENMP" == 1 ]]; then
         set -- --openmp "$@"
     fi
+    if [[ -n "${GASNET_SYSTEM+x}" ]]; then
+        set -- --gasnet-system "$GASNET_SYSTEM" "$@"
+    fi
     if [[ -n "${LEGION_DIR+x}" ]]; then
         set -- --legion-src-dir "$LEGION_DIR" "$@"
     fi

@@ -162,11 +162,14 @@ elif [[ "$PLATFORM" == perlmutter ]]; then
      # 64GM RAM per NUMA domain (256GB RAM per node)
      # 1 Ampere A100 GPU per NUMA domain (4 GPUs per node)
      # 40GB FB per GPU
+     USE_CUDA=1
      NUMAS_PER_NODE=4
      RAM_PER_NUMA=48000
      GPUS_PER_NODE=4
      CORES_PER_NUMA=16
      FB_PER_GPU=36250
+     # WAR for: https://gasnet-bugs.lbl.gov/bugzilla/show_bug.cgi?id=4638
+     export LEGATE_DISABLE_MPI=1
 elif [[ "$PLATFORM" == pizdaint ]]; then
     # 1 NUMA domain per node
     # 1 NIC per node
