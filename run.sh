@@ -92,19 +92,15 @@ if [[ "$CONTAINER_BASED" == 1 ]]; then
     export USE_CUDA="${USE_CUDA:-1}"
     export USE_OPENMP="${USE_OPENMP:-1}"
 else
-    # Assuming editable conda install
-    SITE_PACKAGES_DIR="$(python3 -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"
-    LEGATE_SRC_DIR="$(head -n 1 "$SITE_PACKAGES_DIR/legate.core.egg-link")"
-    BUILD_CONFIG="$LEGATE_SRC_DIR"/build/legate_core-config.cmake
     if [[ -z "${USE_CUDA+x}" ]]; then
-        if grep -q 'set(Legion_USE_CUDA ON)' "$BUILD_CONFIG"; then
+        if [[ "$(legate --info | grep use_cuda | awk '{ print $3 }')" == True ]]; then
             export USE_CUDA=1
         else
             export USE_CUDA=0
         fi
     fi
     if [[ -z "${USE_OPENMP+x}" ]]; then
-        if grep -q 'set(Legion_USE_OpenMP ON)' "$BUILD_CONFIG"; then
+        if [[ "$(legate --info | grep use_openmp | awk '{ print $3 }')" == True ]]; then
             export USE_OPENMP=1
         else
             export USE_OPENMP=0

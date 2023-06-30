@@ -24,7 +24,7 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "  CUDA_VER : CUDA version to use (default: 11.5)"
     echo "  DEBUG : compile with debug symbols and w/o optimizations (default: 0)"
     echo "  DEBUG_RELEASE : compile with optimizations and some debug symbols (default: 0)"
-    echo "  LEGION_REF : Legion branch/commit/tag to use (default: control_replication)"
+    echo "  DOCKERFILE : dockerfile path (default: Dockerfile)"
     echo "  LINUX_VER : what distro to base the image on (default: ubuntu20.04)"
     echo "  NETWORK : Realm networking backend to use (default: ucx)"
     echo "  NOPULL : do not pull latest versions of Legion & Legate libraries (default: 0)"
@@ -42,7 +42,7 @@ fi
 export CUDA_VER="${CUDA_VER:-11.5}"
 export DEBUG="${DEBUG:-0}"
 export DEBUG_RELEASE="${DEBUG_RELEASE:-0}"
-export LEGION_REF="${LEGION_REF:-control_replication}"
+export DOCKERFILE="${DOCKERFILE:-Dockerfile}"
 export LINUX_VER="${LINUX_VER:-ubuntu20.04}"
 export NETWORK="${NETWORK:-ucx}"
 export NOPULL="${NOPULL:-0}"
@@ -56,31 +56,37 @@ export USE_SPY="${USE_SPY:-0}"
 # Pull latest versions of legate libraries and Legion
 function git_pull {
     if [[ ! -e "$2" ]]; then
-        if [[ "$3" == HEAD ]]; then
+        if [[ $# -le 2 ]]; then
+            echo "$2 git hash: (auto)"
+            return
+        elif [[ "$3" == HEAD ]]; then
             git clone "$1" "$2"
         else
             git clone "$1" "$2" -b "$3"
         fi
     fi
-    if [[ "$NOPULL" == 1 ]]; then
-        return
-    fi
     cd "$2"
-    git fetch --all
-    if [[ "$3" == HEAD ]]; then
-        # checkout remote HEAD branch
-        REF="$(git remote show origin | grep HEAD | awk '{ print $3 }')"
-    else
-        REF="$3"
+    if [[ "$NOPULL" == 0 ]]; then
+        git fetch --all
+        if [[ $# -ge 3 ]]; then
+            if [[ "$3" == HEAD ]]; then
+                # checkout remote HEAD branch
+                REF="$(git remote show origin | grep HEAD | awk '{ print $3 }')"
+            else
+                REF="$3"
+            fi
+            git checkout "$REF"
+        fi
+        # update from the remote, if we are on a branch
+        if [[ "$(git rev-parse --abbrev-ref HEAD)" != "HEAD" ]]; then
+            git pull --ff-only
+        fi
     fi
-    git checkout "$REF"
-    # update from the remote, if we are on a branch
-    if [[ "$(git rev-parse --abbrev-ref HEAD)" != "HEAD" ]]; then
-        git pull --ff-only
-    fi
+    echo -n "$2 git hash: "
+    git rev-parse HEAD
     cd -
 }
-git_pull https://gitlab.com/StanfordLegion/legion.git legion "$LEGION_REF"
+git_pull https://gitlab.com/StanfordLegion/legion.git legion
 git_pull https://github.com/nv-legate/legate.core.git legate.core "$RELEASE_BRANCH"
 git_pull https://github.com/nv-legate/cunumeric.git cunumeric "$RELEASE_BRANCH"
 
@@ -99,7 +105,7 @@ fi
 if [[ "$USE_SPY" == 1 ]]; then
     IMAGE="$IMAGE"-spy
 fi
-DOCKER_BUILDKIT=1 docker build -t "$IMAGE:$TAG" \
+DOCKER_BUILDKIT=1 docker build -t "$IMAGE:$TAG" -f "$DOCKERFILE" \
     --build-arg CUDA_VER="$CUDA_VER" \
     --build-arg DEBUG="$DEBUG" \
     --build-arg DEBUG_RELEASE="$DEBUG_RELEASE" \

@@ -48,7 +48,7 @@ RUN export LINUX_VER_URL="$(echo "$LINUX_VER" | tr -d '.')" \
 
 # Copy quickstart scripts to image (don't copy the entire directory; that would
 # include the library repo checkouts, that we want to place elsewhere)
-COPY build.sh common.sh entrypoint.sh /opt/legate/quickstart/
+COPY build.sh common.sh /opt/legate/quickstart/
 
 # Install apt packages
 RUN source /opt/legate/quickstart/common.sh \
@@ -62,6 +62,8 @@ RUN source /opt/legate/quickstart/common.sh \
         zlib1g-dev \
   ; fi \
  && apt-get install -y --no-install-recommends \
+      `# requirements for Legion rust profiler` \
+      pkg-config libssl-dev \
       `# useful utilities` \
       nsight-systems-cli numactl gdb vim \
  && apt-get clean \
@@ -86,12 +88,13 @@ RUN source /opt/legate/quickstart/common.sh \
  &&   echo ${MOFED_VER} > /opt/mofed-ver \
   ; fi
 
-# Copy MOFED executables to /usr/bin
-# (BCP wants mpirun to be in a well-known location at container boot)
+# Copy executables to /usr/bin
+# BCP wants mpirun to be in a well-known location at container boot
 RUN for APP in mpicc mpicxx mpif90 mpirun; do \
       ln -s /usr/mpi/gcc/openmpi-*/bin/"$APP" /usr/bin/"$APP" \
   ; done
-COPY ibdev2netdev /usr/bin/
+# useful scripts
+COPY entrypoint.sh ibdev2netdev print_backtraces.sh /usr/bin/
 
 # Make sure libraries can find the MOFED libmpi at runtime
 RUN mkdir -p /usr/mpi/gcc/openmpi \
@@ -105,8 +108,8 @@ ENV LD_LIBRARY_PATH=/usr/mpi/gcc/openmpi/lib:${LD_LIBRARY_PATH}
 RUN source /opt/legate/quickstart/common.sh \
  && set_build_vars \
  && if [[ "$NETWORK" != none ]]; then \
-      export UCX_VER=1.14.0 \
- &&   export UCX_RELEASE=1.14.0 \
+      export UCX_VER=1.14.1 \
+ &&   export UCX_RELEASE=1.14.1 \
  &&   cd /tmp \
  &&   curl -fsSL https://github.com/openucx/ucx/releases/download/v${UCX_RELEASE}/ucx-${UCX_VER}.tar.gz | tar -xz \
  &&   cd ucx-${UCX_VER} \
@@ -127,28 +130,38 @@ RUN export TMP_DIR="$(mktemp -d)" \
 
 # Some conda libraries have recently started pulling ucx (namely libarrow).
 # Remove that if present, to guarantee that our custom UCX buid is used instead.
+# Also remove rdma-core, so we build against the system Inifinband libs.
 RUN source activate legate \
  && if (( $(conda list ^ucx$ | wc -l) >= 4 )); then \
       conda remove --offline --force ucx \
+  ; fi \
+ && if (( $(conda list ^rdma-core$ | wc -l) >= 4 )); then \
+      conda remove --offline --force rdma-core \
   ; fi
 
+# Copy the legion directory, if it exists. We have to do it in this weird way
+# because COPY <src-dir> doesn't copy <src-dir> itself, only its contents, and
+# a COPY with a glob that results in 0 source files will fail.
+COPY build.sh legio[n] /opt/legate/legion/
+RUN rm /opt/legate/legion/build.sh \
+ && if [[ "$(ls -A /opt/legate/legion/)" == "" ]]; then rmdir /opt/legate/legion; fi
+
 # Build GASNet, Legion and legate.core
-COPY legion /opt/legate/legion
 RUN source activate legate \
  && export CUDA_PATH=/usr/local/cuda/lib64/stubs `# some conda packages, notably cupy, override CUDA_PATH` \
- && export LEGION_DIR=/opt/legate/legion \
+ && if [[ -e /opt/legate/legion/ ]]; then export LEGION_DIR=/opt/legate/legion; fi \
  && cd /opt/legate/legate.core \
- && bash -x /opt/legate/quickstart/build.sh
+ && bash -x /opt/legate/quickstart/build.sh --editable
 
 # Build cunumeric
 COPY cunumeric /opt/legate/cunumeric
 RUN source activate legate \
  && export CUDA_PATH=/usr/local/cuda/lib64/stubs `# some conda packages, notably cupy, override CUDA_PATH` \
  && cd /opt/legate/cunumeric \
- && bash -x /opt/legate/quickstart/build.sh
+ && bash -x /opt/legate/quickstart/build.sh --editable
 
 # Set up run environment
-ENTRYPOINT [ "/opt/legate/quickstart/entrypoint.sh" ]
+ENTRYPOINT [ "entrypoint.sh" ]
 CMD [ "/bin/bash" ]
 RUN echo "conda activate legate" >> /root/.bashrc
 ENV LD_LIBRARY_PATH="/opt/conda/envs/legate/lib:${LD_LIBRARY_PATH}"
