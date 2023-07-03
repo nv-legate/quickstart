@@ -162,7 +162,6 @@ elif [[ "$PLATFORM" == perlmutter ]]; then
      # 64GM RAM per NUMA domain (256GB RAM per node)
      # 1 Ampere A100 GPU per NUMA domain (4 GPUs per node)
      # 40GB FB per GPU
-     USE_CUDA=1
      NUMAS_PER_NODE=4
      RAM_PER_NUMA=48000
      GPUS_PER_NODE=4
