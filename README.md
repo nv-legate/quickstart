@@ -62,6 +62,12 @@ module load cray-pmi
 module del cray-libsci
 ```
 
+Additionally, make sure conda environments are installed under `/global/common` and activate with
+```
+conda env create -p $PREFIX -f env.yaml
+conda activate $PREFIX
+```
+
 ### Summit @ ORNL
 
 ```
