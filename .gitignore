@@ -1,6 +1,4 @@
 *~
-legion
-legate.core
-legate.hello
-cunumeric
-legate.pandas
+/legion
+/legate.core
+/cunumeric

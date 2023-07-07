@@ -64,11 +64,7 @@ function set_build_vars {
         export CONDUIT="${CONDUIT:-none}"
         export GPU_ARCH="${PLATFORM#generic-}"
     else
-        if [[ -f /proc/self/cgroup ]] && grep -q docker /proc/self/cgroup; then
-            echo "Error: Detected a docker build for an unknown target platform" 1>&2
-            exit 1
-        fi
-        echo "Did not detect a supported cluster, assuming local-node build"
+        echo "Did not detect a supported cluster, auto-detecting configuration"
         if [[ -z "${NETWORK+x}" ]]; then
             if command -v mpirun &> /dev/null; then
                 export NETWORK=gasnet1
@@ -103,15 +99,6 @@ function set_build_vars {
     export USE_CUDA="${USE_CUDA:-1}"
     export USE_OPENMP="${USE_OPENMP:-1}"
     export NETWORK="${NETWORK:-gasnet1}"
-}
-
-function set_mofed_vars {
-    if [[ -n "${MOFED_VER+x}" ]]; then
-        true
-    else
-        echo "Error: Unknown MOFED version for platform $PLATFORM" 1>&2
-        exit 1
-    fi
 }
 
 function verbose_export {

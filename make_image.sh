@@ -16,20 +16,19 @@
 #
 
 set -euo pipefail
-
 # Print usage if requested
 if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "Usage: $(basename "${BASH_SOURCE[0]}") [extra docker-build flags]"
     echo "Arguments read from the environment:"
-    echo "  CUDA_VER : CUDA version to use (default: 11.5)"
+    echo "  CONDUIT : GASNet conduit to use (if applicable) (default: ibv)"
+    echo "  CUDA_VER : CUDA version to use (default: 11.5.2)"
     echo "  DEBUG : compile with debug symbols and w/o optimizations (default: 0)"
     echo "  DEBUG_RELEASE : compile with optimizations and some debug symbols (default: 0)"
-    echo "  DOCKERFILE : dockerfile path (default: Dockerfile)"
+    echo "  GPU_ARCH : what CUDA architecture to build for (default: ampere)"
     echo "  LINUX_VER : what distro to base the image on (default: ubuntu20.04)"
+    echo "  MOFED_VER : what MOFED version to use (default: 5.4-3.5.8.0)"
     echo "  NETWORK : Realm networking backend to use (default: ucx)"
     echo "  NOPULL : do not pull latest versions of Legion & Legate libraries (default: 0)"
-    echo "  PLATFORM : what machine to build for (default: generic single-node"
-    echo "             machine with volta GPUs)"
     echo "  PYTHON_VER : Python version to use (default: 3.9)"
     echo "  RELEASE_BRANCH : Legate.core and cuNumeric branch to use, example: branch-23.05 (default: HEAD)"
     echo "  TAG : tag to use for the produced image (default: \`date +%Y-%m-%d-%H%M%S\`)"
@@ -39,14 +38,19 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
 fi
 
 # Read arguments
-export CUDA_VER="${CUDA_VER:-11.5}"
+export CONDUIT="${CONDUIT:-ibv}"
+export CUDA_VER="${CUDA_VER:-11.5.2}"
+if [[ ! "$CUDA_VER" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo "Error: \$CUDA_VER must be given in the format X.Y.Z (patch version is required)" 1>&2
+    exit 1
+fi
 export DEBUG="${DEBUG:-0}"
 export DEBUG_RELEASE="${DEBUG_RELEASE:-0}"
-export DOCKERFILE="${DOCKERFILE:-Dockerfile}"
+export GPU_ARCH="${GPU_ARCH:-ampere}"
 export LINUX_VER="${LINUX_VER:-ubuntu20.04}"
+export MOFED_VER="${MOFED_VER:-5.4-3.5.8.0}"
 export NETWORK="${NETWORK:-ucx}"
 export NOPULL="${NOPULL:-0}"
-export PLATFORM="${PLATFORM:-generic-volta}"
 export PYTHON_VER="${PYTHON_VER:-3.9}"
 export RELEASE_BRANCH="${RELEASE_BRANCH:-HEAD}"
 export TAG="${TAG:-$(date +%Y-%m-%d-%H%M%S)}"
@@ -91,11 +95,12 @@ git_pull https://github.com/nv-legate/legate.core.git legate.core "$RELEASE_BRAN
 git_pull https://github.com/nv-legate/cunumeric.git cunumeric "$RELEASE_BRANCH"
 
 # Build and push image
-IMAGE=legate-"$PLATFORM"
-if [[ "$PLATFORM" == generic-* ]]; then
-    export NETWORK=none
-else
+IMAGE=legate-"$GPU_ARCH"
+if [[ "$NETWORK" != none ]]; then
     IMAGE="$IMAGE"-"$NETWORK"
+fi
+if [[ "$NETWORK" = gasnet* ]]; then
+    IMAGE="$IMAGE"-"$CONDUIT"
 fi
 if [[ "$DEBUG" == 1 ]]; then
     IMAGE="$IMAGE"-debug
@@ -105,13 +110,15 @@ fi
 if [[ "$USE_SPY" == 1 ]]; then
     IMAGE="$IMAGE"-spy
 fi
-DOCKER_BUILDKIT=1 docker build -t "$IMAGE:$TAG" -f "$DOCKERFILE" \
+DOCKER_BUILDKIT=1 docker build -t "$IMAGE:$TAG" \
+    --build-arg CONDUIT="$CONDUIT" \
     --build-arg CUDA_VER="$CUDA_VER" \
     --build-arg DEBUG="$DEBUG" \
     --build-arg DEBUG_RELEASE="$DEBUG_RELEASE" \
+    --build-arg GPU_ARCH="$GPU_ARCH" \
     --build-arg LINUX_VER="$LINUX_VER" \
+    --build-arg MOFED_VER="$MOFED_VER" \
     --build-arg NETWORK="$NETWORK" \
-    --build-arg PLATFORM="$PLATFORM" \
     --build-arg PYTHON_VER="$PYTHON_VER" \
     --build-arg USE_SPY="$USE_SPY" \
     "$@" .
