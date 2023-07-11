@@ -101,7 +101,7 @@ Create a conda environment
 
 Legate's build system is generally flexible regarding where the dependencies are
 pulled from. However, the quickstart workflow in particular assumes a
-conda-based editable installation. Follow the instructions at
+conda-based installation. Follow the instructions at
 https://github.com/nv-legate/legate.core/blob/HEAD/BUILD.md#getting-dependencies-through-conda
 to install Legate's dependencies from conda. Ignore the following instructions
 about using `install.py`, the quickstart scripts will invoke that internally.
@@ -132,7 +132,7 @@ Run Legate programs
 -------------------
 
 ```
-<quickstart-dir>/run.sh <num-nodes> <py-program> <args>
+<quickstart-dir>/run.sh <num-nodes> <legate-args> <py-program> <program-args>
 ```
 
 Container-based clusters
@@ -151,12 +151,15 @@ Build an image
 The `make_image.sh` script can be used to build Docker images containing all
 Legate libraries.
 
-Certain build options, such as the target CUDA architecture, must be specified
-appropriately at docker build time, to match the environment where the image
-will be used. These options are specified for each supported target `PLATFORM`
-in `common.sh`. The default `PLATFORM` is a generic non-networked machine
-containing Volta GPUs. You can add custom configurations as new `PLATFORM`s in
-`common.sh`.
+Certain configuration options, such as the target CUDA architecture, must be
+specified appropriately at docker build time, to match the environment where the
+image will be used. For example:
+
+```
+GPU_ARCH=ampere ./make_image.sh
+```
+
+See `make_image.sh -h` for a full list of such options.
 
 After building the image, you can test it locally:
 
