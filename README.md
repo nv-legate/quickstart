@@ -62,12 +62,6 @@ module load cray-pmi
 module del cray-libsci
 ```
 
-Additionally, make sure conda environments are installed under `/global/common` and activate with
-```
-conda env create -p $PREFIX -f env.yaml
-conda activate $PREFIX
-```
-
 ### Summit @ ORNL
 
 ```
@@ -99,12 +93,23 @@ module load gcc/8.3.1 cuda/11.1.0
 Create a conda environment
 --------------------------
 
-Legate's build system is generally flexible regarding where the dependencies are
-pulled from. However, the quickstart workflow in particular assumes a
-conda-based installation. Follow the instructions at
+If your cluster doesn't provide an installation of conda, you can use an
+appropriate installer from https://github.com/conda-forge/miniforge/#download
+to perform a user-specific installation.
+
+Use the `scripts/generate-conda-envs.py` script from legate.core to create a
+conda environment, e.g.:
+
+```
+git clone https://github.com/nv-legate/legate.core <legate.core-dir>
+cd <legate.core-dir>
+./scripts/generate-conda-envs.py --python 3.10 --ctk 11.7 --os linux --no-compilers --no-openmpi --ucx
+conda env create -n legate -f environment-test-linux-py310-cuda11.7-ucx.yaml
+```
+
+See
 https://github.com/nv-legate/legate.core/blob/HEAD/BUILD.md#getting-dependencies-through-conda
-to install Legate's dependencies from conda. Ignore the following instructions
-about using `install.py`, the quickstart scripts will invoke that internally.
+for more details on installing dependencies from conda.
 
 Make sure you use an environment file with a `--ctk` version matching the
 system-wide CUDA version (i.e. the version provided by the CUDA `module` you
@@ -114,6 +119,30 @@ environment generated with `--no-compilers` and `--no-openmpi`.
 
 You may wish to auto-activate this environment on login, by doing `conda activate`
 in your shell startup file.
+
+See below for special instructions required on certain clusters:
+
+### Perlmutter @ NERSC
+
+Make sure conda environments are installed under `/global/common`, so they are accessible
+from all nodes. Do this by installing using a prefix rather a name:
+
+```
+conda env create -p /global/common/sub/dir -f env.yaml
+```
+
+and activate with:
+
+```
+conda activate /global/common/sub/dir
+```
+
+The `pkg-config` package from conda-forge may be conflicting with the system version, in
+which case you should do:
+
+```
+conda uninstall pkg-config
+```
 
 Build Legate libraries
 ----------------------
