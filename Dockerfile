@@ -48,6 +48,7 @@ ENV USE_OPENMP=1
 SHELL [ "/bin/bash", "-eo", "pipefail", "-c" ]
 
 # Install apt packages
+ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
  && if [[ "$NETWORK" != none ]]; then \
       apt-get install -y --no-install-recommends \
