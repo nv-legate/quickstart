@@ -287,6 +287,43 @@ if [[ "$NODRIVER" != 1 ]]; then
         set -- --cpus $(( NUM_CORES - RESERVED_CORES )) --sysmem "$WORK_RAM" "$@"
     fi
 
+    # Bind resources to ranks, on multi-rank-per-node runs
+    function compute_binding() {
+        RES_LIST=( "$@" )
+        SLOTS_PER_RANK=$(( GPUS_PER_NODE / RANKS_PER_NODE ))
+        START_SLOT=0
+        BINDING=""
+        while (( START_SLOT < GPUS_PER_NODE )); do
+            RES_FOR_RANK="${RES_LIST[@]:$START_SLOT:$SLOTS_PER_RANK}"
+            # Combine any duplicates
+            RES_FOR_RANK="$( echo $RES_FOR_RANK | tr ' ' '\n' | sort -u | tr '\n' ',' )"
+            RES_FOR_RANK="${RES_FOR_RANK%?}"
+            if [[ "$BINDING" == "" ]]; then
+                BINDING="$RES_FOR_RANK"
+            else
+                BINDING="$BINDING/$RES_FOR_RANK"
+            fi
+            START_SLOT=$(( START_SLOT + SLOTS_PER_RANK ))
+        done
+        echo "$BINDING"
+    }
+    if [[ "$RANKS_PER_NODE" == 1 ]]; then
+        true
+    elif [[ "$RATIO_OF_NODE_USED" != 1 ]]; then
+        echo "Warning: Automatic resource binding not supported for partial-node runs"
+    elif [[ -z "${CPU_SLOTS+x}" ]]; then
+        echo "Warning: Don't know how to bind resources on this platform"
+    elif (( GPUS_PER_NODE < RANKS_PER_NODE || GPUS_PER_NODE % RANKS_PER_NODE != 0 )); then
+        echo "Warning: Cannot split resources $RANKS_PER_NODE-ways; skipping resource binding"
+    else
+        set -- --nic-bind "$(compute_binding $NIC_SLOTS)" "$@"
+        set -- --mem-bind "$(compute_binding $MEM_SLOTS)" "$@"
+        if [[ "$USE_CUDA" == 1 ]]; then
+            set -- --gpu-bind "$(compute_binding $GPU_SLOTS)" "$@"
+        fi
+        set -- --cpu-bind "$(compute_binding $CPU_SLOTS)" "$@"
+    fi
+
     # Add launcher options
     if [[ "$PLATFORM" == summit ]]; then
         set -- --launcher jsrun "$@"
