@@ -44,9 +44,7 @@ function check_not_overriding {
     INSTALL_DIR="$2"
     shift
     shift
-    # NOTE: Assumes at most one file will match the glob pattern. Using a single
-    # square bracket is necessary for this to work properly as an "exists" check.
-    if [ -e "$CONDA_PREFIX"/lib/python*/site-packages/"$INSTALL_DIR" ]; then
+    if compgen -G "$CONDA_PREFIX"/lib/'python*'/site-packages/"$INSTALL_DIR" > /dev/null; then
         # Existing non-editable installation
         for ARG in "$@"; do
             if [[ "$ARG" == --editable ]]; then
@@ -54,7 +52,13 @@ function check_not_overriding {
                 exit 1
             fi
         done
-    elif [ -e "$CONDA_PREFIX"/lib/python*/site-packages/"$PACKAGE".egg-link ]; then
+    elif compgen -G "$CONDA_PREFIX"/lib/'python*'/site-packages/"$PACKAGE".egg-link > /dev/null; then
+        # Pick an arbitrary .egg-link file; there should only be one, except in
+        # the case of e.g. python 3.10, in which case conda creates a 3.1 copy
+        for FILE in "$CONDA_PREFIX"/lib/python*/site-packages/"$PACKAGE".egg-link; do
+            EGG_LINK_FILE="$FILE"
+            break
+        done
         # Existing editable installation
         EDITABLE_REQUESTED=0
         for ARG in "$@"; do
@@ -67,7 +71,7 @@ function check_not_overriding {
             echo "Error: $PACKAGE already installed in editable mode, but non-editable was requested" 1>&2
             exit 1
         fi
-        if [[ ! . -ef "$(head -n 1 "$CONDA_PREFIX"/lib/python*/site-packages/"$PACKAGE".egg-link)" ]]; then
+        if [[ ! . -ef "$(head -n 1 "$EGG_LINK_FILE")" ]]; then
             echo "Error: $PACKAGE already installed from a different source" 1>&2
             exit 1
         fi
