@@ -167,8 +167,6 @@ elif [[ "$PLATFORM" == perlmutter ]]; then
      GPUS_PER_NODE=4
      CORES_PER_NUMA=16
      FB_PER_GPU=36250
-     # WAR for: https://gasnet-bugs.lbl.gov/bugzilla/show_bug.cgi?id=4638
-     export LEGATE_DISABLE_MPI=1
 elif [[ "$PLATFORM" == pizdaint ]]; then
     # 1 NUMA domain per node
     # 1 NIC per node
@@ -359,7 +357,8 @@ if [[ "$PLATFORM" == summit ]]; then
     set -- bsub -J legate -P "$ACCOUNT" -q "$QUEUE" -W "$TIMELIMIT" -nnodes "$NUM_NODES" -alloc_flags smt1 "$@"
     submit "$@"
 elif [[ "$PLATFORM" == perlmutter ]]; then
-     export SCRIPT_DIR
+     # WAR for: https://gasnet-bugs.lbl.gov/bugzilla/show_bug.cgi?id=4638
+     export LEGATE_DISABLE_MPI=1
      set -- "$SCRIPT_DIR/legate.slurm" "$@"
      # We double the number of cores because SLURM counts virtual cores
      set -- -J legate -A "$ACCOUNT" -t "$TIMELIMIT" -N "$NUM_NODES" -C gpu "$@"
