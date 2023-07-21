@@ -193,6 +193,10 @@ elif [[ "$PLATFORM" == sapling2 ]]; then
     GPUS_PER_NODE=4
     CORES_PER_NUMA=10
     FB_PER_GPU=14500
+    CPU_SLOTS="0,2,4,6,8,10,12,14,16,18 20,22,24,26,28,30,32,34,36,38 1,3,5,7,9,11,13,15,17,19 21,23,25,27,29,31,33,35,37,39"
+    GPU_SLOTS="                       0                             1                        2                             3"
+    MEM_SLOTS="                       0                             0                        1                             1"
+    NIC_SLOTS="                  mlx5_0                        mlx5_0                   mlx5_0                        mlx5_0"
 elif [[ "$PLATFORM" == lassen ]]; then
     # 2 NUMA domains per node
     # 2 NICs per NUMA domain (4 NICs per node)
