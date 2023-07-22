@@ -59,7 +59,7 @@ RUN apt-get update \
   ; fi \
  && apt-get install -y --no-install-recommends \
       `# build utilities` \
-      curl \
+      curl locales \
       `# NUMA support` \
       libnuma1 libnuma-dev numactl \
       `# requirements for Legion rust profiler` \
@@ -68,6 +68,10 @@ RUN apt-get update \
       gdb vim \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
+
+# Generate locales for 'en_US.UTF-8', required for 'readline' to work
+RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
+ && locale-gen
 
 # Install extra Nvidia packages
 RUN export LINUX_VER_URL="$(echo "$LINUX_VER" | tr -d '.')" \
