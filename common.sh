@@ -130,6 +130,8 @@ function run_build {
         true
     elif [[ "$PLATFORM" == summit ]]; then
         set -- bsub -nnodes 1 -W 60 -P "$ACCOUNT" -I "$@"
+    elif [[ "$PLATFORM" == perlmutter ]]; then
+        set -- srun --exclusive -N 1 -q interactive_ss11 -t 60 -C gpu -A "$ACCOUNT" "$@"
     elif [[ "$PLATFORM" == pizdaint ]]; then
         set -- srun -N 1 -p debug -C gpu -t 30 -A "$ACCOUNT" "$@"
     elif [[ "$PLATFORM" == sapling2 ]]; then

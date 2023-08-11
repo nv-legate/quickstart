@@ -361,19 +361,21 @@ if [[ "$PLATFORM" == summit ]]; then
     set -- bsub -J legate -P "$ACCOUNT" -q "$QUEUE" -W "$TIMELIMIT" -nnodes "$NUM_NODES" -alloc_flags smt1 "$@"
     submit "$@"
 elif [[ "$PLATFORM" == perlmutter ]]; then
-     # WAR for: https://gasnet-bugs.lbl.gov/bugzilla/show_bug.cgi?id=4638
-     export LEGATE_DISABLE_MPI=1
-     set -- "$SCRIPT_DIR/legate.slurm" "$@"
-     # We double the number of cores because SLURM counts virtual cores
-     set -- -J legate -A "$ACCOUNT" -t "$TIMELIMIT" -N "$NUM_NODES" -C gpu "$@"
-     set -- --ntasks-per-node "$RANKS_PER_NODE" -c $(( 2 * NUM_CORES )) --gpus-per-task "$NUM_GPUS" "$@"
-     if [[ "$INTERACTIVE" == 1 ]]; then
-         set -- salloc -q interactive_ss11 "$@"
-     else
-         set -- sbatch -q regular_ss11 -o "$HOST_OUT_DIR/out.txt" "$@"
-     fi
-     echo "Submitted: $@"
-     "$@"
+    # WAR for: https://gasnet-bugs.lbl.gov/bugzilla/show_bug.cgi?id=4638
+    export LEGATE_DISABLE_MPI=1
+    set -- "$SCRIPT_DIR/legate.slurm" "$@"
+    # We double the number of cores because SLURM counts virtual cores
+    set -- -J legate -A "$ACCOUNT" -t "$TIMELIMIT" -N "$NUM_NODES" -C gpu "$@"
+    set -- --ntasks-per-node "$RANKS_PER_NODE" -c $(( 2 * NUM_CORES )) --gpus-per-task "$NUM_GPUS" "$@"
+    if [[ "$INTERACTIVE" == 1 ]]; then
+        QUEUE="${QUEUE:-interactive_ss11}"
+        set -- salloc -q "$QUEUE" "$@"
+    else
+        QUEUE="${QUEUE:-regular_ss11}"
+        set -- sbatch -q "$QUEUE" -o "$HOST_OUT_DIR/out.txt" "$@"
+    fi
+    echo "Submitted: $@"
+    "$@"
 elif [[ "$PLATFORM" == pizdaint ]]; then
     set -- "$SCRIPT_DIR/legate.slurm" "$@"
     QUEUE="${QUEUE:-normal}"
