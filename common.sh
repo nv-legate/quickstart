@@ -92,7 +92,7 @@ function set_build_vars {
             fi
             rm -rf "$TEST_DIR"
         fi
-        export GPU_ARCH="${GPU_ARCH:-NATIVE}"
+        export GPU_ARCH="${GPU_ARCH:-native}"
     fi
     # Assuming that nvcc is in PATH, or CUDA_PATH has been set
     # so that FindCUDAToolkit.cmake can function
