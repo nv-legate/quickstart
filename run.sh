@@ -42,8 +42,9 @@ if [[ $# -lt 2 || ! "$1" =~ ^(1/)?[0-9]+(:[0-9]+)?$ ]]; then
     echo "  RESERVED_CORES : cores to reserve for kernel launches, Legion & Realm meta-work (default: 4)"
     echo "  SCRATCH : where to create an output directory (default: .)"
     echo "  TIMELIMIT : how much time to request for the job, in minutes (defaut: 60)"
-    echo "  USE_CUDA : run with CUDA enabled (defaut: auto-detected)"
-    echo "  USE_OPENMP : run with OpenMP enabled (defaut: auto-detected)"
+    echo "  USE_CUDA : run with CUDA enabled (defaut: enable if Legate was compiled with CUDA support)"
+    echo "  USE_OPENMP : run with OpenMP enabled (defaut: enable if Legate was compiled with OpenMP"
+    echo "               support, but skip if USE_CUDA==1)"
     exit
 fi
 
@@ -90,7 +91,13 @@ export TIMELIMIT="${TIMELIMIT:-60}"
 if [[ "$CONTAINER_BASED" == 1 ]]; then
     # Can't auto-detect this outside the container, assume best-case scenario
     export USE_CUDA="${USE_CUDA:-1}"
-    export USE_OPENMP="${USE_OPENMP:-1}"
+    if [[ -z "${USE_OPENMP+x}" ]]; then
+        if [[ "$USE_CUDA" == 1 ]]; then
+            export USE_OPENMP=0
+        else
+            export USE_OPENMP=1
+        fi
+    fi
 else
     if [[ -z "${USE_CUDA+x}" ]]; then
         if [[ "$(legate --info | grep use_cuda | awk '{ print $3 }')" == True ]]; then
@@ -100,7 +107,9 @@ else
         fi
     fi
     if [[ -z "${USE_OPENMP+x}" ]]; then
-        if [[ "$(legate --info | grep use_openmp | awk '{ print $3 }')" == True ]]; then
+        if [[ "$USE_CUDA" == 1 ]]; then
+            export USE_OPENMP=0
+        elif [[ "$(legate --info | grep use_openmp | awk '{ print $3 }')" == True ]]; then
             export USE_OPENMP=1
         else
             export USE_OPENMP=0
@@ -257,16 +266,7 @@ if [[ "$NODRIVER" != 1 ]]; then
     set -- --verbose --log-to-file "$@"
 
     # Split available resources between ranks
-    if [[ "$USE_CUDA" == 1 ]]; then
-        # Need at least 2 more cores, for 1 CPU processor and 1 Python processor
-        RESERVED_CORES=$(( RESERVED_CORES + 2 ))
-        if (( RESERVED_CORES > NUM_CORES )); then
-            echo "Error: Not enough cores, try reducing RESERVED_CORES" 1>&2
-            exit 1
-        fi
-        set -- --gpus "$NUM_GPUS" --fbmem "$FB_PER_GPU" "$@"
-        set -- --cpus 1 --sysmem $(( WORK_RAM>4000 ? 4000 : WORK_RAM)) "$@"
-    elif [[ "$USE_OPENMP" == 1 ]]; then
+    if [[ "$USE_OPENMP" == 1 ]]; then
         # Need at least 2 more cores, for 1 CPU processor and 1 Python processor
         RESERVED_CORES=$(( RESERVED_CORES + 2 ))
         # These reserved cores must be subtracted equally from each OpenMP group
@@ -279,6 +279,18 @@ if [[ "$NODRIVER" != 1 ]]; then
         set -- --cpus 1 --sysmem 256 "$@"
         set -- --omps "$NUM_OMPS" --ompthreads "$THREADS_PER_OMP" "$@"
         set -- --numamem "$RAM_PER_OMP" "$@"
+        if [[ "$USE_CUDA" == 1 ]]; then
+            set -- --gpus "$NUM_GPUS" --fbmem "$FB_PER_GPU" "$@"
+        fi
+    elif [[ "$USE_CUDA" == 1 ]]; then
+        # Need at least 2 more cores, for 1 CPU processor and 1 Python processor
+        RESERVED_CORES=$(( RESERVED_CORES + 2 ))
+        if (( RESERVED_CORES > NUM_CORES )); then
+            echo "Error: Not enough cores, try reducing RESERVED_CORES" 1>&2
+            exit 1
+        fi
+        set -- --gpus "$NUM_GPUS" --fbmem "$FB_PER_GPU" "$@"
+        set -- --cpus 1 --sysmem $(( WORK_RAM>4000 ? 4000 : WORK_RAM)) "$@"
     else
         # Need at least 1 more core, for the Python processor
         RESERVED_CORES=$(( RESERVED_CORES + 1 ))

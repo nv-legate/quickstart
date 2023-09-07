@@ -41,8 +41,6 @@ ARG PYTHON_VER
 ENV PYTHON_VER=${PYTHON_VER}
 ARG USE_SPY
 ENV USE_SPY=${USE_SPY}
-ENV USE_CUDA=1
-ENV USE_OPENMP=1
 
 # Execute RUN commands in strict mode
 SHELL [ "/bin/bash", "-eo", "pipefail", "-c" ]
@@ -173,14 +171,14 @@ RUN source activate legate \
  && export CUDA_PATH=/usr/local/cuda/lib64/stubs `# some conda packages, notably cupy, override CUDA_PATH` \
  && if [[ -e /opt/legate/legion/ ]]; then export LEGION_DIR=/opt/legate/legion; fi \
  && cd /opt/legate/legate.core \
- && bash -x /opt/legate/quickstart/build.sh --editable
+ && USE_CUDA=1 USE_OPENMP=1 /opt/legate/quickstart/build.sh --editable
 
 # Build cunumeric
 COPY cunumeric /opt/legate/cunumeric
 RUN source activate legate \
  && export CUDA_PATH=/usr/local/cuda/lib64/stubs `# some conda packages, notably cupy, override CUDA_PATH` \
  && cd /opt/legate/cunumeric \
- && bash -x /opt/legate/quickstart/build.sh --editable
+ && /opt/legate/quickstart/build.sh --editable
 
 # Set up run environment
 ENTRYPOINT [ "entrypoint.sh" ]
