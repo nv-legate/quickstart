@@ -39,7 +39,7 @@ if [[ $# -lt 2 || ! "$1" =~ ^(1/)?[0-9]+(:[0-9]+)?$ ]]; then
     echo "  NOWAIT : don't wait for batch jobs to start (default: 0)"
     echo "  PLATFORM : what machine we are executing on (default: auto-detected)"
     echo "  QUEUE : what queue/partition to submit the job to (default: depends on cluster)"
-    echo "  RESERVED_CORES : cores to reserve for kernel launches, Legion & Realm meta-work (default: 4)"
+    echo "  RESERVED_CORES : physical cores to reserve for Legion & Realm meta-work (default: 4)"
     echo "  SCRATCH : where to create an output directory (default: .)"
     echo "  TIMELIMIT : how much time to request for the job, in minutes (defaut: 60)"
     echo "  USE_CUDA : run with CUDA enabled (defaut: enable if Legate was compiled with CUDA support)"
@@ -269,6 +269,10 @@ if [[ "$NODRIVER" != 1 ]]; then
     if [[ "$USE_OPENMP" == 1 ]]; then
         # Need at least 2 more cores, for 1 CPU processor and 1 Python processor
         RESERVED_CORES=$(( RESERVED_CORES + 2 ))
+        # Add 1 core per 2 GPUs (hyperthreads should be sufficient for GPU processors)
+        if [[ "$USE_CUDA" == 1 ]]; then
+            RESERVED_CORES=$(( RESERVED_CORES + NUM_GPUS / 2 ))
+        fi
         # These reserved cores must be subtracted equally from each OpenMP group
         RESERVED_PER_OMP=$(( ( RESERVED_CORES + NUM_OMPS - 1 ) / NUM_OMPS ))
         if (( RESERVED_PER_OMP >= CORES_PER_OMP )); then
@@ -285,6 +289,8 @@ if [[ "$NODRIVER" != 1 ]]; then
     elif [[ "$USE_CUDA" == 1 ]]; then
         # Need at least 2 more cores, for 1 CPU processor and 1 Python processor
         RESERVED_CORES=$(( RESERVED_CORES + 2 ))
+        # Add 1 core per 2 GPUs (hyperthreads should be sufficient for GPU processors)
+        RESERVED_CORES=$(( RESERVED_CORES + NUM_GPUS / 2 ))
         if (( RESERVED_CORES > NUM_CORES )); then
             echo "Error: Not enough cores, try reducing RESERVED_CORES" 1>&2
             exit 1
