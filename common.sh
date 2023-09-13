@@ -155,6 +155,7 @@ function run_command {
             BEFORE+=("$TOKEN")
             if [[ "$TOKEN" == legate ]]; then break; fi
         done
+        IFS=';' read -ra EXTRA_ARGS_ARR <<< "$EXTRA_ARGS"
     fi
     for I in `seq 0 "$((ITERATIONS - 1))"`; do
         if (( ITERATIONS == 1 )); then
@@ -164,7 +165,12 @@ function run_command {
             OUT_DIR="$CMD_OUT_DIR/$I"
         fi
         if [[ "$NODRIVER" != 1 ]]; then
-            _run_command "${BEFORE[@]}" --logdir "$OUT_DIR" "${AFTER[@]}"
+            EXTRA=""
+            if (( I < ${#EXTRA_ARGS_ARR[@]} )); then
+                EXTRA="${EXTRA_ARGS_ARR[$I]}"
+            fi
+            # Missing quotes around EXTRA is by design
+            _run_command "${BEFORE[@]}" --logdir "$OUT_DIR" $EXTRA "${AFTER[@]}"
         else
             _run_command "$@"
         fi

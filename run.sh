@@ -30,6 +30,9 @@ if [[ $# -lt 2 || ! "$1" =~ ^(1/)?[0-9]+(:[0-9]+)?$ ]]; then
     echo "           see the Legion README for options accepted by Legion"
     echo "Arguments read from the environment:"
     echo "  ACCOUNT : account/group/project to submit the job under (if applicable)"
+    echo "  EXTRA_ARGS : extra arguments to pass to legate on each invocation of the program"
+    echo "               the arguments for each run are separated by semicolons"
+    echo "               (example: '--profile;--event --dataflow', default: '')"
     echo "  IMAGE : which image to use (for container-based clusters)"
     echo "  INTERACTIVE : submit an interactive rather than a batch job (defaut: 0)"
     echo "  ITERATIONS : how many times to run the program (defaut: 1)"
@@ -80,8 +83,11 @@ else
     # Local run
     CONTAINER_BASED=0
 fi
+export EXTRA_ARGS="${EXTRA_ARGS:- }"
 export INTERACTIVE="${INTERACTIVE:-0}"
-export ITERATIONS="${ITERATIONS:-1}"
+if [[ -z "${ITERATIONS+x}" ]]; then
+    export ITERATIONS="${#EXTRA_ARGS_ARR[@]}"
+fi
 export MOUNTS="${MOUNTS:-}"
 export NODRIVER="${NODRIVER:-0}"
 export NOWAIT="${NOWAIT:-0}"
