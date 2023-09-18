@@ -86,6 +86,7 @@ fi
 export EXTRA_ARGS="${EXTRA_ARGS:- }"
 export INTERACTIVE="${INTERACTIVE:-0}"
 if [[ -z "${ITERATIONS+x}" ]]; then
+    IFS=';' read -ra EXTRA_ARGS_ARR <<< "$EXTRA_ARGS"
     export ITERATIONS="${#EXTRA_ARGS_ARR[@]}"
 fi
 export MOUNTS="${MOUNTS:-}"
