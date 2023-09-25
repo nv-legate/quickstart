@@ -396,8 +396,11 @@ elif [[ "$PLATFORM" == perlmutter ]]; then
     export LEGATE_DISABLE_MPI=1
     set -- "$SCRIPT_DIR/legate.slurm" "$@"
     # We double the number of cores because SLURM counts virtual cores
-    set -- -J legate -A "$ACCOUNT" -t "$TIMELIMIT" -N "$NUM_NODES" -C gpu "$@"
-    set -- --ntasks-per-node "$RANKS_PER_NODE" -c $(( 2 * NUM_CORES )) --gpus-per-task "$NUM_GPUS" "$@"
+    set -- -J legate -A "$ACCOUNT" -t "$TIMELIMIT" -N "$NUM_NODES" "$@"
+    set -- --ntasks-per-node "$RANKS_PER_NODE" -c $(( 2 * NUM_CORES )) "$@"
+    if [[ "$USE_CUDA" == 1 ]]; then
+        set -- -C gpu --gpus-per-task "$NUM_GPUS" "$@"
+    fi
     if [[ "$INTERACTIVE" == 1 ]]; then
         QUEUE="${QUEUE:-interactive_ss11}"
         set -- salloc -q "$QUEUE" "$@"
