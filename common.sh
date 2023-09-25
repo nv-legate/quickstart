@@ -111,7 +111,11 @@ function submit {
     echo -n "Submitted:"
     for TOK in "$@"; do printf " %q" "$TOK"; done
     echo
-    "$@"
+    if [[ "$DRY_RUN" == 1 ]]; then
+        echo "(dry run; no work was actually submitted)"
+    else
+        "$@"
+    fi
 }
 
 function _run_command {
