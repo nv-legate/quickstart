@@ -85,6 +85,9 @@ else
     CONTAINER_BASED=0
 fi
 export DRY_RUN="${DRY_RUN:-0}"
+if [[ "$DRY_RUN" == 1 ]]; then
+    export NOWAIT=1
+fi
 # The default being " " rather than "" is by design
 export EXTRA_ARGS="${EXTRA_ARGS:- }"
 export INTERACTIVE="${INTERACTIVE:-0}"
