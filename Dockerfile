@@ -144,7 +144,7 @@ RUN export TMP_DIR="$(mktemp -d)" \
  && export CUDA_VER_SHORT="$(expr "$CUDA_VER" : '\([0-9][0-9]*\.[0-9][0-9]*\)')" \
  && export YML_FILE="$TMP_DIR"/environment-test-linux-py${PYTHON_VER}-cuda${CUDA_VER_SHORT}.yaml \
  && cd "$TMP_DIR" \
- && /opt/legate/legate.core/scripts/generate-conda-envs.py --python ${PYTHON_VER} --ctk ${CUDA_VER_SHORT} --os linux --no-compilers --no-openmpi --no-ucx \
+ && /opt/legate/legate.core/scripts/generate-conda-envs.py --python ${PYTHON_VER} --ctk ${CUDA_VER_SHORT} --os linux --no-ucx \
  && mamba env create -n legate -f "$YML_FILE" \
  && rm -rf "$TMP_DIR"
 

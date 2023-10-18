@@ -103,7 +103,7 @@ conda environment, e.g.:
 ```
 git clone https://github.com/nv-legate/legate.core <legate.core-dir>
 cd <legate.core-dir>
-./scripts/generate-conda-envs.py --python 3.10 --ctk 11.7 --os linux --no-compilers --no-openmpi --ucx
+./scripts/generate-conda-envs.py --python 3.10 --ctk 11.7 --os linux --ucx
 conda env create -n legate -f environment-test-linux-py310-cuda11.7-ucx.yaml
 ```
 
@@ -113,9 +113,7 @@ for more details on installing dependencies from conda.
 
 Make sure you use an environment file with a `--ctk` version matching the
 system-wide CUDA version (i.e. the version provided by the CUDA `module` you
-load). Most commonly on clusters you will want to use the system-provided
-compilers and MPI implementation, therefore you will likely want to use an
-environment generated with `--no-compilers` and `--no-openmpi`.
+load).
 
 You may wish to auto-activate this environment on login, by doing `conda activate`
 in your shell startup file.
