@@ -178,12 +178,12 @@ Build an image
 The `make_image.sh` script can be used to build Docker images containing all
 Legate libraries.
 
-Certain configuration options, such as the target CUDA architecture, must be
-specified appropriately at docker build time, to match the environment where the
-image will be used. For example:
+Certain configuration options, such as the CUDA Toolkit version to use, should
+be specified at docker build time, to match the environment where the image will
+be used. For example:
 
 ```
-GPU_ARCH=ampere ./make_image.sh
+CUDA_VER=11.8.0 ./make_image.sh
 ```
 
 See `make_image.sh -h` for a full list of such options.

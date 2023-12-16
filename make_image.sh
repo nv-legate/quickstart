@@ -24,7 +24,6 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "  CUDA_VER : CUDA version to use (default: 11.5.2)"
     echo "  DEBUG : compile with debug symbols and w/o optimizations (default: 0)"
     echo "  DEBUG_RELEASE : compile with optimizations and some debug symbols (default: 0)"
-    echo "  GPU_ARCH : what CUDA architecture to build for (default: ampere)"
     echo "  LINUX_VER : what distro to base the image on (default: ubuntu20.04)"
     echo "  MOFED_VER : what MOFED version to use (default: 5.4-3.5.8.0)"
     echo "  NETWORK : Realm networking backend to use (default: ucx)"
@@ -46,7 +45,6 @@ if [[ ! "$CUDA_VER" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
 fi
 export DEBUG="${DEBUG:-0}"
 export DEBUG_RELEASE="${DEBUG_RELEASE:-0}"
-export GPU_ARCH="${GPU_ARCH:-ampere}"
 export LINUX_VER="${LINUX_VER:-ubuntu20.04}"
 export MOFED_VER="${MOFED_VER:-5.4-3.5.8.0}"
 export NETWORK="${NETWORK:-ucx}"
@@ -95,7 +93,7 @@ git_pull https://github.com/nv-legate/legate.core.git legate.core "$RELEASE_BRAN
 git_pull https://github.com/nv-legate/cunumeric.git cunumeric "$RELEASE_BRANCH"
 
 # Build and push image
-IMAGE=legate-"$GPU_ARCH"
+IMAGE=legate
 if [[ "$NETWORK" != none ]]; then
     IMAGE="$IMAGE"-"$NETWORK"
 fi
@@ -115,7 +113,6 @@ DOCKER_BUILDKIT=1 docker build -t "$IMAGE:$TAG" \
     --build-arg CUDA_VER="$CUDA_VER" \
     --build-arg DEBUG="$DEBUG" \
     --build-arg DEBUG_RELEASE="$DEBUG_RELEASE" \
-    --build-arg GPU_ARCH="$GPU_ARCH" \
     --build-arg LINUX_VER="$LINUX_VER" \
     --build-arg MOFED_VER="$MOFED_VER" \
     --build-arg NETWORK="$NETWORK" \

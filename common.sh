@@ -35,26 +35,21 @@ function set_build_vars {
     # Set base build variables according to target platform
     if [[ "$PLATFORM" == summit ]]; then
         export CONDUIT="${CONDUIT:-ibv}"
-        export GPU_ARCH=volta
         # Compiling TBLIS, a dependency of cuNumeric on PowerPC requires
         # these defines to be set.
         export CXXFLAGS="${CXXFLAGS:-} -DNO_WARN_X86_INTRINSICS"
         export CFLAGS="${CFLAGS:-} -DNO_WARN_X86_INTRINSICS"
     elif [[ "$PLATFORM" == pizdaint ]]; then
         export CONDUIT="${CONDUIT:-aries}"
-        export GPU_ARCH=pascal
     elif [[ "$PLATFORM" == perlmutter ]]; then
          export NETWORK=gasnetex
          export CONDUIT=ofi
          export GASNET_SYSTEM=slingshot11
          # CUDA_HOME is already set (by module)
-         export GPU_ARCH=ampere
     elif [[ "$PLATFORM" == sapling2 ]]; then
         export CONDUIT="${CONDUIT:-ibv}"
-        export GPU_ARCH=pascal
     elif [[ "$PLATFORM" == lassen ]]; then
         export CONDUIT="${CONDUIT:-ibv}"
-        export GPU_ARCH=volta
         # Compiling TBLIS, a dependency of cuNumeric on PowerPC requires
         # these defines to be set.
         export CXXFLAGS="${CXXFLAGS:-} -DNO_WARN_X86_INTRINSICS"
@@ -62,7 +57,6 @@ function set_build_vars {
     elif [[ "$PLATFORM" == generic-* ]]; then
         export NETWORK="${NETWORK:-none}"
         export CONDUIT="${CONDUIT:-none}"
-        export GPU_ARCH="${PLATFORM#generic-}"
     else
         echo "Did not detect a supported cluster, auto-detecting configuration"
         if [[ -z "${NETWORK+x}" ]]; then
@@ -92,7 +86,6 @@ function set_build_vars {
             fi
             rm -rf "$TEST_DIR"
         fi
-        export GPU_ARCH="${GPU_ARCH:-native}"
     fi
     # Assuming that nvcc is in PATH, or CUDA_PATH has been set
     # so that FindCUDAToolkit.cmake can function

@@ -25,7 +25,6 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "Arguments read from the environment:"
     echo "  ACCOUNT : account/group/project to submit build job under (if applicable)"
     echo "  CONDUIT : GASNet conduit to use (if applicable) (default: auto-detected)"
-    echo "  GPU_ARCH : CUDA architecture to build for (default: auto-detected)"
     echo "  LEGION_DIR : source directory to use for Legion (default: unset; the build"
     echo "               will pull a local copy of Legion)"
     echo "  NETWORK : Realm networking backend to use (default: auto-detected)"
@@ -88,7 +87,7 @@ if [[ -d "legate/core" ]]; then
         set -- --conduit "$CONDUIT" "$@"
     fi
     if [[ "$USE_CUDA" == 1 ]]; then
-        set -- --cuda --arch "$GPU_ARCH" "$@"
+        set -- --cuda "$@"
     fi
     if [[ "$USE_OPENMP" == 1 ]]; then
         set -- --openmp "$@"
