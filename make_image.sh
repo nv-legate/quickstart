@@ -33,6 +33,7 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "  TAG : tag to use for the produced image (default: \`date +%Y-%m-%d-%H%M%S\`)"
     echo "  TAG_LATEST : whether to also tag the image as latest (default: 0)"
     echo "  USE_SPY : build Legion with detailed Spy logging enabled (default: 0)"
+    echo "  CPU_ARCH : what CPU architecture to build for (choices: arm, x86; default: x86)"
     exit
 fi
 
@@ -54,6 +55,7 @@ export RELEASE_BRANCH="${RELEASE_BRANCH:-HEAD}"
 export TAG="${TAG:-$(date +%Y-%m-%d-%H%M%S)}"
 export TAG_LATEST="${TAG_LATEST:-0}"
 export USE_SPY="${USE_SPY:-0}"
+export CPU_ARCH="${CPU_ARCH:-x86}"
 
 # Check out repos
 function git_clone {
@@ -102,6 +104,7 @@ git_pull cunumeric "$RELEASE_BRANCH"
 
 # Build and push image
 IMAGE=legate
+IMAGE="$IMAGE"-"$CPU_ARCH"
 if [[ "$NETWORK" != none ]]; then
     IMAGE="$IMAGE"-"$NETWORK"
 fi
@@ -126,6 +129,7 @@ DOCKER_BUILDKIT=1 docker build -t "$IMAGE:$TAG" \
     --build-arg NETWORK="$NETWORK" \
     --build-arg PYTHON_VER="$PYTHON_VER" \
     --build-arg USE_SPY="$USE_SPY" \
+    --build-arg CPU_ARCH="$CPU_ARCH" \
     "$@" .
 if [[ "$TAG_LATEST" == 1 ]]; then
     docker tag "$IMAGE:$TAG" "$IMAGE:latest"

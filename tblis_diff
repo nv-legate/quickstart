@@ -1,0 +1,120 @@
+diff --git a/src/external/marray/include/expression.hpp b/src/external/marray/include/expression.hpp
+index 2448c61..f7742a4 100644
+--- a/src/external/marray/include/expression.hpp
++++ b/src/external/marray/include/expression.hpp
+@@ -1,7 +1,7 @@
+ #ifndef _MARRAY_EXPRESSION_HPP_
+ #define _MARRAY_EXPRESSION_HPP_
+ 
+-#include <x86intrin.h>
++//#include <x86intrin.h>
+ 
+ #include "utility.hpp"
+ #include "vector.hpp"
+diff --git a/src/external/marray/include/vector_avx.hpp b/src/external/marray/include/vector_avx.hpp
+index a37e9d0..a8c77f5 100644
+--- a/src/external/marray/include/vector_avx.hpp
++++ b/src/external/marray/include/vector_avx.hpp
+@@ -1,7 +1,7 @@
+ #ifndef _MARRAY_VECTOR_AVX_HPP_
+ #define _MARRAY_VECTOR_AVX_HPP_
+ 
+-#include <x86intrin.h>
++//#include <x86intrin.h>
+ #include "vector.hpp"
+ 
+ namespace MArray
+diff --git a/src/external/marray/include/vector_avx512.hpp b/src/external/marray/include/vector_avx512.hpp
+index f493cdd..db02eef 100644
+--- a/src/external/marray/include/vector_avx512.hpp
++++ b/src/external/marray/include/vector_avx512.hpp
+@@ -1,7 +1,7 @@
+ #ifndef _MARRAY_VECTOR_AVX512_HPP_
+ #define _MARRAY_VECTOR_AVX512_HPP_
+ 
+-#include <x86intrin.h>
++//#include <x86intrin.h>
+ #include "vector.hpp"
+ 
+ namespace MArray
+diff --git a/src/external/marray/include/vector_sse41.hpp b/src/external/marray/include/vector_sse41.hpp
+index e28b849..4c52b71 100644
+--- a/src/external/marray/include/vector_sse41.hpp
++++ b/src/external/marray/include/vector_sse41.hpp
+@@ -1,7 +1,7 @@
+ #ifndef _MARRAY_VECTOR_SSE41_HPP_
+ #define _MARRAY_VECTOR_SSE41_HPP_
+ 
+-#include <x86intrin.h>
++//#include <x86intrin.h>
+ #include "vector.hpp"
+ 
+ namespace MArray
+diff --git a/src/util/cpuid.cxx b/src/util/cpuid.cxx
+index 6cb19b6..6b44a1d 100644
+--- a/src/util/cpuid.cxx
++++ b/src/util/cpuid.cxx
+@@ -246,7 +246,7 @@ int get_cpu_type(int& model, int& part, int& features)
+ 
+     auto pos = ptno.find("0x");
+     TBLIS_ASSERT(pos != std::string::npos);
+-    part = strtoi(ptno, pos, 16);
++    part = std::stoi(ptno, &pos, 16);
+ 
+     return VENDOR_ARM;
+ }
+diff --git a/src/util/cpuid.hpp b/src/util/cpuid.hpp
+index 320803d..f6be8bc 100644
+--- a/src/util/cpuid.hpp
++++ b/src/util/cpuid.hpp
+@@ -42,8 +42,8 @@ int get_cpu_type(int& family, int& model, int& features);
+ namespace tblis
+ {
+ 
+-enum {VENDOR_ARM, VENDOR_UNKNOWN}
+-enum {MODEL_ARMV7, MODEL_ARMV8, MODEL_UNKNOWN}
++enum {VENDOR_ARM, VENDOR_UNKNOWN};
++enum {MODEL_ARMV7, MODEL_ARMV8, MODEL_UNKNOWN};
+ enum {FEATURE_NEON = 0x1};
+ 
+ int get_cpu_type(int& model, int& part, int& features);
+diff --git a/config.sub b/config.sub
+index 8b612ab..c752cc1 100755
+--- a/config.sub
++++ b/config.sub
+@@ -367,7 +367,7 @@ case $basic_machine in
+ 	| alpha-* | alphaev[4-8]-* | alphaev56-* | alphaev6[78]-* \
+ 	| alpha64-* | alpha64ev[4-8]-* | alpha64ev56-* | alpha64ev6[78]-* \
+ 	| alphapca5[67]-* | alpha64pca5[67]-* | arc-* | arceb-* \
+-	| arm-*  | armbe-* | armle-* | armeb-* | armv*-* \
++	| arm-*  | armbe-* | armle-* | armeb-* | armv*-* | arm64-* \
+ 	| avr-* | avr32-* \
+ 	| be32-* | be64-* \
+ 	| bfin-* | bs2000-* \
+diff --git a/src/external/marray/config.sub b/src/external/marray/config.sub
+index 7ffe373..dafb01c 100755
+--- a/src/external/marray/config.sub
++++ b/src/external/marray/config.sub
+@@ -374,7 +374,7 @@ case $basic_machine in
+ 	| alpha-* | alphaev[4-8]-* | alphaev56-* | alphaev6[78]-* \
+ 	| alpha64-* | alpha64ev[4-8]-* | alpha64ev56-* | alpha64ev6[78]-* \
+ 	| alphapca5[67]-* | alpha64pca5[67]-* | arc-* | arceb-* \
+-	| arm-*  | armbe-* | armle-* | armeb-* | armv*-* \
++	| arm-*  | armbe-* | armle-* | armeb-* | armv*-* | arm64-* \
+ 	| avr-* | avr32-* \
+ 	| be32-* | be64-* \
+ 	| bfin-* | bs2000-* \
+diff --git a/src/external/tci/config.sub b/src/external/tci/config.sub
+index 8b612ab..c752cc1 100755
+--- a/src/external/tci/config.sub
++++ b/src/external/tci/config.sub
+@@ -367,7 +367,7 @@ case $basic_machine in
+ 	| alpha-* | alphaev[4-8]-* | alphaev56-* | alphaev6[78]-* \
+ 	| alpha64-* | alpha64ev[4-8]-* | alpha64ev56-* | alpha64ev6[78]-* \
+ 	| alphapca5[67]-* | alpha64pca5[67]-* | arc-* | arceb-* \
+-	| arm-*  | armbe-* | armle-* | armeb-* | armv*-* \
++	| arm-*  | armbe-* | armle-* | armeb-* | armv*-* | arm64-* \
+ 	| avr-* | avr32-* \
+ 	| be32-* | be64-* \
+ 	| bfin-* | bs2000-* \
+

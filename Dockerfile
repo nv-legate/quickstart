@@ -39,6 +39,8 @@ ARG PYTHON_VER
 ENV PYTHON_VER=${PYTHON_VER}
 ARG USE_SPY
 ENV USE_SPY=${USE_SPY}
+ARG CPU_ARCH
+ENV CPU_ARCH=${CPU_ARCH}
 
 # Execute RUN commands in strict mode
 SHELL [ "/bin/bash", "-eo", "pipefail", "-c" ]
@@ -69,10 +71,11 @@ RUN apt-get update \
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
  && locale-gen
 
-# Install extra Nvidia packages
+# Install extra NVIDIA packages
 RUN export LINUX_VER_URL="$(echo "$LINUX_VER" | tr -d '.')" \
- && curl -fsSL https://developer.download.nvidia.com/devtools/repos/${LINUX_VER_URL}/amd64/nvidia.pub | apt-key add - \
- && echo "deb https://developer.download.nvidia.com/devtools/repos/${LINUX_VER_URL}/amd64/ /" >> /etc/apt/sources.list.d/nsys.list
+ && if [[ "$CPU_ARCH" == "arm" ]]; then export ARCH="arm64"; else export ARCH="amd64"; fi \
+ && curl -fsSL https://developer.download.nvidia.com/devtools/repos/${LINUX_VER_URL}/${ARCH}/nvidia.pub | apt-key add - \
+ && echo "deb https://developer.download.nvidia.com/devtools/repos/${LINUX_VER_URL}/${ARCH}/ /" >> /etc/apt/sources.list.d/nsys.list
 RUN apt-get update \
  && apt-get install -y --no-install-recommends nsight-systems-cli \
  && apt-get clean \
@@ -130,11 +133,12 @@ RUN if [[ "$NETWORK" != none ]]; then \
 # Install conda
 ENV PATH=/opt/conda/bin:${PATH}
 RUN cd /tmp \
- && curl -fsSLO https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh \
- && /bin/bash Mambaforge-Linux-x86_64.sh -b -p /opt/conda \
+ && if [[ "$CPU_ARCH" == "arm" ]]; then export ARCH="aarch64"; else export ARCH="x86_64"; fi \
+ && curl -fsSLO https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-${ARCH}.sh \
+ && /bin/bash Mambaforge-Linux-${ARCH}.sh -b -p /opt/conda \
  && conda update --all --yes \
  && conda clean --all --yes \
- && rm Mambaforge-Linux-x86_64.sh
+ && rm Mambaforge-Linux-${ARCH}.sh
 
 # Create conda environment
 COPY legate.core /opt/legate/legate.core
@@ -174,9 +178,15 @@ RUN source activate legate \
 # Build cunumeric
 COPY cunumeric /opt/legate/cunumeric
 RUN source activate legate \
+ && export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/legate/tblis_build/lib \
  && export CUDA_PATH=/usr/local/cuda/lib64/stubs `# some conda packages, notably cupy, override CUDA_PATH` \
  && cd /opt/legate/cunumeric \
- && /opt/legate/quickstart/build.sh --editable
+ && if [[ "$CPU_ARCH" == "arm" ]]; then \
+      /opt/legate/quickstart/build.sh --editable --with-tblis /opt/legate/tblis_build \
+  ; else \
+      /opt/legate/quickstart/build.sh --editable \
+  ; fi
+ENV LD_LIBRARY_PATH="/opt/legate/tblis_build/lib:${LD_LIBRARY_PATH}"
 
 # Set up run environment
 ENTRYPOINT [ "entrypoint.sh" ]
