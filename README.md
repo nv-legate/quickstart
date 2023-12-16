@@ -200,13 +200,10 @@ Once inside the container, you can try running some examples:
 legate --gpus 1 --fbmem 15000 /opt/legate/cunumeric/examples/gemm.py
 ```
 
-Note the following general requirements for using Nvidia hardware within
-containers: To use Nvidia GPUs from inside a container the host needs to
+Note that to use Nvidia GPUs from inside a container the host needs to
 provide a CUDA installation at least as recent as the version used in the
 image, and a GPU-aware container execution engine like
-[nvidia-docker](https://github.com/NVIDIA/nvidia-docker). To use Nvidia
-networking hardware from inside a container the host and the image must use
-the same version of MOFED.
+[nvidia-docker](https://github.com/NVIDIA/nvidia-docker).
 
 Run on the cluster
 ------------------
