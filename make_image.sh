@@ -55,42 +55,50 @@ export TAG="${TAG:-$(date +%Y-%m-%d-%H%M%S)}"
 export TAG_LATEST="${TAG_LATEST:-0}"
 export USE_SPY="${USE_SPY:-0}"
 
+# Check out repos
+function git_clone {
+    if [[ ! -e "$1" ]]; then
+        git clone "$2" "$1"
+    fi
+}
+# Legion is optional
+# git_clone legion https://gitlab.com/StanfordLegion/legion.git
+git_clone legate.core https://github.com/nv-legate/legate.core.git
+git_clone cunumeric https://github.com/nv-legate/cunumeric.git
+
 # Pull latest versions of legate libraries and Legion
 function git_pull {
-    if [[ ! -e "$2" ]]; then
-        if [[ $# -le 2 ]]; then
-            echo "$2 git hash: (auto)"
-            return
-        elif [[ "$3" == HEAD ]]; then
-            git clone "$1" "$2"
-        else
-            git clone "$1" "$2" -b "$3"
-        fi
+    if [[ ! -e "$1" ]]; then
+        echo "$1 git hash: (auto)"
+        return
     fi
-    cd "$2"
+    cd "$1"
     if [[ "$NOPULL" == 0 ]]; then
-        git fetch --all
-        if [[ $# -ge 3 ]]; then
-            if [[ "$3" == HEAD ]]; then
-                # checkout remote HEAD branch
-                REF="$(git remote show origin | grep HEAD | awk '{ print $3 }')"
-            else
-                REF="$3"
-            fi
+        REMOTE=origin
+        git fetch --quiet "$REMOTE"
+        if [[ "$2" == HEAD ]]; then
+            # checkout remote HEAD branch
+            REF="$(git remote show "$REMOTE" | grep HEAD | awk '{ print $3 }')"
+        else
+            REF="$2"
+        fi
+        if git show-ref --quiet refs/heads/"$REF"; then
             git checkout "$REF"
+        else
+            git checkout --track "$REMOTE"/"$REF"
         fi
         # update from the remote, if we are on a branch
         if [[ "$(git rev-parse --abbrev-ref HEAD)" != "HEAD" ]]; then
             git pull --ff-only
         fi
     fi
-    echo -n "$2 git hash: "
+    echo -n "$1 git hash: "
     git rev-parse HEAD
     cd -
 }
-git_pull https://gitlab.com/StanfordLegion/legion.git legion
-git_pull https://github.com/nv-legate/legate.core.git legate.core "$RELEASE_BRANCH"
-git_pull https://github.com/nv-legate/cunumeric.git cunumeric "$RELEASE_BRANCH"
+git_pull legion control_replication
+git_pull legate.core "$RELEASE_BRANCH"
+git_pull cunumeric "$RELEASE_BRANCH"
 
 # Build and push image
 IMAGE=legate
