@@ -21,7 +21,7 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "Usage: $(basename "${BASH_SOURCE[0]}") [extra docker-build flags]"
     echo "Arguments read from the environment:"
     echo "  CONDUIT : GASNet conduit to use (if applicable) (default: ibv)"
-    echo "  CUDA_VER : CUDA version to use (default: 11.5.2)"
+    echo "  CUDA_VER : CUDA version to use (default: 12.0.1)"
     echo "  DEBUG : compile with debug symbols and w/o optimizations (default: 0)"
     echo "  DEBUG_RELEASE : compile with optimizations and some debug symbols (default: 0)"
     echo "  LINUX_VER : what distro to base the image on (default: ubuntu20.04)"
@@ -38,7 +38,7 @@ fi
 
 # Read arguments
 export CONDUIT="${CONDUIT:-ibv}"
-export CUDA_VER="${CUDA_VER:-11.5.2}"
+export CUDA_VER="${CUDA_VER:-12.0.1}"
 if [[ ! "$CUDA_VER" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     echo "Error: \$CUDA_VER must be given in the format X.Y.Z (patch version is required)" 1>&2
     exit 1
