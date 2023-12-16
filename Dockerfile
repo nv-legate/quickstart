@@ -23,6 +23,8 @@ FROM nvidia/cuda:${CUDA_VER}-devel-${LINUX_VER}
 # Build arguments
 ARG CONDUIT
 ENV CONDUIT=${CONDUIT}
+ARG CPU_ARCH
+ENV CPU_ARCH=${CPU_ARCH}
 ARG CUDA_VER
 ENV CUDA_VER=${CUDA_VER}
 ARG DEBUG
@@ -37,8 +39,6 @@ ARG PYTHON_VER
 ENV PYTHON_VER=${PYTHON_VER}
 ARG USE_SPY
 ENV USE_SPY=${USE_SPY}
-ARG CPU_ARCH
-ENV CPU_ARCH=${CPU_ARCH}
 
 # Execute RUN commands in strict mode
 SHELL [ "/bin/bash", "-eo", "pipefail", "-c" ]

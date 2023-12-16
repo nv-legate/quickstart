@@ -21,6 +21,7 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "Usage: $(basename "${BASH_SOURCE[0]}") [extra docker-build flags]"
     echo "Arguments read from the environment:"
     echo "  CONDUIT : GASNet conduit to use (if applicable) (default: ibv)"
+    echo "  CPU_ARCH : what CPU architecture to build for (choices: arm, x86; default: x86)"
     echo "  CUDA_VER : CUDA version to use (default: 12.0.1)"
     echo "  DEBUG : compile with debug symbols and w/o optimizations (default: 0)"
     echo "  DEBUG_RELEASE : compile with optimizations and some debug symbols (default: 0)"
@@ -32,12 +33,12 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "  TAG : tag to use for the produced image (default: \`date +%Y-%m-%d-%H%M%S\`)"
     echo "  TAG_LATEST : whether to also tag the image as latest (default: 0)"
     echo "  USE_SPY : build Legion with detailed Spy logging enabled (default: 0)"
-    echo "  CPU_ARCH : what CPU architecture to build for (choices: arm, x86; default: x86)"
     exit
 fi
 
 # Read arguments
 export CONDUIT="${CONDUIT:-ibv}"
+export CPU_ARCH="${CPU_ARCH:-x86}"
 export CUDA_VER="${CUDA_VER:-12.0.1}"
 if [[ ! "$CUDA_VER" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     echo "Error: \$CUDA_VER must be given in the format X.Y.Z (patch version is required)" 1>&2
@@ -53,7 +54,6 @@ export RELEASE_BRANCH="${RELEASE_BRANCH:-HEAD}"
 export TAG="${TAG:-$(date +%Y-%m-%d-%H%M%S)}"
 export TAG_LATEST="${TAG_LATEST:-0}"
 export USE_SPY="${USE_SPY:-0}"
-export CPU_ARCH="${CPU_ARCH:-x86}"
 
 # Check out repos
 function git_clone {
@@ -119,6 +119,7 @@ if [[ "$USE_SPY" == 1 ]]; then
 fi
 DOCKER_BUILDKIT=1 docker build -t "$IMAGE:$TAG" \
     --build-arg CONDUIT="$CONDUIT" \
+    --build-arg CPU_ARCH="$CPU_ARCH" \
     --build-arg CUDA_VER="$CUDA_VER" \
     --build-arg DEBUG="$DEBUG" \
     --build-arg DEBUG_RELEASE="$DEBUG_RELEASE" \
@@ -126,7 +127,6 @@ DOCKER_BUILDKIT=1 docker build -t "$IMAGE:$TAG" \
     --build-arg NETWORK="$NETWORK" \
     --build-arg PYTHON_VER="$PYTHON_VER" \
     --build-arg USE_SPY="$USE_SPY" \
-    --build-arg CPU_ARCH="$CPU_ARCH" \
     "$@" .
 if [[ "$TAG_LATEST" == 1 ]]; then
     docker tag "$IMAGE:$TAG" "$IMAGE:latest"
