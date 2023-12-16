@@ -54,7 +54,7 @@ function set_build_vars {
         # these defines to be set.
         export CXXFLAGS="${CXXFLAGS:-} -DNO_WARN_X86_INTRINSICS"
         export CFLAGS="${CFLAGS:-} -DNO_WARN_X86_INTRINSICS"
-    elif [[ "$PLATFORM" == generic-* ]]; then
+    elif [[ "$PLATFORM" == generic ]]; then
         export NETWORK="${NETWORK:-none}"
         export CONDUIT="${CONDUIT:-none}"
     else
