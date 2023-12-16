@@ -175,6 +175,20 @@ RUN source activate legate \
  && cd /opt/legate/legate.core \
  && USE_CUDA=1 USE_OPENMP=1 /opt/legate/quickstart/build.sh --editable
 
+# Build Tblis for ARM, needs patching for ARM architecture:
+COPY tblis_diff /opt/legate/
+RUN if [[ "$CPU_ARCH" == "arm" ]]; then \
+      export TMP_DIR="$(mktemp -d)" \
+ &&   cd "$TMP_DIR" \
+ &&   git clone --recursive --branch master https://github.com/devinamatthews/tblis.git \
+ &&   cd tblis \
+ &&   git apply /opt/legate/tblis_diff \
+ &&   ./configure --enable-thread-model=openmp --with-label-type=int32_t --with-length-type=int64_t --with-stride-type=int64_t --prefix=/opt/legate/tblis_build \
+ &&   make -j \
+ &&   make install \
+ &&   rm -rf "$TMP_DIR" \
+  ; fi
+
 # Build cunumeric
 COPY cunumeric /opt/legate/cunumeric
 RUN source activate legate \
