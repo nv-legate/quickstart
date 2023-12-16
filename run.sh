@@ -156,13 +156,18 @@ if [[ "$CONTAINER_BASED" == 0 ]]; then
 fi
 
 # Retrieve resources available per node
-# At this point we set aside some memory:
-# - 1-2GB of framebuffer for the runtime and NCCL
-# - ~1GB of RAM for GASNet
-# - ~1GB of RAM for the Legion runtime
-# - 256MB of RAM for sysmem/csize (reserved for the app, non-NUMA-aware)
-# - 256MB of RAM for ib_rsize (reserved for remote DMA transfers)
-# - 256MB of RAM for ib_csize (reserved for DMA transfers to/from the GPU)
+# The FB_PER_GPU setting should leave 1-2GB for other uses:
+# - the needs of Realm itself
+# - loading CUDA modules
+# - memory allocations from libraries that operate outside of Realm, e.g. NCCL
+# The RAM_PER_NUMA setting should leave:
+# - ~10% of RAM for the OS, job manager etc.
+# - ~4GB for other uses within a Legion application:
+#   - ~1GB of RAM for GASNet
+#   - ~1GB of RAM for the Legion runtime
+#   - 256MB of RAM for sysmem/csize (reserved for the app, non-NUMA-aware)
+#   - 256MB of RAM for ib_rsize (reserved for remote DMA transfers)
+#   - 256MB of RAM for ib_csize (reserved for DMA transfers to/from the GPU)
 if [[ "$PLATFORM" == summit ]]; then
     # 2 NUMA domains per node
     # 2 NICs per NUMA domain (4 NICs per node)
@@ -376,7 +381,6 @@ if [[ "$NODRIVER" != 1 ]]; then
             set -- --launcher none "$@"
         fi
     fi
-
     set -- legate "$@"
 fi
 
