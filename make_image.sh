@@ -28,7 +28,7 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "  LINUX_VER : what distro to base the image on (default: ubuntu20.04)"
     echo "  NETWORK : Realm networking backend to use (default: ucx)"
     echo "  NOPULL : do not pull latest versions of Legion & Legate libraries (default: 0)"
-    echo "  PYTHON_VER : Python version to use (default: 3.9)"
+    echo "  PYTHON_VER : Python version to use (default: 3.10)"
     echo "  RELEASE_BRANCH : Legate.core and cuNumeric branch to use, example: branch-23.05 (default: HEAD)"
     echo "  TAG : tag to use for the produced image (default: \`date +%Y-%m-%d-%H%M%S\`)"
     echo "  TAG_LATEST : whether to also tag the image as latest (default: 0)"
