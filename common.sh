@@ -171,5 +171,6 @@ function run_command {
         else
             _run_command "$@"
         fi
+        echo "Command completed on: $(date)"
     done
 }
