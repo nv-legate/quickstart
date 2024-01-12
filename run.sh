@@ -143,18 +143,6 @@ else
     export CMD_OUT_DIR="$HOST_OUT_DIR"
 fi
 
-# We explicitly add the Conda lib dir, to ensure the Conda libraries we load
-# will look there for their dependencies first, instead of trying to link with
-# the corresponding system-wide versions.
-# We skip this on Mac, because then the system-wide vecLib would attempt to
-# reuse the conda libcblas, which has SONAME version 0.0.0, whereas vecLib
-# requires 1.0.0.
-if [[ "$CONTAINER_BASED" == 0 ]]; then
-    if [[ "$(uname)" != "Darwin" ]]; then
-        verbose_export LD_LIBRARY_PATH "$CONDA_PREFIX"/lib:"${LD_LIBRARY_PATH:-}"
-    fi
-fi
-
 # Retrieve resources available per node
 # The FB_PER_GPU setting should leave 1-2GB for other uses:
 # - the needs of Realm itself
