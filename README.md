@@ -108,8 +108,8 @@ conda env create -n legate -f environment-test-linux-py310-cuda12.0.1-ucx.yaml
 ```
 
 Note that Quickstart uses the UCX networking backend by default on supported
-clusters (and on local installations, if you wish to build with networking
-support), so --ucx is required.
+clusters (and on local-machine non-MacOS installations, if you choose to build
+with networking support), so --ucx is required in those cases.
 
 See
 https://github.com/nv-legate/legate.core/blob/HEAD/BUILD.md#getting-dependencies-through-conda

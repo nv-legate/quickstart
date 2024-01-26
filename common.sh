@@ -60,11 +60,14 @@ function set_build_vars {
     else
         echo "Did not detect a supported cluster, auto-detecting configuration"
         if [[ -z "${NETWORK+x}" ]]; then
-            if command -v mpirun &> /dev/null; then
-                export NETWORK=ucx
+            if ! command -v mpirun &> /dev/null; then
+                export NETWORK=none
+            elif [[ "$(uname)" == "Darwin" ]]; then
+                # UCX not available on MacOS
+                export NETWORK=gasnetex
                 export CONDUIT="${CONDUIT:-mpi}"
             else
-                export NETWORK=none
+                export NETWORK=ucx
             fi
         fi
         if [[ -z "${USE_CUDA+x}" ]]; then
