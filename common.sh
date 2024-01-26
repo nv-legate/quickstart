@@ -61,7 +61,7 @@ function set_build_vars {
         echo "Did not detect a supported cluster, auto-detecting configuration"
         if [[ -z "${NETWORK+x}" ]]; then
             if command -v mpirun &> /dev/null; then
-                export NETWORK=gasnet1
+                export NETWORK=ucx
                 export CONDUIT="${CONDUIT:-mpi}"
             else
                 export NETWORK=none
@@ -91,7 +91,7 @@ function set_build_vars {
     # so that FindCUDAToolkit.cmake can function
     export USE_CUDA="${USE_CUDA:-1}"
     export USE_OPENMP="${USE_OPENMP:-1}"
-    export NETWORK="${NETWORK:-gasnet1}"
+    export NETWORK="${NETWORK:-ucx}"
 }
 
 function verbose_export {

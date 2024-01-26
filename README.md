@@ -103,9 +103,13 @@ conda environment, e.g.:
 ```
 git clone https://github.com/nv-legate/legate.core <legate.core-dir>
 cd <legate.core-dir>
-./scripts/generate-conda-envs.py --python 3.10 --ctk 11.7 --os linux --ucx
-conda env create -n legate -f environment-test-linux-py310-cuda11.7-ucx.yaml
+./scripts/generate-conda-envs.py --python 3.10 --ctk 12.0.1 --os linux --ucx
+conda env create -n legate -f environment-test-linux-py310-cuda12.0.1-ucx.yaml
 ```
+
+Note that Quickstart uses the UCX networking backend by default on supported
+clusters (and on local installations, if you wish to build with networking
+support), so --ucx is required.
 
 See
 https://github.com/nv-legate/legate.core/blob/HEAD/BUILD.md#getting-dependencies-through-conda
