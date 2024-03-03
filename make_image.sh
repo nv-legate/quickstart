@@ -96,7 +96,7 @@ function git_pull {
     git rev-parse HEAD
     cd -
 }
-git_pull legion control_replication
+git_pull legion master
 git_pull legate.core "$RELEASE_BRANCH"
 git_pull cunumeric "$RELEASE_BRANCH"
 
