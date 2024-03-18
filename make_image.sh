@@ -100,7 +100,7 @@ git_pull legion master
 git_pull legate.core "$RELEASE_BRANCH"
 git_pull cunumeric "$RELEASE_BRANCH"
 
-# Build and push image
+# Build and tag image
 IMAGE=legate
 IMAGE="$IMAGE"-"$CPU_ARCH"
 if [[ "$NETWORK" != none ]]; then
