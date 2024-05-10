@@ -117,7 +117,16 @@ fi
 if [[ "$USE_SPY" == 1 ]]; then
     IMAGE="$IMAGE"-spy
 fi
-DOCKER_BUILDKIT=1 docker build -t "$IMAGE:$TAG" \
+if [[ "$CPU_ARCH" == "arm" ]]; then
+    BUILDER_PLATFORM="linux/arm64"
+else
+    BUILDER_PLATFORM="linux/amd64"
+fi
+if ! docker buildx ls | grep -q "$BUILDER_PLATFORM"; then
+    echo "Error: Docker cannot build an image for $CPU_ARCH" 1>&2
+    exit 1
+fi
+docker buildx build --platform "$BUILDER_PLATFORM" -t "$IMAGE:$TAG" \
     --build-arg CONDUIT="$CONDUIT" \
     --build-arg CPU_ARCH="$CPU_ARCH" \
     --build-arg CUDA_VER="$CUDA_VER" \
