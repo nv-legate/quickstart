@@ -22,10 +22,10 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "Arguments read from the environment:"
     echo "  CONDUIT : GASNet conduit to use (if applicable) (default: ibv)"
     echo "  CPU_ARCH : what CPU architecture to build for (choices: arm, x86; default: x86)"
-    echo "  CUDA_VER : CUDA version to use (default: 12.0.1)"
+    echo "  CUDA_VER : CUDA version to use (default: 12.4.1)"
     echo "  DEBUG : compile with debug symbols and w/o optimizations (default: 0)"
     echo "  DEBUG_RELEASE : compile with optimizations and some debug symbols (default: 0)"
-    echo "  LINUX_VER : what distro to base the image on (default: ubuntu20.04)"
+    echo "  LINUX_VER : what distro to base the image on (default: ubuntu22.04)"
     echo "  NETWORK : Realm networking backend to use (default: ucx)"
     echo "  NOPULL : do not pull latest versions of Legion & Legate libraries (default: 0)"
     echo "  PYTHON_VER : Python version to use (default: 3.10)"
@@ -39,14 +39,14 @@ fi
 # Read arguments
 export CONDUIT="${CONDUIT:-ibv}"
 export CPU_ARCH="${CPU_ARCH:-x86}"
-export CUDA_VER="${CUDA_VER:-12.0.1}"
+export CUDA_VER="${CUDA_VER:-12.4.1}"
 if [[ ! "$CUDA_VER" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     echo "Error: \$CUDA_VER must be given in the format X.Y.Z (patch version is required)" 1>&2
     exit 1
 fi
 export DEBUG="${DEBUG:-0}"
 export DEBUG_RELEASE="${DEBUG_RELEASE:-0}"
-export LINUX_VER="${LINUX_VER:-ubuntu20.04}"
+export LINUX_VER="${LINUX_VER:-ubuntu22.04}"
 export NETWORK="${NETWORK:-ucx}"
 export NOPULL="${NOPULL:-0}"
 export PYTHON_VER="${PYTHON_VER:-3.10}"
