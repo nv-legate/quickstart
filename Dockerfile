@@ -48,11 +48,13 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       `# build utilities` \
-      curl locales \
+      curl locales patch \
       `# NUMA support` \
       libnuma1 libnuma-dev numactl \
       `# programming/debugging utilities` \
       gdb vim wget git \
+      `# OpenMPI implicitly depends on ssh` \
+      openssh-client \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
@@ -90,6 +92,7 @@ RUN export TMP_DIR="$(mktemp -d)" \
  && export YML_FILE="$TMP_DIR"/environment-test-linux-py${PYTHON_VER}-cuda${CUDA_VER}-openmpi-ucx.yaml \
  && cd "$TMP_DIR" \
  && /opt/legate/legate.core/scripts/generate-conda-envs.py --python ${PYTHON_VER} --ctk ${CUDA_VER} --os linux --ucx --openmpi \
+ && echo "  - python=$PYTHON_VER" >> "$YML_FILE" \
  && mamba env create -n legate -f "$YML_FILE" \
  && rm -rf "$TMP_DIR"
 
@@ -99,9 +102,6 @@ RUN source activate legate \
  && ln -s "$CONDA_PREFIX"/bin/mpirun /usr/bin/mpirun
 # useful scripts
 COPY entrypoint.sh ibdev2netdev print_backtraces.sh /usr/bin/
-
-# Make sure libraries can find libmpi at runtime
-ENV LD_LIBRARY_PATH="$CONDA_PREFIX/lib:${LD_LIBRARY_PATH}"
 
 # For Linux 64, conda OpenMPI is built with CUDA awareness but
 # this support is disabled by default. UCX support is also built
@@ -124,14 +124,14 @@ RUN source activate legate \
  && export CUDA_PATH=/usr/local/cuda/lib64/stubs `# some conda packages, notably cupy, override CUDA_PATH` \
  && if [[ -e /opt/legate/legion/ ]]; then export LEGION_DIR=/opt/legate/legion; fi \
  && cd /opt/legate/legate.core \
- && USE_CUDA=1 USE_OPENMP=1 /opt/legate/quickstart/build.sh --editable
+ && USE_CUDA=1 USE_OPENMP=1 /opt/legate/quickstart/build.sh
 
 # Build cunumeric
 COPY cunumeric /opt/legate/cunumeric
 RUN source activate legate \
  && export CUDA_PATH=/usr/local/cuda/lib64/stubs `# some conda packages, notably cupy, override CUDA_PATH` \
  && cd /opt/legate/cunumeric \
- && /opt/legate/quickstart/build.sh --editable
+ && /opt/legate/quickstart/build.sh
 
 # Set up run environment
 ENTRYPOINT [ "entrypoint.sh" ]
