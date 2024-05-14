@@ -25,6 +25,10 @@ if [[ $# -ge 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
     echo "Arguments read from the environment:"
     echo "  ACCOUNT : account/group/project to submit build job under (if applicable)"
     echo "  CONDUIT : GASNet conduit to use (if applicable) (default: auto-detected)"
+    echo "  DEBUG : compile with debug symbols and w/o optimizations (default: 0)"
+    echo "  DEBUG_RELEASE : compile with optimizations and some debug symbols (default: 0)"
+    echo "  EDITABLE : do an editable installation (default: 0)"
+    echo "  LEGION_BRANCH : source branch to use for Legion (default: unset)"
     echo "  LEGION_DIR : source directory to use for Legion (default: unset; the build"
     echo "               will pull a local copy of Legion)"
     echo "  NETWORK : Realm networking backend to use (default: auto-detected)"
@@ -41,16 +45,12 @@ detect_platform && set_build_vars
 function check_not_overriding {
     PACKAGE="$1"
     INSTALL_DIR="$2"
-    shift
-    shift
     if compgen -G "$CONDA_PREFIX"/lib/'python*'/site-packages/"$INSTALL_DIR" > /dev/null; then
         # Existing non-editable installation
-        for ARG in "$@"; do
-            if [[ "$ARG" == --editable ]]; then
-                echo "Error: $PACKAGE already installed in non-editable mode, but editable was requested" 1>&2
-                exit 1
-            fi
-        done
+        if [[ "$EDITABLE" == 1 ]]; then
+            echo "Error: $PACKAGE already installed in non-editable mode, but editable was requested" 1>&2
+            exit 1
+        fi
     elif compgen -G "$CONDA_PREFIX"/lib/'python*'/site-packages/"$PACKAGE".egg-link > /dev/null; then
         # Pick an arbitrary .egg-link file; there should only be one, except in
         # the case of e.g. python 3.10, in which case conda creates a 3.1 copy
@@ -59,14 +59,7 @@ function check_not_overriding {
             break
         done
         # Existing editable installation
-        EDITABLE_REQUESTED=0
-        for ARG in "$@"; do
-            if [[ "$ARG" == --editable ]]; then
-                EDITABLE_REQUESTED=1
-                break
-            fi
-        done
-        if [[ "$EDITABLE_REQUESTED" == 0 ]]; then
+        if [[ "$EDITABLE" == 0 ]]; then
             echo "Error: $PACKAGE already installed in editable mode, but non-editable was requested" 1>&2
             exit 1
         fi
@@ -79,7 +72,7 @@ function check_not_overriding {
 
 # Run appropriate build command for the target library
 if [[ -d "legate/core" ]]; then
-    check_not_overriding legate.core legate/core "$@"
+    check_not_overriding legate.core legate/core
     if [[ "$NETWORK" != none ]]; then
         set -- --network "$NETWORK" "$@"
     fi
@@ -98,14 +91,29 @@ if [[ -d "legate/core" ]]; then
     if [[ -n "${LEGION_DIR+x}" ]]; then
         set -- --legion-src-dir "$LEGION_DIR" "$@"
     fi
-    run_build ./install.py \
-              --verbose \
-              "$@"
+    if [[ -n "${LEGION_BRANCH+x}" ]]; then
+        set -- --legion-branch "$LEGION_BRANCH" "$@"
+    fi
+    if [[ "$DEBUG" == 1 ]]; then
+        set -- --debug "$@"
+    elif [[ "$DEBUG_RELEASE" == 1 ]]; then
+        set -- --debug-release "$@"
+    fi
+    if [[ "$EDITABLE" == 1 ]]; then
+        set -- --editable "$@"
+    fi
+    run_build ./install.py --verbose "$@"
 elif [[ -d "cunumeric" ]]; then
-    check_not_overriding cunumeric cunumeric "$@"
-    run_build ./install.py \
-              --verbose \
-              "$@"
+    check_not_overriding cunumeric cunumeric
+    if [[ "$DEBUG" == 1 ]]; then
+        set -- --debug "$@"
+    elif [[ "$DEBUG_RELEASE" == 1 ]]; then
+        set -- --debug-release "$@"
+    fi
+    if [[ "$EDITABLE" == 1 ]]; then
+        set -- --editable "$@"
+    fi
+    run_build ./install.py --verbose "$@"
 else
     echo "Error: Unsupported library" 1>&2
     exit 1

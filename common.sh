@@ -92,9 +92,12 @@ function set_build_vars {
     fi
     # Assuming that nvcc is in PATH, or CUDA_PATH has been set
     # so that FindCUDAToolkit.cmake can function
+    export DEBUG="${DEBUG:-0}"
+    export DEBUG_RELEASE="${DEBUG_RELEASE:-0}"
+    export EDITABLE="${EDITABLE:-0}"
+    export NETWORK="${NETWORK:-ucx}"
     export USE_CUDA="${USE_CUDA:-1}"
     export USE_OPENMP="${USE_OPENMP:-1}"
-    export NETWORK="${NETWORK:-ucx}"
 }
 
 function verbose_export {
