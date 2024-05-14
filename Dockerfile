@@ -18,7 +18,7 @@
 # Parent image
 ARG CUDA_VER
 ARG LINUX_VER
-FROM nvidia/cuda:${CUDA_VER}-devel-${LINUX_VER}
+FROM nvidia/cuda:${CUDA_VER}-base-${LINUX_VER}
 
 # Build arguments
 ARG CONDUIT
@@ -89,9 +89,9 @@ RUN cd /tmp \
 # Create conda environment
 COPY legate.core /opt/legate/legate.core
 RUN export TMP_DIR="$(mktemp -d)" \
- && export YML_FILE="$TMP_DIR"/environment-test-linux-py${PYTHON_VER}-cuda${CUDA_VER}-openmpi-ucx.yaml \
+ && export YML_FILE="$TMP_DIR"/environment-test-linux-py${PYTHON_VER}-cuda${CUDA_VER}-compilers-openmpi-ucx.yaml \
  && cd "$TMP_DIR" \
- && /opt/legate/legate.core/scripts/generate-conda-envs.py --python ${PYTHON_VER} --ctk ${CUDA_VER} --os linux --ucx --openmpi \
+ && /opt/legate/legate.core/scripts/generate-conda-envs.py --python ${PYTHON_VER} --ctk ${CUDA_VER} --os linux --ucx --openmpi --compilers \
  && echo "  - python=$PYTHON_VER" >> "$YML_FILE" \
  && mamba env create -n legate -f "$YML_FILE" \
  && rm -rf "$TMP_DIR"
