@@ -113,7 +113,10 @@ if [[ "$CONTAINER_BASED" == 1 ]]; then
     fi
 else
     if [[ -z "${USE_CUDA+x}" ]]; then
-        if [[ "$(legate --info | grep use_cuda | awk '{ print $3 }')" == True ]]; then
+        if ! command -v legate &> /dev/null; then
+            # can't query; assume best-case scenario
+            export USE_CUDA=1
+        elif [[ "$(legate --info | grep use_cuda | awk '{ print $3 }')" == True ]]; then
             export USE_CUDA=1
         else
             export USE_CUDA=0
@@ -122,6 +125,9 @@ else
     if [[ -z "${USE_OPENMP+x}" ]]; then
         if [[ "$USE_CUDA" == 1 ]]; then
             export USE_OPENMP=0
+        elif ! command -v legate &> /dev/null; then
+            # can't query; assume best-case scenario
+            export USE_OPENMP=1
         elif [[ "$(legate --info | grep use_openmp | awk '{ print $3 }')" == True ]]; then
             export USE_OPENMP=1
         else
@@ -176,12 +182,12 @@ elif [[ "$PLATFORM" == perlmutter ]]; then
     # 2-way SMT per core
     # 64GM RAM per NUMA domain (256GB RAM per node)
     # 1 Ampere A100 GPU per NUMA domain (4 GPUs per node)
-    # 40GB FB per GPU
+    # 80GB FB per GPU
     NUMAS_PER_NODE=4
     RAM_PER_NUMA=48000
     GPUS_PER_NODE=4
     CORES_PER_NUMA=16
-    FB_PER_GPU=36250
+    FB_PER_GPU=76000
 elif [[ "$PLATFORM" == pizdaint ]]; then
     # 1 NUMA domain per node
     # 1 NIC per node
@@ -385,13 +391,13 @@ if [[ "$PLATFORM" == summit ]]; then
     submit "$@"
 elif [[ "$PLATFORM" == perlmutter ]]; then
     # WAR for: https://gasnet-bugs.lbl.gov/bugzilla/show_bug.cgi?id=4638
-    export LEGATE_DISABLE_MPI=1
+    verbose_export LEGATE_DISABLE_MPI=1
     set -- "$SCRIPT_DIR/legate.slurm" "$@"
     # We double the number of cores because SLURM counts virtual cores
     set -- -J legate -A "$ACCOUNT" -t "$TIMELIMIT" -N "$NUM_NODES" "$@"
     set -- --ntasks-per-node "$RANKS_PER_NODE" -c $(( 2 * NUM_CORES )) "$@"
     if [[ "$USE_CUDA" == 1 ]]; then
-        set -- -C gpu --gpus-per-task "$NUM_GPUS" "$@"
+        set -- -C "gpu&hbm80g" --gpus-per-task "$NUM_GPUS" "$@"
     fi
     if [[ "$INTERACTIVE" == 1 ]]; then
         QUEUE="${QUEUE:-interactive_ss11}"
